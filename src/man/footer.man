@@ -1,0 +1,19 @@
+.SH FILES
+.PP
+User file type database files are read from the $HOME/.xfile/types/ directory.
+System file type database files are installed in PREFIX\(dg/share/xfile/types
+directory.
+
+Icons in XPM (X Pixmap) format are looked for in user $HOME/.xfile/icons and
+system PREFIX\(dg/share/xfile/icons directories.
+
+XFile stores some state information in the $HOME/.xfile/history directory
+which can be safely deleted.
+
+\(dgPlatform dependent. (/usr on GNU/Linux, /usr/local on FreeBSD etc.)
+.SH AUTHORS
+.PP
+XFile was written and is maintained by alx@fastestcode.org
+.SH CAVEATS
+.PP
+There is no xattr handling as of now.

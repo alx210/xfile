@@ -1,0 +1,9 @@
+#!/bin/sh
+
+for n in *.xbm; do
+	if [ -f $n.bak ]; then rm $n.bak; fi
+	mv $n $n.bak
+	sed 's/.xbm//g' $n.bak > $n
+done
+
+rm *.bak

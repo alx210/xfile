@@ -1,0 +1,17 @@
+GIMP Image {
+	icon pixmap
+	match_name *.xcf
+	action &Open: gimp %n
+}
+
+Krita Image {
+	icon pixmap
+	match_name *.kra
+	action &Open: krita %n
+}
+
+Blender Scene {
+	icon blend
+	match_name *.blend
+	action &Open: blender %n
+}

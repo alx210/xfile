@@ -1,0 +1,38 @@
+/* XPM */
+static char * ofcalc_s_xpm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"24 24 8 1 0 0",
+/* colors */
+" 	s none	m none	c none",
+".	s iconGray5	m black	c #737373737373",
+"X	s iconColor2	m white	c white",
+"o	s iconGray1	m white	c #dededededede",
+"O	s iconColor1	m black	c black",
+"+	s iconGray4	m white	c #949494949494",
+"@	s iconGray2	m white	c #bdbdbdbdbdbd",
+"#	s iconGray6	m black	c #636363636363",
+/* pixels */
+" .................      ",
+".XXXXXXXXXXXXXXXXX      ",
+".XooooooooooooooOX      ",
+".Xo+++++++++++++OX      ",
+".Xo+oo+oo+oo+oo+OX      ",
+".Xo+++++++++++++OX      ",
+".Xo+oo+oo+oo+oo+OX      ",
+".Xo+++++++++++++OX      ",
+".Xo+oo+oo+oo+oo+OX      ",
+".Xo+++++++++++++OX      ",
+".Xo+oo+oo+@..........   ",
+".Xo+++++++.XXXXXXXXXo   ",
+".Xo+oo+oo+@X@@@@@@@Oo   ",
+".Xo+++++++.X@#####@Oo   ",
+".Xo+oo+oo+@X@ooooo@Oo   ",
+".Xo+++++++.X@@@@@@@Oo   ",
+".Xo+oo+oo+@X@o+@o+@Oo   ",
+".Xo+++++++.X@@@@@@@Oo   ",
+".Xo+oo+oo+@X@o+@o+@Oo   ",
+".Xo+++++++.X@@@@@@@Oo   ",
+".Xo+oo+oo+@X@@@@@@@Oo   ",
+".Xo+++++++.XOOOOOOOOo   ",
+".XOOOOOOOOooooooooooo   ",
+".XXXXXXXXXXXXXXXXX      "};

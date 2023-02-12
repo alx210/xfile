@@ -1,0 +1,31 @@
+/* XPM */
+static char * calc_t_pm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"16 16 9 1 0 0",
+/* colors */
+" 	s iconGray5	m black	c #737373737373",
+".	s none	m none	c none",
+"X	s iconColor2	m white	c white",
+"o	s iconGray1	m white	c #dededededede",
+"O	s iconGray4	m white	c #949494949494",
+"+	s iconGray3	m white	c #adadadadadad",
+"@	s iconGray2	m white	c #bdbdbdbdbdbd",
+"#	s iconColor1	m black	c black",
+"$	s iconGray6	m black	c #636363636363",
+/* pixels */
+"           .....",
+" XXXXXXXXXXo....",
+" XooooooooOo....",
+" Xo+o           ",
+" Xooo XXXXXXXXXo",
+" Xo+o X@@@@@@@#o",
+" Xooo X@$$$$$@#o",
+" Xo+o X@ooooo@#o",
+" Xooo X@@@@@@@#o",
+" Xo+o X@oO@oO@#o",
+" Xooo X@@@@@@@#o",
+" Xo+o X@oO@oO@#o",
+" Xooo X@@@@@@@#o",
+" X### X@@@@@@@#o",
+".oooo X########o",
+".....ooooooooooo"};

@@ -1,0 +1,28 @@
+/* XPM */
+static char * file_t_xpm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"16 16 6 1 0 0",
+/* colors */
+" 	s iconGray8	m black	c #212121212121",
+".	s none	m none	c none",
+"X	s iconColor2	m white	c white",
+"o	s iconColor1	m black	c black",
+"O	s iconGray1	m white	c #dededededede",
+"+	s iconGray6	m black	c #636363636363",
+/* pixels */
+"          ......",
+" XXXXXXXoO .....",
+" XXXXXXXoXO ....",
+" XXXXXXXoooo....",
+" XXXXXXXX+++o...",
+" XXXXXXXXX++o...",
+" XXXXXXXXXX+o...",
+" XXXXXXXXXX+o...",
+" XXXXXXXXXX+o...",
+" XXXXXXXXXX+o...",
+" XXXXXXXXXX+o...",
+" XXXXXXXXXX+o...",
+" XXXXXXXXXX+o...",
+" XXXXXXXXXX+o...",
+" +++++++++++o...",
+"..ooooooooooo..."};

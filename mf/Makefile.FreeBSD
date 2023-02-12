@@ -1,0 +1,16 @@
+# XFile FreeBSD Makefile
+
+PREFIX ?= /usr/local
+MANDIR = $(PREFIX)/man
+SHAREDIR = $(PREFIX)/share/xfile
+APPLRESDIR = $(PREFIX)/etc/X11/app-defaults
+
+INCDIRS = -I/usr/local/include 
+LIBDIRS = -L/usr/local/lib
+
+CFLAGS += -O2 -Wall
+
+.include "common.mf"
+APPDEFS = $(APPDEFS_XFT)
+
+install: common_install

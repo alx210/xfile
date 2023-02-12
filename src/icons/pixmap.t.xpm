@@ -1,0 +1,37 @@
+/* XPM */
+static char * pixmap_t_xpm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"16 16 15 1 0 0",
+/* colors */
+" 	s iconGray8	m black	c #212121212121",
+".	s none	m none	c none",
+"X	s iconColor2	m white	c white",
+"o	s iconColor1	m black	c black",
+"O	s iconGray1	m white	c #dededededede",
+"+	s iconGray6	m black	c #636363636363",
+"@	s iconColor12	m white	c yellow",
+"#	s iconColor10	m white	c cyan",
+"$	s iconColor16	m white	c skyblue",
+"%	s iconColor4	m white	c red",
+"&	s iconColor6	m white	c green",
+"*	s iconColor9	m black	c darkcyan",
+"=	s iconColor3	m black	c darkred",
+"-	s iconColor5	m black	c darkgreen",
+";	s iconColor8	m white	c blue",
+/* pixels */
+"          ......",
+" XXXXXXXoO .....",
+" XXXXXXXoXO ....",
+" XXXXXXXoooo....",
+" XXXXXXXX+++o...",
+" X@@X##X$$++o...",
+" X@@X##X$$X+o...",
+" XXXXXXXXXX+o...",
+" X%%X&&X**X+o...",
+" X%%X&&X**X+o...",
+" XXXXXXXXXX+o...",
+" X==X--X;;X+o...",
+" X==X--X;;X+o...",
+" XXXXXXXXXX+o...",
+" +++++++++++o...",
+"..ooooooooooo..."};

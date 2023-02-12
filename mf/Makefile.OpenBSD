@@ -1,0 +1,21 @@
+# XFile OpenBSD Makefile
+
+PREFIX = /usr/local
+MANDIR = /usr/local/man
+SHAREDIR = $(PREFIX)/share/xfile
+APPLRESDIR = /usr/X11R6/lib/X11/app-defaults
+
+INCDIRS = -I/usr/X11R6/include -I/usr/local/include
+LIBDIRS = -L/usr/X11R6/lib -L/usr/local/lib
+
+CFLAGS = -O2 -Wall
+
+.c.o:
+	$(CC) $(CFLAGS) $(INCDIRS) -c -o $(@D)/$(@F) $<
+
+include common.mf
+
+# Set to APPDEFS_CORE for core fonts
+APPDEFS = $(APPDEFS_XFT)
+
+install: common_install

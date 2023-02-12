@@ -1,0 +1,80 @@
+# XFile common targets
+# This is included by platform specific makefiles in TOP/mf
+
+X_LIBS = -lX11 -lXinerama -lXm -lXt -lXpm
+SYS_LIBS = -lm -lc
+
+CFLAGS += -DPREFIX='"$(PREFIX)"' $(INCDIRS)
+
+XFILE_OBJS = main.o menu.o defaults.o comdlgs.o guiutil.o typedb.o path.o \
+	listw.o pathw.o filemgr.o graphics.o cbproc.o exec.o stack.o fsutil.o \
+	attrib.o mount.o fsproc.o fstab.o usrtool.o info.o debug.o
+
+all: .depend xfile.ad xfile.1 xfile
+.PHONY: clean install uninstall
+
+xfile: icons.h $(XFILE_OBJS)
+	$(CC) $(LDFLAGS) $(LIBDIRS) -o $@ $(XFILE_OBJS) $(X_LIBS) $(SYS_LIBS)
+
+# Built-in icons
+icons.h: mkicons.sh icons/*.xpm
+	$(SHELL) mkicons.sh $@
+
+# App-defaults, core and xft fonts variety, APPDEFS must be set 
+# to one of these in platform specific makefiles 
+APPDEFS_CORE = res/prefs.ad res/fonts.ad res/accels.ad res/misc.ad
+APPDEFS_XFT = res/prefs.ad res/fonts-xft.ad res/accels.ad res/misc.ad
+xfile.ad: $(APPDEFS)
+	cat $(APPDEFS) > xfile.ad
+
+# Default (fallback) resources
+defaults.c: xfile.ad
+	awk -f adtoc.awk xfile.ad > $@
+
+# Manpage
+MANUAL = man/intro.man man/gui.man man/db.man man/res.man man/footer.man
+xfile.1: $(MANUAL)
+	cat $(MANUAL) > xfile.1
+
+# Cleanup
+clean:
+	-rm defaults.c icons.h
+	-rm xfile.ad
+	-rm xfile.1
+	-rm .depend
+	-rm $(XFILE_OBJS) xfile
+	-rm Makefile
+
+# Dependencies
+.depend: $(XFILE_OBJS:.o=.c) icons.h
+	$(CC) -MM $(INCDIRS) $(XFILE_OBJS:.o=.c) > .depend
+
+# Install
+common_install: xfile xfile.ad xfile.1
+	install -o 0 -g 0 -m775 -d $(PREFIX)
+	install -o 0 -g 0 -m775 xfile $(PREFIX)/bin/xfile
+	-ln -s $(PREFIX)/bin/xfile $(PREFIX)/bin/xfile-open
+	install -o 0 -g 0 -m 775 -d $(MANDIR)/man1
+	install -o 0 -g 0 -m 664 xfile.1 $(MANDIR)/man1/xfile.1
+	install -o 0 -g 0 -m 775 -d $(APPLRESDIR)
+	install -o 0 -g 0 -m 664 xfile.ad $(APPLRESDIR)/XFile
+	install -o 0 -g 0 -m 775 -d $(SHAREDIR)/types
+	install -o 0 -g 0 -m 664 default.db $(SHAREDIR)/types/system.db
+	install -o 0 -g 0 -m 775 -d $(SHAREDIR)/icons
+	for n in icons/*.xpm; do install -o 0 -g 0 -m 664 $$n $(SHAREDIR)/$$n; done
+	install -o 0 -g 0 -m 664 icons/README $(SHAREDIR)/README.icons
+
+# Removal
+uninstall:
+	rm -f $(PREFIX)/bin/xfile
+	rm -f $(PREFIX)/bin/xfile-open
+	rm -f $(MANDIR)/man1/xfile.1
+	rm -f $(APPLRESDIR)/XFile
+	rm -f $(SHAREDIR)/types/system.db
+	rm -f $(SHAREDIR)/icons/*.xpm
+	rm -f $(SHAREDIR)/README.icons
+	rmdir $(SHAREDIR)/types
+	rmdir $(SHAREDIR)/icons
+	rmdir $(SHAREDIR)
+
+-include .depend

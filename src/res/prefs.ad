@@ -1,0 +1,55 @@
+!-----------------------------------------------------------------------------
+! XFile App-Defaults 
+!-----------------------------------------------------------------------------
+XFile.geometry: 480x320
+XFile.title: XFile
+XFile.appNameInTitle: False
+XFile.fullPathInTitle: False
+XFile.confirmRemoval: always
+XFile.showAll: False
+XFile.terminal: xterm
+XFile.userMounts: True
+XFile.mountCommand: mount
+XFile.unmountCommand: umount
+
+! EXAMPLE: mount daemon managed media directory
+! XFile.mediaDirectory: /media/$LOGNAME
+! XFile.mediaUnmountCommand: udevil umount
+! XFile.mediaMountCommand: udevil mount
+
+! EXAMPLE: tools menu entry (browse CWD with XImaging)
+! XFile.tools.ximaging: ximaging %p
+! XFile.tools.ximaging.title: &XImaging
+! The widget inherits tool's name, hence its resources may be set as follows
+! XFile*toolsMenu.ximaging.acceleratorText: F11
+! XFile*toolsMenu.ximaging.accelerator: <Key>F11
+
+! EXAMPLE: tools menu entry (file search with prompt for pattern)
+! XFile.tools.find: xterm -hold -e find %p -name %u
+! XFile.tools.find.title: &Find...
+! The widget inherits tool's name, hence its resources may be set as follows
+! XFile*toolsMenu.find.acceleratorText: F3
+! XFile*toolsMenu.find.accelerator: <Key>F3
+
+
+!-----------------------------------------------------------------------------
+! Environment variables used by the file type database
+!-----------------------------------------------------------------------------
+XFile.variable.terminal: xterm -e
+XFile.variable.textEditor: xedit
+XFile.variable.imageViewer: ximaging
+XFile.variable.imageEditor: xpaint
+XFile.variable.audioPlayer: mplayer
+XFile.variable.videoPlayer: mplayer
+XFile.variable.pdfViewer: xpdf
+XFile.variable.webBrowser: links -g
+
+!-----------------------------------------------------------------------------
+! File list widget defaults
+!-----------------------------------------------------------------------------
+*FileList.background: LightSteelBlue
+*FileList.highlightBackground: SteelBlue
+*FileList.highlightForeground: White
+*FileList.viewMode: compact
+*FileList.sortOrder: name
+*FileList.sortDirection: ascend

@@ -1,0 +1,40 @@
+!-----------------------------------------------------------------------------
+! Accelerators
+!-----------------------------------------------------------------------------
+*fileMenu.makeDirectory.acceleratorText: F7
+*fileMenu.makeDirectory.accelerator: <Key>F7
+*fileMenu.makeFile.acceleratorText: F6
+*fileMenu.makeFile.accelerator: <Key>F6
+*fileMenu.copyTo.acceleratorText: F4
+*fileMenu.copyTo.accelerator: <Key>F4
+*fileMenu.moveTo.acceleratorText: F3
+*fileMenu.moveTo.accelerator: <Key>F3
+*fileMenu.rename.acceleratorText: F2
+*fileMenu.rename.accelerator: <Key>F2
+*fileMenu.delete.acceleratorText: Ctrl+Del
+*fileMenu.delete.accelerator: Ctrl<Key>Del
+*fileMenu.attributes.acceleratorText: F1
+*fileMenu.attributes.accelerator: <Key>F1
+*fileMenu.exit.acceleratorText: Alt+F4
+*fileMenu.exit.accelerator: Alt<Key>F4
+
+*editMenu.selectAll.acceleratorText: Ctrl+A
+*editMenu.selectAll.accelerator: Ctrl<Key>a
+*editMenu.deselect.acceleratorText: Ctrl+Shift+A
+*editMenu.deselect.accelerator: Ctrl Shift<Key>a
+*editMenu.selectPattern.acceleratorText: Ctrl+P
+*editMenu.selectPattern.accelerator: Ctrl<Key>p
+
+*viewMenu.reread.acceleratorText: F5
+*viewMenu.reread.accelerator: <Key>F5
+*viewMenu.detailed.acceleratorText: Ctrl+L
+*viewMenu.detailed.accelerator: Ctrl<Key>l
+*viewMenu.showAll.acceleratorText: Ctrl+.
+*viewMenu.showAll.accelerator: Ctrl<Key>period
+*viewMenu.filter.acceleratorText: Ctrl+F
+*viewMenu.filter.accelerator: Ctrl<Key>F
+
+*toolsMenu.newWindow.acceleratorText: F9
+*toolsMenu.newWindow.accelerator: <Key>F9
+*toolsMenu.terminal.acceleratorText: F10
+*toolsMenu.terminal.accelerator: <Key>F10

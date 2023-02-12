@@ -1,0 +1,38 @@
+/* XPM */
+static char * cinc_s_xpm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"24 24 8 1 0 0",
+/* colors */
+" 	s iconGray8	m black	c #212121212121",
+".	s none	m none	c none",
+"X	s iconColor2	m white	c white",
+"o	s iconGray6	m black	c #636363636363",
+"O	s iconColor1	m black	c black",
+"+	s iconColor11	m black	c darkkhaki",
+"@	s iconGray2	m white	c #bdbdbdbdbdbd",
+"#	c #AEAEAEAEAEAE",
+/* pixels */
+"               .........",
+" XXXXXXXXXXXX X ........",
+" XXXXXXXXXXXX XX .......",
+" XXXXXXXXXXXX XXX ......",
+" XXXXXXXXXXXX     ......",
+" XXXXXXXXXXXXXooooO.....",
+" XXXX+++XXOO@OXoooO.....",
+" XXX+++++XXXXXXXXoO.....",
+" XXX++XXXXO#OOXXXoO.....",
+" XXX++XXXXXXXXXXXoO.....",
+" XXX++XXXX#OOOXXXoO.....",
+" XXX+++++XXXXXXXXoO.....",
+" XXXX+++XXOOOOXXXoO.....",
+" XXXXXXXXXXXXXXXXoO.....",
+" XXXO#OOOOO#OOXXXoO.....",
+" XXXXXXXXXXXXXXXXoO.....",
+" XXX#OOO##OOOOXXXoO.....",
+" XXXXXXXXXXXXXXXXoO.....",
+" XXXOO#OOOO#OOXXXoO.....",
+" XXXXXXXXXXXXXXXXoO.....",
+" XXXXXXXXXXXXXXXXoO.....",
+" XXXXXXXXXXXXXXXXoO.....",
+"  ooooooooooooooooO.....",
+"..OOOOOOOOOOOOOOOOO....."};

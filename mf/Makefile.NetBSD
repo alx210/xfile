@@ -1,0 +1,22 @@
+# XFile NetBSD Makefile
+
+PREFIX = /usr
+MANDIR = $(PREFIX)/share/man
+SHAREDIR = $(PREFIX)/share/xfile
+APPLRESDIR = /usr/pkg/lib/X11/app-defaults
+
+INCDIRS = -I/usr/X11R7/include -I/usr/pkg/include 
+LIBDIRS = -L/usr/X11R7/lib -L/usr/pkg/lib
+LDFLAGS = -Wl,-R/usr/X11R7/lib,-R/usr/pkg/lib
+
+CFLAGS += -Wall $(INCDIRS)
+
+.include "common.mf"
+
+# Set to APPDEFS_CORE for core fonts
+APPDEFS = $(APPDEFS_XFT)
+
+.c.o:
+	$(CC) $(CFLAGS) $(INCDIRS) -c -o $(<:.c=.o) $>
+
+install: common_install

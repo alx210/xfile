@@ -1,0 +1,30 @@
+/* XPM */
+static char * pdf_t_xpm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"16 16 8 1 0 0",
+/* colors */
+" 	s iconGray8	m black	c #212121212121",
+".	s none	m none	c none",
+"X	s iconColor2	m white	c white",
+"o	s iconColor1	m black	c black",
+"O	s iconGray1	m white	c #dededededede",
+"+	s iconColor3	m black	c darkred",
+"@	c #E8E8E8E8E8E8",
+"#	s iconGray6	m black	c #636363636363",
+/* pixels */
+"          ......",
+" XXXXXXXoO .....",
+" XXXXXXXoXO ....",
+" XXXX+@Xoooo....",
+" XXXX++XX###o...",
+" XXXX+@XXX##o...",
+" XXXX+XXXXX#o...",
+" XXXX+XXXXX#o...",
+" XXX@+@XXXX#o...",
+" XXX+O+@XXX#o...",
+" XX@+++++@X#o...",
+" XX+@XXX@++#o...",
+" X++XXXXXXX#o...",
+" XXXXXXXXXX#o...",
+" ###########o...",
+"..ooooooooooo..."};

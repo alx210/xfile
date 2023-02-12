@@ -1,0 +1,3 @@
+#!/bin/sh
+
+cat intro.man gui.man db.man res.man footer.man | mandoc | less

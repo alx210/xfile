@@ -1,0 +1,11 @@
+!-----------------------------------------------------------------------------
+! Misc. GUI preferences
+!-----------------------------------------------------------------------------
+
+! Make Cancel the default button in confirmation dialogs
+*confirmationDialog.defaultButtonType: DIALOG_CANCEL_BUTTON
+
+! Some CDE 2.0 defaults
+*XmFileSelectionBox.fileFilterStyle: XmFILTER_HIDDEN_FILES
+*XmFileSelectionBox.pathMode: XmPATH_MODE_RELATIVE
+*XmFileSelectionBox.resizePolicy: XmRESIZE_GROW

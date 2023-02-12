@@ -1,0 +1,32 @@
+/* XPM */
+static char * draw_t_pm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"16 16 10 1 0 0",
+/* colors */
+" 	       s none m none c none",
+".	s iconGray5	m black	c #737373737373",
+"X	s iconGray6	m black	c #636363636363",
+"o	s iconColor6	m white	c yellow",
+"O	s iconGray3	m white	c #adadadadadad",
+"+	s iconGray7	m black	c #424242424242",
+"@	s iconColor2	m white	c white",
+"#	s iconGray1	m white	c #dededededede",
+"$	s iconColor1	m black	c black",
+"%	s iconGray4	m white	c #949494949494",
+/* pixels */
+"                ",
+"            ..X ",
+" ........  .oO+X",
+".@@@@@@@@ .oO.+X",
+".@######$.oO.+X ",
+".@#%#%##.oO.+X  ",
+".@#####.oO.+X   ",
+".@#%##.oO.+X    ",
+".@###.@O.++#    ",
+".@###O%.+#$#    ",
+".@##.$$+$#$#    ",
+".@######$#$#    ",
+".#$$$$$$$#$#    ",
+" %#@######$#    ",
+"  %#$$$$$$$#    ",
+"    #######     "};

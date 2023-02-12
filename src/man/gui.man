@@ -1,0 +1,42 @@
+.SH USER INTERFACE
+.SS Directory View
+By default, icon size is deduced from label font height\. This can be controlled
+wit the iconSize resource. Custom icons may be installed in \.xfile/icons user's
+home sub-directory (see also the FILES section)\. If an icon specified in the
+type database cannot be found, a built-in, generic icon will be used instead\.
+.SS Mount Points
+For directories, which are mount points un/mount action will be displayed in the
+context menu\. Depending on system configuration, alternate un/mount command may
+be specified (see mountCommand, unmountCommand), or disabled (see userMounts)\.
+.PP
+Additionally, XFile may be configured to utilize a user mount daemon that
+manages a "media" directory (see mediaDirectory, mediaOwner, mediaMountCommand,
+mediaUnmountCommand X resources)\.
+.SS File/Context Menu
+Actions defined in the file type database appear first in File/Context menus,
+in the order they were defined. First action in the list is the default -
+that is, it's being run whenever an item in the list is activated.
+.SS Tools Menu
+User defined commands may be added to the \fBTools\fP drop-down menu using
+following X resources:
+.PP
+XFile\.tools\.<tool name>: <command>
+.br
+XFile\.tools\.<tool name>\.title: <menu item title>
+.br
+.PP
+The command string may contain following context dependent variables:
+.PP
+.nf
+.ta .5i
+%n	Selected file name(s).
+%p	Current directory (CWD).
+%u	User specified parameters (an input dialog will be shown).
+.fi
+.PP
+Environment variables may also be specified using \fBsh\fP syntax.
+.PP
+If \fBtitle\fP resource is omitted, tool name will be used.
+A mnemonic character may be specified by prefixing it with ampersand.
+To set standard Motif resources, such as accelerators, menu item widgets in
+the Tools menu may be referred to by XFile\.mainMenu\.toolsMenu\.\fI<tool name>\fP\.

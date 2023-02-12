@@ -1,0 +1,54 @@
+PREREQUISITES
+-------------
+
+Development libraries and headers:
+
+libX11 (including libXinerama, libXt, libXpm)
+libXm (Motif 2.3 or newer)
+
+Tools:
+
+C99 compliant C compiler, SysVR4 compatible make, awk and sed
+
+BUILDING AND INSTALLING
+-----------------------
+
+If necessary, tweak the target platform specific makefile, Makefile.$(uname),
+in the mf sub-directory, e.g. to change installation prefix and whether to 
+enable Xft fonts. If no target specific Makefile exists, try "generic".
+
+Run make in the top-level directory.
+When build process finishes, run "make install" as root.
+
+INSTALLATION NOTES
+------------------
+
+File Types
+----------
+XFile includes file type definitions for common file types. The default database
+file is installed in PREFIX/share/xfile/types. XFile will also look for type
+definitions (files with .db suffix) in $HOME/.xfile/types. The database format
+is plain text, typical Unix "RC" syntax. See xfile(1) manual and the included
+database file for syntax description and examples.
+The addon directory in the distribution tarball contains some additional type
+definitions and icons.
+
+Fonts
+-----
+XFile uses different fonts to highlight properties of certain files and
+menu elements, appropriate renditions are predefined in the included
+app-defaults file. In case of inappropriate font type or size, following
+renditions need to be overridden in .Xresources:
+
+variable:   Default variable width font (used to render most GUI elements)
+fixed:      Fixed width font
+directory:  Directory labels (variable is used by default)
+regular:    Regular file labels (variable is used by default)
+symlink:    Symbolic links (italic is used by default)
+special:    Special files (pipes, devices, etc.) (bold is used by default)
+
+All of the renditions above are defined with Helvetica or Liberation fonts,
+depending on whether Xft specific app-defaults is installed.
+
+See also: XmRenderTable(3)
+

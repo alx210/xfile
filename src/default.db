@@ -1,0 +1,252 @@
+# XFile default type database
+
+#-------------------------------------------------------------------------------
+# General
+#-------------------------------------------------------------------------------
+Text {
+	icon text
+	match_name {
+		*.txt
+		*.TXT
+		*.diff
+		*.patch
+		*.conf
+		*.cfg
+	}
+	action &Open: %textEditor %n
+}
+
+Shell Script {
+	icon sh
+	match_content {
+		0 #!/bin/sh
+		0 #!/bin/csh
+		0 #!/bin/ksh
+		0 #!/bin/bash
+	}
+	match_name {
+		*.sh
+		*.csh
+		*.ksh
+	}
+	action &Edit: %textEditor %n
+}
+
+Script {
+	icon script
+	match_content {
+		0 #!/bin/awk
+		0 #!/bin/perl
+	}
+	match_name {
+		*.awk
+		*.m4
+		*.pl
+	}
+	action &Edit: %textEditor %n
+}
+
+Manual {
+	icon info
+	match_name *.[1-9]
+	action &Edit: %textEditor %n
+}
+
+#-------------------------------------------------------------------------------
+# Archive
+#-------------------------------------------------------------------------------
+Compressed File {
+	icon comp
+	match_name {
+		*.[zZ]
+		*.xz
+		*.gz
+		*.bz2
+		*.zip
+		*.rar
+		*.ZIP
+		*.RAR
+	}
+}
+
+Tarball {
+	icon tar
+	match_name {
+		*.tar
+		*.tar.[zZ]
+		*.tar.xz
+		*.tar.gz
+		*.tar.bz2
+	}
+}
+
+#-------------------------------------------------------------------------------
+# Documents
+#-------------------------------------------------------------------------------
+PDF {
+	icon pdf
+	match_name {
+		*.pdf
+		*.PDF
+	}
+	match_content {
+		0 %PDF-
+	}
+	action &Open: %pdfViewer %n
+}
+
+PostScript {
+	icon typeset
+	match_name {
+		*.ps
+		*.PS
+	}
+	match_content {
+		0 %PS
+	}
+}
+
+HTML {
+	icon http
+	match_name {
+		*.htm
+		*.html
+		*.xml
+		*.css
+		*.js
+		*.HTM
+		*.HTML
+		*.XML
+		*.CSS
+		*.JS
+	}
+	action &View: %webBrowser %n
+	action &Edit: %textEditor %n
+}
+
+#-------------------------------------------------------------------------------
+# Graphics
+#-------------------------------------------------------------------------------
+Image {
+	icon pixmap
+	match_name {
+		*.png
+		*.jpg
+		*.jpeg
+		*.tif
+		*.tiff
+		*.tga
+		*.pcx
+		*.sgi
+		*.ras
+		*.bw
+		*.rgb
+		*.xpm
+		*.xbm
+		*.pm
+		*.bm
+		*.bmp
+		*.JPG
+		*.PNG
+		*.JPEG
+		*.TIF
+		*.TIFF
+		*.TGA
+		*.PCX
+		*.BMP
+	}
+	action &View: %imageViewer %n
+	action &Edit: %imageEditor %n
+}
+
+#-------------------------------------------------------------------------------
+# Source code
+#-------------------------------------------------------------------------------
+Makefile {
+	icon makefile
+	match_name {
+		Makefile
+		makefile
+		Makefile.*
+		makefile.*
+		*.mf
+	}
+	action &Open: %textEditor %n
+}
+
+C Source {
+	icon csrc
+	match_name *.c
+	action &Open: %textEditor %n
+}
+
+C Header {
+	icon cinc
+	match_name *.h
+	action &Open: %textEditor %n
+}
+
+C++ Source {
+	icon cxxsrc
+	match_name {
+		*.cxx
+		*.C
+	}
+	action &Open: %textEditor %n
+}
+
+C++ Header {
+	icon cxxinc
+	match_name {
+		*.hxx
+		*.H
+	}
+	action &Open: %textEditor %n
+}
+
+Assembler Source {
+	icon text
+	match_name {
+		*.m
+		*.asm
+		*.ASM
+		*.inc
+		*.INC
+	}
+	action &Open: %textEditor %n
+}
+
+#-------------------------------------------------------------------------------
+# Multimedia
+#-------------------------------------------------------------------------------
+Audio {
+	icon audio
+	match_name {
+		*.wav
+		*.flac
+		*.flc
+		*.FLC
+		*.mp3
+		*.ogg
+		*.aif
+		*.WAV
+		*.FLAC		
+		*.MP3
+		*.OGG
+		*.AIF
+	}
+	action &Open: %audioPlayer %n
+}
+
+Video {
+	icon video
+	match_name {
+		*.mpg
+		*.avi
+		*.MPG
+		*.AVI
+	}
+	action &Open: %videoPlayer %n
+}
+
+# EOF

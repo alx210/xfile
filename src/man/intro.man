@@ -1,0 +1,22 @@
+.TH XFILE 1
+.SH NAME
+xfile \- graphical file manager\.
+.SH SYNOPSIS
+xfile [OPTIONS] [DIRECTORY]
+.SH DESCRIPTION
+.PP
+XFile is a file manager for Unix systems running X11\.
+.SS Options
+.TP
+\fB+/-a\fP
+Ignore/show entries starting with a dot character. 
+.TP
+\fB-f\fP <glob pattern>
+Hide files matching glob pattern specified\. Prefix the pattern with the
+negation ! character to hide matching files\.
+.TP
+\fb-l\fP
+Invert sort direction (see sortDirection resource)\.
+.TP
+\fB-s\fP(s|t|f|x)
+Specify sort order: \fBs\fPize, \fBt\fPime, \fBf\fPile type, suffi\fBx\fP\.

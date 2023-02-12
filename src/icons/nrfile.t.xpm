@@ -1,0 +1,29 @@
+/* XPM */
+static char * nrfile_t_xpm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"16 16 7 1 0 0",
+/* colors */
+" 	s iconGray8	m black	c #212121212121",
+".	s none	m none	c none",
+"X	s iconColor2	m white	c white",
+"o	s iconColor1	m black	c black",
+"O	s iconGray1	m white	c #dededededede",
+"+	s iconGray6	m black	c #636363636363",
+"@	s iconColor3	m black	c darkred",
+/* pixels */
+"          ......",
+" XXXXXXXoO .....",
+" XXXXXXXoXO ....",
+" XXXXXXXoooo....",
+" XXXXXXXX+++o...",
+" XXXXXXXXX++o...",
+" XXXX@@@XXX+o...",
+" XXX@XXX@XX+o...",
+" XX@X@XXX@X+o...",
+" XX@XX@XX@X+o...",
+" XX@XXX@X@X+o...",
+" XXX@XXX@XX+o...",
+" XXXX@@@XXX+o...",
+" XXXXXXXXXX+o...",
+" +++++++++++o...",
+"..ooooooooooo..."};

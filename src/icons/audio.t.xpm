@@ -1,0 +1,31 @@
+/* XPM */
+static char * audio_t_xpm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"16 16 9 1 0 0",
+/* colors */
+" 	s iconGray8	m black	c #212121212121",
+".	s none	m none	c none",
+"X	s iconColor2	m white	c white",
+"o	c #4B4B4B4B4B4B",
+"O	s iconColor1	m black	c black",
+"+	s iconGray6	m black	c #636363636363",
+"@	s iconGray4	m white	c #949494949494",
+"#	s iconGray3	m white	c #adadadadadad",
+"$	s iconGray2	m white	c #bdbdbdbdbdbd",
+/* pixels */
+"          ......",
+" XXXXXXXoX .....",
+" XXXXXXXOXX ....",
+" XXXXXXO+@o+O...",
+" XXXXXO#+XX+O...",
+" XXXOO#$+XX+O...",
+" XXO$+$X@XX+O...",
+" XXOX@X$$XX+O...",
+" XXO$@$X$XX+O...",
+" XXO$+$$@XX+O...",
+" XX@OO#$+XX+O...",
+" XXX@@O#+XX+O...",
+" XXXXX@O+XX+O...",
+" XXXXXX@OXX+O...",
+"  ++++++++++O...",
+"..OOOOOOOOOOO..."};

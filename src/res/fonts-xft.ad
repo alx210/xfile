@@ -1,0 +1,26 @@
+!-----------------------------------------------------------------------------
+! Renditions for file name labels
+!-----------------------------------------------------------------------------
+*FileList.renderTable: regular directory symlink special
+
+! Directories
+*FileList.renderTable.directory.fontType: FONT_IS_XFT
+*FileList.renderTable.directory.fontName: Liberation Sans
+*FileList.renderTable.directory.fontSize: 10
+
+! Regular files
+*FileList.renderTable.regular.fontType: FONT_IS_XFT
+*FileList.renderTable.regular.fontName: Liberation Sans
+*FileList.renderTable.regular.fontSize: 10
+
+! Symbolic links
+*FileList.renderTable.symlink.fontType: FONT_IS_XFT
+*FileList.renderTable.symlink.fontName: Liberation Sans
+*FileList.renderTable.symlink.fontStyle: Italic
+*FileList.renderTable.symlink.fontSize: 10
+
+! Special files
+*FileList.renderTable.special.fontType: FONT_IS_XFT
+*FileList.renderTable.special.fontName: Liberation Sans
+*FileList.renderTable.special.fontStyle: Bold
+*FileList.renderTable.special.fontSize: 10

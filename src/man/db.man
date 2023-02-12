@@ -1,0 +1,66 @@
+.SH FILE TYPE DATABASE
+.PP
+A file type database is a plain text file comprised of one or more records\.
+See \fBFILES\fP section in this manual for database file locations\.
+.PP
+A record starts with a type name string, consisting of alpha-numeric characters
+that may contain spaces, followed by an opening bracket { on the
+same or following line, and ends with a closing bracket } on a separate line.
+.PP
+Within record's scope, properties and matching patterns are specified as
+name/value pairs.
+.PP
+Comments may be specified following the # character\.
+.SS Record Fields
+.TP
+\fBicon\fP \fI<string>\fP
+Specifies icon name to be displayed for this file type\.
+.TP
+\fBmime\fP \fI<string>\fP
+Specifies MIME type\. This is not used internally, but is accessible trough a
+context dependent variable %m\.
+.TP
+\fBmatch_name\fP \fI<glob pattern>\fP
+One or more glob patterns\(dg to match the file name against\.
+.TP
+\fBmatch_content\fP \fI#<offset>\fP \fI<data>\fP
+One or more data patterns\(dg to match file contents against\.
+.TP
+\fBaction\fP \fI<name>\fP: \fI<command>\fP
+Action to be displayed in the file context menu\. Any character in the name
+may be prefixed with & to specify a mnemonic\. Literal & may be specified using
+the \\ escape character\.
+.PP
+\fB\(dg\fP Multiple values may be specified for file name and content
+patterns, \- one per line \- within a scope delimited by an opening bracket {
+on the same or following line, and a closing bracket } on a separate line\.
+.SS Variable Expansion
+.PP
+Unix shell like variable expansion is supported in action command strings\.
+.PP
+XFile local and context dependent variables start with the % character, while
+environment variables start with $\. The sh syntax ${\.\.\.} and respectively
+%{\.\.\.} is also supported.
+.PP
+Local variables are defined using X resources in form:
+.br
+XFile\.variables.\fI<name>\fP: \fI<value>\fP
+.br
+.PP
+Substitute \fIname\fP with the variable name of choice, and \fIvalue\fP
+with the value desired\.
+.SS Context Dependent Variables
+.PP
+.nf
+.ta .5i
+\fB%n\fP	File name of the selected item.
+\fB%p\fP	Path name of the selected item (working directory).
+\fB%m\fP	MIME string (if specified in the database).
+.fi
+.SS Predefined Variables
+.PP
+The default database makes use of several predefined variables:
+terminal, textEditor, imageViewer, imageEditor, audioPlayer, videoPlayer\.
+.PP
+These may be set in user's .Xresources (see \fBVariable Expansion\fP above)
+to accommodate the environment, without modifying the database\.

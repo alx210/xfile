@@ -1,0 +1,40 @@
+# XFile SunOS Makefile
+
+PREFIX = /usr
+MANDIR = /usr/share/man
+SHAREDIR = $(PREFIX)/share/xfile
+APPLRESDIR = /usr/lib/X11/app-defaults
+
+CC = gcc
+CFLAGS = -O2 -Wall
+
+include common.mf
+
+# Set to APPDEFS_XFT for Xft enabled Motif
+APPDEFS = $(APPDEFS_CORE)
+
+.c.o:
+	$(CC) $(CFLAGS) $(INCDIRS) -c -o $(^:.c=.o) $^
+
+XFile: xfile.ad
+	cp xfile.ad XFile
+
+system.db: default.db
+	cp default.db system.db
+
+README.icons: icons/README
+	cp icons/README README.icons
+
+install: xfile xfile.1 XFile system.db README.icons
+	install -d $(PREFIX)
+	install -u 0 -g 0 -m 775 -f $(PREFIX)/bin xfile
+	-ln -s $(PREFIX)/bin/xfile $(PREFIX)/bin/xfile-open
+	install -d $(MANDIR)/man1
+	install -u 0 -g 0 -m 664 -f $(MANDIR)/man1 xfile.1
+	install -d $(APPLRESDIR)
+	install -u 0 -g 0 -m 664 -f $(APPLRESDIR) XFile
+	install -d $(SHAREDIR)/types
+	install -u 0 -g 0 -m 664 -f $(SHAREDIR)/types system.db
+	install -d $(SHAREDIR)/icons
+	for n in icons/*.xpm; do install -u 0 -g 0 -m 664 -f $(SHAREDIR)/icons $$n; done
+	install -u 0 -g 0 -m 664 -f $(SHAREDIR) README.icons

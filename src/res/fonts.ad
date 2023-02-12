@@ -1,0 +1,20 @@
+!-----------------------------------------------------------------------------
+! Renditions for file name labels
+!-----------------------------------------------------------------------------
+*FileList.renderTable: regular directory symlink special
+
+! Directories
+*FileList.renderTable.directory.fontType: FONT_IS_FONT
+*FileList.renderTable.directory.fontName: -*-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*
+
+! Regular files
+*FileList.renderTable.regular.fontType: FONT_IS_FONT
+*FileList.renderTable.regular.fontName: -*-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*
+
+! Symbolic links
+*FileList.renderTable.symlink.fontType: FONT_IS_FONT
+*FileList.renderTable.symlink.fontName: -*-helvetica-medium-o-*-*-12-*-*-*-*-*-*-*
+
+! Special files
+*FileList.renderTable.special.fontType: FONT_IS_FONT
+*FileList.renderTable.special.fontName: -*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*

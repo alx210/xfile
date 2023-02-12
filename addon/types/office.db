@@ -1,0 +1,40 @@
+Office Writer {
+	icon ofwp
+	match_name {
+		*.odt
+		*.ott
+		*.odm
+		*.doc
+		*.docx
+		*.DOC
+	}
+	action &Open: swriter %n
+}
+
+Office Spreadsheet {
+	icon ofcalc
+	match_name {
+		*.ods
+		*.xls
+		*.xlsx
+		*.XLS
+	}
+	action &Open: scalc %n
+}
+
+Office Drawing {
+	icon ofdraw
+	match_name *.odg
+	action &Open: sdraw %n
+}
+
+Office Prensentation {
+	icon ofdraw
+	match_name {
+		*.odp
+		*.ppt
+		*.pptx
+		*.PPT
+	}
+	action &Open: simpress %n
+}

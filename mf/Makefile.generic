@@ -1,0 +1,20 @@
+# XFile Generic Makefile
+
+PREFIX = /usr
+MANDIR = $(PREFIX)/share/man
+SHAREDIR = $(PREFIX)/share/xfile
+APPLRESDIR = /etc/X11/app-defaults
+
+INCDIRS = -I/usr/local/include 
+LIBDIRS = -L/usr/local/lib
+
+CFLAGS = -O2 -Wall
+
+include common.mf
+
+# May be set to APPDEFS_CORE for core fonts
+APPDEFS = $(APPDEFS_XFT)
+
+install: common_install
+
+-include .depend
