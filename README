@@ -30,6 +30,13 @@ file is installed in PREFIX/share/xfile/types. XFile will also look for type
 definitions (files with .db suffix) in $HOME/.xfile/types. The database format
 is plain text, typical Unix "RC" syntax. See xfile(1) manual and the included
 database file for syntax description and examples.
+
+The default database makes use of several predefined variables: terminal,
+textEditor, imageViewer, imageEditor, audioPlayer, videoPlayer.
+These  may  be set in user's .Xresources (see xfile(1) FILE TYPE DATABASE
+section on variable expansion) to accommodate the environment, without
+modifying the database.
+
 The addon directory in the distribution tarball contains some additional type
 definitions and icons.
 

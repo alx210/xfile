@@ -3,6 +3,8 @@
 xfile \- graphical file manager\.
 .SH SYNOPSIS
 xfile [OPTIONS] [DIRECTORY]
+.PP
+xfile-open FILENAME\.\.\.
 .SH DESCRIPTION
 .PP
 XFile is a file manager for Unix systems running X11\.
@@ -20,3 +22,10 @@ Invert sort direction (see sortDirection resource)\.
 .TP
 \fB-s\fP(s|t|f|x)
 Specify sort order: \fBs\fPize, \fBt\fPime, \fBf\fPile type, suffi\fBx\fP\.
+.SS Arguments
+XFile will display current working directory if invoked without arguments\.
+.PP
+If invoked as xfile-open (through a symbolic link), XFile will match each file
+name specified against the file type database, run the default action if
+defined, and finally quit\. 
+ 
