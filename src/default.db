@@ -80,6 +80,14 @@ Tarball {
 	}
 }
 
+CD Image {
+	icon isocd
+	match_name {
+		*.iso
+		*.ISO
+	}
+}
+
 #-------------------------------------------------------------------------------
 # Documents
 #-------------------------------------------------------------------------------
@@ -89,9 +97,7 @@ PDF {
 		*.pdf
 		*.PDF
 	}
-	match_content {
-		0 %PDF-
-	}
+	match_content 0 %PDF-
 	action &Open: %pdfViewer %n
 }
 
@@ -101,9 +107,7 @@ PostScript {
 		*.ps
 		*.PS
 	}
-	match_content {
-		0 %PS
-	}
+	match_content 0 %PS
 }
 
 HTML {

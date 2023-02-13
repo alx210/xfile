@@ -15,3 +15,29 @@ Blender Scene {
 	match_name *.blend
 	action &Open: blender %n
 }
+
+Vector Graphics {
+	icon ofdraw
+	match_name {
+		*.svg
+		*.svgz
+		*.eps
+		*.EPS
+		*.ai
+		*.AI
+		*.cdr
+		*.CDR
+	}
+	action &Open: inkscape %n
+}
+
+XFig Drawing {
+	icon ofdraw
+	match_name {
+		*.fig
+		*.fig.gz
+		*.fig.[zZ]
+	}
+	action &Open: xfig %n
+}
+

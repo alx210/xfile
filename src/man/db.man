@@ -60,7 +60,8 @@ with the value desired\.
 .SS Predefined Variables
 .PP
 The default database makes use of several predefined variables:
-terminal, textEditor, imageViewer, imageEditor, audioPlayer, videoPlayer\.
+terminal, textEditor, webBrowser, imageViewer, imageEditor, audioPlayer,
+videoPlayer\.
 .PP
 These may be set in user's .Xresources (see \fBVariable Expansion\fP above)
 to accommodate the environment, without modifying the database\.

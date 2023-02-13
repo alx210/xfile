@@ -1,3 +1,4 @@
 This directory contains additional resources, such as icons and configuration
-files not included in default XFile installation.
+files not included in default XFile installation. These may be added to user's
+XFile configuration ($HOME/.xfile/types and $HOME/.xfile/icons).
 
