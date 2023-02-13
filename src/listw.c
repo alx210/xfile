@@ -2043,7 +2043,7 @@ static void lookup_input(Widget w, XEvent *evt,
 	
 		for(i = 0; i < fl->num_items; i++) {
 			wchar_t wcs_title[LOOKUP_STR_MAX + 1];
-			if(mbstowcs(wcs_title, fl->items[i].title, LOOKUP_STR_MAX) == -1) {
+			if(mbstowcs(wcs_title, fl->items[i].name, LOOKUP_STR_MAX) == -1) {
 				if(!fl->silent) XBell(XtDisplay(w), 100);
 				return;
 			}
