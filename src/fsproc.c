@@ -1262,6 +1262,8 @@ static int wp_copy_file(struct wp_data *wpd,
 		switch(reply) {
 			case FB_RETRY_CONTINUE:
 			if( (res = unlink(dest)) ) return res;
+			break;
+			
 			case FB_SKIP_IGNORE:
 			return 0;
 
