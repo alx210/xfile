@@ -141,7 +141,6 @@ static void feedback_cb(Widget, XtPointer, XtPointer);
 static void window_close_cb(Widget, XtPointer, XtPointer);
 static void progress_cb(XtPointer, int*, XtInputId*);
 static void xt_prog_sigchld_handler(XtPointer, XtSignalId*);
-static Boolean confirm_cancel(struct fsproc_data *d);
 static void quit_with_error(struct fsproc_data *d, const char*);
 
 /* background/work process routines */
@@ -452,17 +451,29 @@ static void map_timeout_cb(XtPointer p, XtIntervalId *iid)
 	XtMapWidget(d->wshell);
 }
 
-/* Cancel button callback */
+/* 
+ * Cancel button callback
+ * Pauses the work process and asks the user to confirm cancelling.
+ */
 static void cancel_cb(Widget w, XtPointer client, XtPointer call)
 {
 	struct fsproc_data *d = (struct fsproc_data*) client;
+
+	enum mb_result res;
 	
 	XtSetSensitive(w, False);
-	if(confirm_cancel(d)) {
-		destroy_progress_ui(d);
-	} else {
+	if(!d->wp_pid) return;
+	
+	kill(d->wp_pid, SIGSTOP);
+
+	res = message_box(d->wshell, MB_QUESTION, APP_TITLE,
+		"Really cancel? Any changes made so far won't be undone.");
+
+	kill(d->wp_pid, SIGCONT);
+	if(res == MBR_CONFIRM)
+		kill(d->wp_pid, SIGTERM);
+	else
 		XtSetSensitive(w, True);
-	}
 }
 
 /* WM_DELETE_WINDOW handler */
@@ -477,26 +488,6 @@ static void destroy_cb(Widget w, XtPointer client, XtPointer call)
 {
 	struct fsproc_data *d = (struct fsproc_data*) client;
 	destroy_fsproc(d);
-}
-
-/*
- * Pauses the work process and asks the user to confirm cancelling.
- * Returns True on affirmative answer.
- */
-static Boolean confirm_cancel(struct fsproc_data *d)
-{
-	enum mb_result res;
-	
-	if(!d->wp_pid) return True;
-	
-	kill(d->wp_pid, SIGSTOP);
-	res = message_box(d->wshell, MB_QUESTION, APP_TITLE,
-		"Really cancel? Any changes made so far won't be undone.");
-	if(res != MBR_CONFIRM) {
-		kill(d->wp_pid, SIGCONT);
-		return False;
-	}
-	return True;	
 }
 
 /*
