@@ -35,7 +35,7 @@ XFile.unmountCommand: umount
 !-----------------------------------------------------------------------------
 ! Environment variables used by the file type database
 !-----------------------------------------------------------------------------
-XFile.variable.terminal: xterm -e
+XFile.variable.terminal: xterm -hold -e
 XFile.variable.textEditor: xedit
 XFile.variable.imageViewer: ximaging
 XFile.variable.imageEditor: xpaint
