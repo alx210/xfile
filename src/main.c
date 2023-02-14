@@ -1006,7 +1006,7 @@ void update_shell_title(const char *path)
 		cd = strdup(path);
 	}
 
-	if(!app_res.show_full_path) {
+	if(!app_res.show_full_path && (strlen(cd) > 1)) {
 		p = &cd[strlen(cd)];
 		while(*p == '/' && p != cd) {
 			*p = '\0';
