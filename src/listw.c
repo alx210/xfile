@@ -106,6 +106,7 @@ static void scroll(Widget, XEvent*, String*, Cardinal*);
 static void pg_scroll(Widget, XEvent*, String*, Cardinal*);
 static void secondary_button(Widget, XEvent*, String*, Cardinal*);
 static void dir_up(Widget, XEvent*, String*, Cardinal*);
+static void delete(Widget, XEvent*, String*, Cardinal*);
 
 #define WARNING(w,s) XtAppWarning(XtWidgetToApplicationContext(w), s)
 
@@ -145,6 +146,15 @@ static XtResource resources[] = {
 		XmRCallback,
 		sizeof(XtPointer),
 		RFO(file_list.dir_up_cb),
+		XmRCallback,
+		NULL	
+	},
+	{
+		XfNdeleteCallback,
+		XfCDeleteCallback,
+		XmRCallback,
+		sizeof(XtPointer),
+		RFO(file_list.delete_cb),
 		XmRCallback,
 		NULL	
 	},
@@ -370,6 +380,7 @@ static char translations[] = {
 	"Shift<Btn4Down>: PageScroll(Up) \n"
 	"Shift<Btn5Down>: PageScroll(Down) \n"
 	"<Key>osfBackSpace: DirectoryUp() \n"
+	"<Key>osfDelete: Delete() \n"
 
 	"s ~m ~a <Key>Tab: PreviousTabGroup() \n"
 	"~m ~a <Key>Tab: NextTabGroup() \n"
@@ -390,6 +401,7 @@ static XtActionsRec actions[] = {
 	{ "Scroll", scroll },
 	{ "PageScroll", pg_scroll },
 	{ "DirectoryUp", dir_up },
+	{ "Delete", delete },
 	{ "LookUpInput", lookup_input },
 	{ "ResetLookUp", reset_lookup },
 	{ "FocusIn", focus_in },
@@ -2491,6 +2503,14 @@ static void dir_up(Widget w, XEvent *evt, String *params, Cardinal *nparams)
 
 	if(fl->dir_up_cb)
 		XtCallCallbackList(w, fl->dir_up_cb, (XtPointer)NULL);
+}
+
+static void delete(Widget w, XEvent *evt, String *params, Cardinal *nparams)
+{
+	struct file_list_part *fl = FL_PART(w);
+
+	if(fl->sel_count && fl->delete_cb)
+		XtCallCallbackList(w, fl->delete_cb, (XtPointer)NULL);
 }
 
 /*

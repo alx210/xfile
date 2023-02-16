@@ -11,8 +11,7 @@
 *fileMenu.moveTo.accelerator: <Key>F3
 *fileMenu.rename.acceleratorText: F2
 *fileMenu.rename.accelerator: <Key>F2
-*fileMenu.delete.acceleratorText: Ctrl+Del
-*fileMenu.delete.accelerator: Ctrl<Key>Del
+*fileMenu.delete.acceleratorText: Delete
 *fileMenu.attributes.acceleratorText: F1
 *fileMenu.attributes.accelerator: <Key>F1
 *fileMenu.exit.acceleratorText: Alt+F4

@@ -53,6 +53,8 @@ enum { XfCOMPACT, XfDETAILED };
 #define XfCSelectionChangeCallback "SelectionChangeCallback"
 #define XfNdirectoryUpCallback "directoryUpCallback"
 #define XfCDirectoryUpCallback "DirectoryUpCallback"
+#define XfNdeleteCallback "deleteCallback"
+#define XfCDeleteCallback "DeleteCallback"
 #define XfNdoubleClickInterval XmNdoubleClickInterval
 #define XfCDoubleClickInterval XmCDoubleClickInterval
 #define XfNsortOrder "sortOrder"

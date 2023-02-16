@@ -197,6 +197,7 @@ struct file_list_part {
 	XtCallbackList default_action_cb;
 	XtCallbackList sel_change_cb;
 	XtCallbackList dir_up_cb;
+	XtCallbackList delete_cb;
 	short dblclk_int;
 	short scrl_factor;
 	short sort_order;
