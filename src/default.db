@@ -171,8 +171,6 @@ Makefile {
 	match_name {
 		Makefile
 		makefile
-		Makefile.*
-		makefile.*
 		*.mf
 	}
 	action &Open: %textEditor %n

@@ -609,7 +609,8 @@ static int match_name_pat(const char *file_name, struct file_type_rec *rec)
 	if(!name) name = (char*)file_name;
 	
 	for(i = 0; i < rec->nname_pat; i++) {
-		if(!fnmatch(rec->name_pat[i], name, 0)) return 1;
+		if(!fnmatch(rec->name_pat[i], name, 0))
+			return strlen(rec->name_pat[i]);
 	}
 	return 0;
 }
@@ -649,11 +650,7 @@ static int match_content_pat(const char *file_name, struct file_type_rec *rec)
 		if(rb < rec->content_pat[i].data_len) continue;
 		
 		if(!memcmp(rec->content_pat[i].data, buffer,
-			rec->content_pat[i].data_len)) {
-				/* NOTE: do we really need the actual count?
-				 *       maybe we should break on first match */
-				match++;
-		}
+			rec->content_pat[i].data_len)) match++;
 	}
 	
 	free(buffer);	
