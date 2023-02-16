@@ -1,11 +1,11 @@
 GIMP Image {
-	icon pixmap
+	icon xcf
 	match_name *.xcf
 	action &Open: gimp %n
 }
 
 Krita Image {
-	icon pixmap
+	icon kra
 	match_name *.kra
 	action &Open: krita %n
 }

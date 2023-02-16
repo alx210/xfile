@@ -1,7 +1,7 @@
 /* XPM */
-static char * draw_t_xpm[] = {
+static char * xcf_t_xpm[] = {
 /* width height ncolors cpp [x_hot y_hot] */
-"16 16 10 1 0 0",
+"16 16 14 1 0 0",
 /* colors */
 " 	s Gray8	m black	c #212121212121",
 ".	s none	m none	c none",
@@ -9,10 +9,14 @@ static char * draw_t_xpm[] = {
 "o	s Color1	m black	c black",
 "O	s Gray1	m white	c #dededededede",
 "+	s Gray6	m black	c #636363636363",
-"@	s Color14	m white	c magenta",
-"#	s Color12	m white	c yellow",
-"$	s Gray4	m white	c #949494949494",
+"@	s Gray2	m white	c #bdbdbdbdbdbd",
+"#	c #696966666464",
+"$	s Gray7	m black	c #424242424242",
 "%	s Gray3	m white	c #adadadadadad",
+"&	s Gray5	m black	c #737373737373",
+"*	c #585855555555",
+"=	s Color3	m black	c darkred",
+"-	s Gray4	m white	c #949494949494",
 /* pixels */
 "          ......",
 " XXXXXXXoO .....",
@@ -20,13 +24,13 @@ static char * draw_t_xpm[] = {
 " XXXXXXXoooo....",
 " XXXXXXXX+++o...",
 " XXXXXXXXX++o...",
-" XXXXXXXoXX+o...",
-" XXXXXXo@oX+o...",
-" XXXXXo#oXX+o...",
-" XXXXo#oXXX+o...",
-" XXX+#oXXXX+o...",
-" XX$#+XXXXX+o...",
-" XX+%XXXXXX+o...",
+" XXXXXXX+OX+o...",
+" XXX+@@#$OX+o...",
+" X%XX&X*$OX+o...",
+" Xoo&$&$$XX+o...",
+" XX%$$$=+XX+o...",
+" XXX@&&+=-X+o...",
+" XXXXXXXX=X+o...",
 " XXXXXXXXXX+o...",
 " +++++++++++o...",
 "..ooooooooooo..."};
