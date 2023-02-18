@@ -53,7 +53,7 @@ static void default_highlight_bg(Widget, int, XrmValue*);
 static void free_item(struct item_rec*);
 static Boolean find_item(const struct file_list_part *fl,
 	const char *name, unsigned int *pindex);
-static void draw_item(Widget, unsigned int index, Boolean);
+static void draw_item(Widget, unsigned int index, Boolean, Boolean);
 static void draw_rubber_bands(Widget);
 static void get_selection_rect(Widget, struct rectangle*);
 static Boolean make_labels(Widget, struct item_rec*);
@@ -87,7 +87,8 @@ static void set_cursor(Widget, unsigned int);
 static unsigned int get_cursor(Widget);
 static void default_action_handler(Widget, unsigned int);
 static void sel_change_handler(Widget);
-static void grab_primary_selection(Widget);
+static void grab_primary_selection(Widget, Boolean);
+static void ungrab_primary_selection(Widget, Boolean);
 static void lose_selection_proc(Widget, Atom*);
 static Boolean convert_selection_proc(Widget,
 	Atom*, Atom*, Atom*, XtPointer*, unsigned long*, int*);
@@ -487,7 +488,8 @@ WidgetClass fileListWidgetClass = (WidgetClass) &fileListWidgetClassRec;
 /*
  * Draws an item. If erase is True, clears the area first.
  */
-static void draw_item(Widget w, unsigned int index, Boolean erase)
+static void draw_item(Widget w,
+	unsigned int index, Boolean erase, Boolean prim_sel)
 {
 	struct file_list_part *fl = FL_PART(w);
 	struct item_rec *r = &fl->items[index];
@@ -525,9 +527,7 @@ static void draw_item(Widget w, unsigned int index, Boolean erase)
 	}
 	
 	if(r->selected) {
-		XFillRectangle(dpy, wnd,
-			fl->grab_prim_sel ? 
-			(fl->owns_prim_sel ? fl->sbg_gc : fl->nfbg_gc) : fl->sbg_gc,
+		XFillRectangle(dpy, wnd, (prim_sel ? fl->sbg_gc : fl->nfbg_gc),
 			lx, ly, lw + 1, lh + 1);
 	}
 	
@@ -1330,8 +1330,6 @@ static void select_within_rect(Widget w,
 	unsigned int changed = 0;
 	unsigned int i;
 	
-	grab_primary_selection(w);
-
 	for(i = 0; i < fl->num_items; i++) {
 		Dimension item_width = (fl->view_mode == XfCOMPACT) ? 
 			fl->items[i].width : fl->item_width_max[fl->view_mode];
@@ -1348,11 +1346,11 @@ static void select_within_rect(Widget w,
 			else
 				fl->items[i].selected = True;
 			
-			draw_item(w, i, True);
+			draw_item(w, i, True, True);
 			changed++;
 		} else if((fl->items[i].selected) && !add) {
 			fl->items[i].selected = False;
-			draw_item(w, i, True);
+			draw_item(w, i, True, True);
 			changed++;
 		}
 	}
@@ -1415,8 +1413,6 @@ static void select_at_xy(Widget w, int x, int y, Boolean add)
 	unsigned int changed = 0;
 	unsigned int i;
 
-	grab_primary_selection(w);
-
 	for(i = 0; i < fl->num_items; i++) {
 		if(hit_test(w, x, y, i, NULL))
 		{
@@ -1429,10 +1425,10 @@ static void select_at_xy(Widget w, int x, int y, Boolean add)
 			}
 			
 			set_cursor(w, i);
-			draw_item(w, i, True);
+			draw_item(w, i, True, True);
 		} else if(!add && (fl->items[i].selected)) {
 			fl->items[i].selected = False;
-			draw_item(w, i, True);
+			draw_item(w, i, True, True);
 			changed++;
 		}
 	}
@@ -1448,8 +1444,6 @@ static void select_range(Widget w, unsigned int a, unsigned int b)
 	unsigned int changed = 0;
 	unsigned int i;
 	
-	grab_primary_selection(w);
-	
 	if(a > b) {
 		unsigned int tmp;
 		tmp = b;
@@ -1460,11 +1454,11 @@ static void select_range(Widget w, unsigned int a, unsigned int b)
 	for(i = 0; i < fl->num_items; i++) {
 		if(i >= a && i <= b){
 			fl->items[i].selected = True;
-			draw_item(w, i, True);
+			draw_item(w, i, True, True);
 			changed++;
 		} else if(fl->items[i].selected) {
 			fl->items[i].selected = False;
-			draw_item(w, i, True);
+			draw_item(w, i, True, True);
 			changed++;
 		}
 	}
@@ -1482,8 +1476,6 @@ static void select_at_cursor(Widget w, Boolean toggle, Boolean replace)
 
 	if(!fl->num_items) return;
 	
-	grab_primary_selection(w);
-	
 	cur = get_cursor(w);
 	
 	if(toggle) {
@@ -1494,13 +1486,13 @@ static void select_at_cursor(Widget w, Boolean toggle, Boolean replace)
 	} else {
 		fl->items[cur].selected = True;
 	}
-	draw_item(w, cur, True);
+	draw_item(w, cur, True, True);
 
 	if(replace) {
 		for(i = 0; i < fl->num_items; i++) {
 			if((i != cur) && (fl->items[i].selected)) {
 				fl->items[i].selected = False;
-				draw_item(w, i, True);
+				draw_item(w, i, True, True);
 			}
 		}
 	}
@@ -1521,8 +1513,11 @@ static void set_cursor(Widget w, unsigned int i)
 	
 	fl->cursor = i;
 	fl->ext_position = i;
-	if(prev < fl->num_items) draw_item(w, prev, True);
-	draw_item(w, i, True);
+	if(prev < fl->num_items) {
+		draw_item(w, prev, True,
+			(fl->grab_prim_sel ? fl->owns_prim_sel : True));
+	}
+	draw_item(w, i, True, (fl->grab_prim_sel ? fl->owns_prim_sel : True));
 }
 
 /*
@@ -1537,7 +1532,7 @@ static unsigned int get_cursor(Widget w)
 	if(fl->cursor >= fl->num_items) {
 		fl->cursor = 0;
 		fl->ext_position = 0;
-		draw_item(w, 0, True);
+		draw_item(w, 0, True, (fl->grab_prim_sel ? fl->owns_prim_sel : True));
 	}
 	return fl->cursor;
 }
@@ -1645,9 +1640,11 @@ static void expose(Widget w, XEvent *evt, Region reg)
 			 * guaranteed to have been erased completely */
 			
 			#ifdef USE_XFT /* defined by motif */
-			draw_item(w, i, True);
+			draw_item(w, i, True,
+				(fl->grab_prim_sel ? fl->owns_prim_sel : True));
 			#else
-			draw_item(w, i, (res & RectangleIn) ? True : False);
+			draw_item(w, i, (res & RectangleIn) ? True : False,
+				(fl->grab_prim_sel ? fl->owns_prim_sel : True));
 			#endif
 		}
 	}
@@ -2451,10 +2448,11 @@ static void focus_in(Widget w, XEvent *evt, String *params, Cardinal *nparams)
 	
 	fl->has_focus = True;
 	if(fl->num_items && fl->show_contents &&
-		((struct file_list_rec*)w)->core.visible)
-			draw_item(w, get_cursor(w), True);
+		((struct file_list_rec*)w)->core.visible) {
+			draw_item(w, get_cursor(w), True,
+				(fl->grab_prim_sel ? fl->owns_prim_sel : True));
+	}
 	_XmPrimitiveFocusIn(w, evt, NULL, NULL);
-	grab_primary_selection(w);
 }
 
 static void focus_out(Widget w, XEvent *evt, String *params, Cardinal *nparams)
@@ -2468,7 +2466,8 @@ static void focus_out(Widget w, XEvent *evt, String *params, Cardinal *nparams)
 		redraw_all(w);
 	} else if(fl->num_items && fl->show_contents &&
 		((struct file_list_rec*)w)->core.visible) {
-		draw_item(w, get_cursor(w), True);
+		draw_item(w, get_cursor(w), True,
+			(fl->grab_prim_sel ? fl->owns_prim_sel : True));
 	}
 	
 	_XmPrimitiveFocusOut(w, evt, NULL, NULL);
@@ -2534,6 +2533,8 @@ static void sel_change_handler(Widget w)
 	if(count) {
 		unsigned int j;
 		
+		grab_primary_selection(w, False);
+		
 		if(count > fl->sel_count) {
 			char **ptr;
 
@@ -2551,6 +2552,8 @@ static void sel_change_handler(Widget w)
 		for(i = 0, j = 0; i < fl->num_items; i++) {
 			if(fl->items[i].selected) {
 				fl->sel_names[j++] = fl->items[i].name;
+				draw_item(w, i, True,
+					(fl->grab_prim_sel ? fl->owns_prim_sel : True));
 			}
 		}
 	
@@ -2558,12 +2561,12 @@ static void sel_change_handler(Widget w)
 		cbd.names = fl->sel_names;
 		cbd.db_type = (count == 1) ? fl->items[cur_sel].db_type : -1;
 		cbd.user_flags = (count == 1) ? fl->items[cur_sel].user_flags : 0;
-
 	} else {
 		cbd.count = 0;
 		cbd.names = NULL;
 		cbd.db_type = -1;
 		cbd.user_flags = 0;
+		ungrab_primary_selection(w, False);
 	}
 	dbg_trace("selection: %d files\n", cbd.count);
 	fl->sel_count = count;
@@ -2574,7 +2577,7 @@ static void sel_change_handler(Widget w)
 /*
  * Tries to own the primary X selection
  */
-static void grab_primary_selection(Widget w)
+static void grab_primary_selection(Widget w, Boolean redraw)
 {
 	struct file_list_part *fl = FL_PART(w);
 	unsigned int i;
@@ -2585,10 +2588,25 @@ static void grab_primary_selection(Widget w)
 		XtLastTimestampProcessed(XtDisplay(w)),
 		convert_selection_proc, lose_selection_proc, NULL);
 	
-	if(!fl->owns_prim_sel || !fl->num_items) return;
+	if(!fl->owns_prim_sel || !fl->num_items || !redraw) return;
 	
 	for(i = 0; i < fl->num_items; i++) {
-		if(fl->items[i].selected) draw_item(w, i, True);
+		if(fl->items[i].selected) draw_item(w, i, True, True);
+	}
+}
+
+static void ungrab_primary_selection(Widget w, Boolean redraw)
+{
+	struct file_list_part *fl = FL_PART(w);
+	int i;
+	
+	if(!fl->grab_prim_sel || !fl->owns_prim_sel) return;
+	
+	XtDisownSelection(w, XA_PRIMARY,
+		XtLastTimestampProcessed(XtDisplay(w)) );
+
+	for(i = 0; i < fl->num_items; i++) {
+		if(fl->items[i].selected) draw_item(w, i, True, False);
 	}
 }
 
@@ -2604,7 +2622,7 @@ static void lose_selection_proc(Widget w, Atom *sel)
 	fl->owns_prim_sel = False;
 
 	for(i = 0; i < fl->num_items; i++) {
-		if(fl->items[i].selected) draw_item(w, i, True);
+		if(fl->items[i].selected) draw_item(w, i, True, False);
 	}
 }
 
@@ -2835,7 +2853,7 @@ int file_list_select_name(Widget w, const char *name, Boolean add)
 
 	fl->items[i].selected = True;
 	
-	draw_item(w, i, True);
+	draw_item(w, i, True, True);
 	sel_change_handler(w);
 	
 	return 0;
@@ -2876,12 +2894,10 @@ void file_list_select_all(Widget w)
 	unsigned int changed = 0;
 	unsigned int i;
 	
-	grab_primary_selection(w);
-	
 	for(i = 0; i < fl->num_items; i++) {
 		if(!(fl->items[i].selected)) {
 			fl->items[i].selected = True;
-			draw_item(w, i, True);
+			draw_item(w, i, True, True);
 			changed++;
 		}
 	}
@@ -2898,7 +2914,7 @@ void file_list_deselect(Widget w)
 	for(i = 0; i < fl->num_items; i++) {
 		if(fl->items[i].selected) {
 			fl->items[i].selected = False;
-			draw_item(w, i, True);
+			draw_item(w, i, True, True);
 			changed++;
 		}
 	}
@@ -2912,15 +2928,13 @@ void file_list_invert_selection(Widget w)
 	unsigned int changed = 0;
 	unsigned int i;
 
-	grab_primary_selection(w);
-	
 	for(i = 0; i < fl->num_items; i++) {
 		if(fl->items[i].selected)
 			fl->items[i].selected = False;
 		else
 			fl->items[i].selected = True;
 		
-		draw_item(w, i, True);
+		draw_item(w, i, True, True);
 	}
 	
 	if(changed) sel_change_handler(w);
