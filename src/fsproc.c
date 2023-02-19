@@ -1230,13 +1230,14 @@ static int wp_copy_file(struct wp_data *wpd,
 	size_t nchunks, ichunk;
 	off_t rest;
 	ssize_t rw;
+	int reply = 0;
 	int res = 0;
+	Boolean read_err = False;
 
 	if(stat(src, &st_src)) return errno;
 
 	if(!stat(dest, &st_dest)) {
 		static Boolean ignore_exist = False;
-		int reply = 0;
 		int fb_type;
 		char *msg;
 
@@ -1274,18 +1275,57 @@ static int wp_copy_file(struct wp_data *wpd,
 	}
 	
 	/* try to rename the file first if moving*/
-	if(move) {
-		if(!rename(src, dest)) return 0;
-		/* don't bother trying to copy if error was anything but EXDEV */
-		if(errno != EXDEV) return errno;
+	if(move && !rename(src, dest)) return 0;
+
+	/* buffered copy */
+	retry_open_src:
+	fin = open(src, O_RDONLY);
+	if(fin == -1) {
+		if(wpd->ignore_read_err) return 0;
+		
+		reply = wp_post_message(wpd, FBT_RETRY_IGNORE, NULL, NULL, NULL,
+			wp_error_string("Error reading", src, NULL, strerror(errno)) );
+
+		switch(reply) {
+			case FB_RETRY_CONTINUE:
+			goto retry_open_src;
+			break;
+			
+			case FB_SKIP_IGNORE:
+			return 0;
+
+			case FB_SKIP_IGNORE_ALL:
+			wpd->ignore_read_err = True;
+			return 0;
+		}		
 	}
 	
-	/* buffered copy */
-	fin = open(src, O_RDONLY);
-	if(fin == -1) return errno;
-	
+	retry_open_dest:
 	fout = open(dest, O_CREAT|O_WRONLY, st_src.st_mode);
-	if(fout== -1) return errno;
+	if(fout == -1) {
+		if(wpd->ignore_write_err) {
+			close(fin);
+			return 0;
+		}
+		
+		reply = wp_post_message(wpd, FBT_RETRY_IGNORE, NULL, NULL, NULL,
+			wp_error_string("Error writing", dest, NULL, strerror(errno)) );
+
+		switch(reply) {
+			case FB_RETRY_CONTINUE:
+			goto retry_open_dest;
+			break;
+			
+			case FB_SKIP_IGNORE:
+			close(fin);
+			return 0;
+
+			case FB_SKIP_IGNORE_ALL:
+			wpd->ignore_write_err = True;
+			close(fin);
+			return 0;
+		}		
+	}
 	
 	if(st_src.st_size > wpd->copy_buffer_size){
 		nchunks = st_src.st_size / wpd->copy_buffer_size;
@@ -1298,23 +1338,46 @@ static int wp_copy_file(struct wp_data *wpd,
 	for(ichunk = 0; ichunk < nchunks; ichunk++){
 		rw = read(fin, wpd->copy_buffer, wpd->copy_buffer_size);
 		if(rw != wpd->copy_buffer_size) {
+			read_err = True;
 			res = errno;
 			break;
 		}
 		
 		rw = write(fout, wpd->copy_buffer, wpd->copy_buffer_size);
 		if(rw != wpd->copy_buffer_size) {
+			read_err = False;
 			res = errno;
 			break;
 		}
 	}
-	if(ichunk == nchunks && rest){
+
+	if(!res && rest){
 		if( (rw = read(fin, wpd->copy_buffer, rest)) == rest){
 			rw = write(fout, wpd->copy_buffer, rest);
+			if(rw != rest) read_err = False;
+		} else {
+			read_err = True;
 		}
 		if(rw != rest) res = errno;
 	}
-	fchmod(fout, st_src.st_mode);
+
+	if(res) {
+		const char *msg = read_err ? "Error reading" : "Error writing";
+		const char *name = read_err ? src : dest;
+		reply = wp_post_message(wpd, FBT_SKIP_CANCEL, NULL, NULL, NULL,
+			wp_error_string(msg, name, NULL, strerror(res)) );
+		if(reply == FB_SKIP_IGNORE_ALL) {
+			if(read_err)
+				wpd->ignore_read_err = True;
+			else
+				wpd->ignore_write_err = True;
+		}
+	} else if(fchmod(fout, st_src.st_mode) == -1) {
+		reply = wp_post_message(wpd, FBT_SKIP_CANCEL, NULL, NULL, NULL,
+			wp_error_string("Error setting attributes", dest,
+			NULL, strerror(res)) );
+		if(reply == FB_SKIP_IGNORE_ALL) wpd->ignore_write_err = True;
+	}
 	
 	close(fin);
 	close(fout);
@@ -1325,7 +1388,7 @@ static int wp_copy_file(struct wp_data *wpd,
 		wp_delete_file(wpd, src);
 	}
 
-	return res;	
+	return 0;	
 }
 
 /*
