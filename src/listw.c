@@ -1992,7 +1992,7 @@ static void reset_lookup(Widget w, XEvent *evt,
 	struct file_list_part *fl = FL_PART(w);
 
 	if(evt->type != KeyPress) {
-		WARNING(w, "Wrong event type for the action ResetLookUp()\n");
+		WARNING(w, "Wrong event type for the action ResetLookUp()");
 		return;
 	}
 
@@ -2015,7 +2015,7 @@ static void lookup_input(Widget w, XEvent *evt,
 	size_t pos;
 
 	if(evt->type != KeyPress) {
-		WARNING(w, "Wrong event type for the action LookUpInput()\n");
+		WARNING(w, "Wrong event type for the action LookUpInput()");
 		return;
 	}
 
@@ -2090,7 +2090,7 @@ static void primary_button(Widget w, XEvent *evt,
 	Boolean extend = False;
 	
 	if(evt->type != ButtonPress && evt->type != ButtonRelease) {
-		WARNING(w, "Wrong event type for the action PrimaryButton()\n");
+		WARNING(w, "Wrong event type for the action PrimaryButton()");
 		return;
 	}
 	
@@ -2229,7 +2229,7 @@ static void button_motion(Widget w, XEvent *evt,
 	int delx, dely;
 
 	if(evt->type != MotionNotify) {
-		WARNING(w, "Wrong event type for the action PrimaryButtonMotion()\n");
+		WARNING(w, "Wrong event type for the action PrimaryButtonMotion()");
 		return;
 	}
 
@@ -2289,7 +2289,7 @@ static void secondary_button(Widget w, XEvent *evt,
 	if(fl->dragging) return;
 
 	if(evt->type != ButtonPress) {
-		WARNING(w, "Wrong event type for the action SecondaryButton()\n");
+		WARNING(w, "Wrong event type for the action SecondaryButton()");
 		return;
 	}
 	XmProcessTraversal(w, XmTRAVERSE_CURRENT);
@@ -2322,7 +2322,7 @@ static void move_cursor(Widget w, XEvent *evt,
 	if(fl->dragging) return;
 
 	if(evt->type != KeyPress) {
-		WARNING(w, "Wrong event type for the action MoveCursor()\n");
+		WARNING(w, "Wrong event type for the action MoveCursor()");
 		return;
 	}
 	
