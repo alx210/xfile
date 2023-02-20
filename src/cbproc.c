@@ -29,6 +29,7 @@
 #include "debug.h"
 #include "memdb.h" /* must be the last header */
 
+#define EXEC_STATUS_TIMEOUT 3000
 
 static void open_dir_proc(Widget, XtPointer, XtPointer);
 static void new_window_proc(Widget, XtPointer, XtPointer);
@@ -37,6 +38,8 @@ static void exec_string_proc(Widget, XtPointer, XtPointer);
 static void run_exec_proc(Widget, XtPointer, XtPointer);
 static void mount_proc(Widget, XtPointer, XtPointer);
 static void umount_proc(Widget, XtPointer, XtPointer);
+static void action_status_timer_cb(XtPointer, XtIntervalId*);
+static void set_action_status_text(const char*, const char*);
 
 /*
  * Context menu callback.
@@ -94,6 +97,7 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	free(path);
 	free(input);
 
+	set_action_status_text("Executing", cmd);
 	rv = spawn_command(cmd);
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
@@ -168,6 +172,7 @@ static void exec_string_proc(Widget w, XtPointer pclient, XtPointer pcall)
 		return;
 	}
 	
+	set_action_status_text("Executing", exp_cmd);
 	rv = spawn_command(exp_cmd);
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
@@ -188,6 +193,7 @@ static void mount_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	real_path = realpath((char*)pclient, NULL);
 	if(real_path) {
+		set_action_status_text("Mounting", real_path);
 		rv = exec_mount(real_path);
 		free(real_path);
 	} else {
@@ -207,6 +213,7 @@ static void umount_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	real_path = realpath((char*)pclient, NULL);
 	if(real_path) {
+		set_action_status_text("Unmounting", real_path);
 		rv = exec_umount(real_path);
 		free(real_path);
 	} else {
@@ -240,6 +247,7 @@ static void run_exec_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	fqn = malloc(fqn_len);
 	snprintf(fqn, fqn_len, "%s/%s", path, app_inst.cur_sel.names[0]);
 
+	set_action_status_text("Executing", fqn);
 	rv = spawn_exe(fqn);
 
 	free(path);
@@ -251,6 +259,24 @@ static void run_exec_proc(Widget w, XtPointer pclient, XtPointer pcall)
 			app_inst.cur_sel.names[0], strerror(rv));
 	}
 }
+
+/* set_action_status_text timer callback */
+static void action_status_timer_cb(XtPointer closure, XtIntervalId *iid)
+{
+	if(app_inst.cur_sel.count)
+		set_sel_status_text();
+	else
+		set_default_status_text();
+}
+
+/* Temporarily sets status-bar text message */
+static void set_action_status_text(const char *action, const char *cmd)
+{
+	set_status_text("%s %s", action, cmd);
+	XtAppAddTimeOut(app_inst.context, EXEC_STATUS_TIMEOUT,
+		action_status_timer_cb, NULL);
+}
+
 
 /*
  * FileList activate (double-click/return) callbacks
