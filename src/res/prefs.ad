@@ -52,4 +52,4 @@ XFile.variable.webBrowser: links -g
 *FileList.highlightForeground: White
 *FileList.viewMode: compact
 *FileList.sortOrder: name
-*FileList.sortDirection: ascend
+*FileList.sortDirection: descend

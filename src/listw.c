@@ -184,7 +184,7 @@ static XtResource resources[] = {
 		sizeof(short),
 		RFO(file_list.sort_direction),
 		XtRImmediate,
-		(void*)XfASCEND
+		(void*)XfDESCEND
 	},
 	{
 		XfNviewMode,
@@ -671,7 +671,7 @@ static void sort_list(Widget w)
 /*
  * Different flavors of quick sort compare functions
  */
-static int sort_by_name(const void *aptr, const void *bptr)
+static int sort_by_name_des(const void *aptr, const void *bptr)
 {
 	int r;
 	const struct item_rec *a = (struct item_rec*)aptr;
@@ -680,13 +680,25 @@ static int sort_by_name(const void *aptr, const void *bptr)
 	return r ? r : strcasecmp(a->name, b->name);
 }
 
-static int sort_by_name_des(const void *aptr, const void *bptr)
+static int sort_by_name(const void *aptr, const void *bptr)
 {
 	int r;
 	const struct item_rec *a = (struct item_rec*)aptr;
 	const struct item_rec *b = (struct item_rec*)bptr;
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
 	return r ? r : strcasecmp(b->name, a->name);
+}
+
+static int sort_by_time_des(const void *aptr, const void *bptr)
+{
+	int r;
+	const struct item_rec *a = (struct item_rec*)aptr;
+	const struct item_rec *b = (struct item_rec*)bptr;
+	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
+	if(!r) r = (b->mtime - a->mtime);
+	if(!r) r = sort_by_name_des(a, b);
+	
+	return r;
 }
 
 static int sort_by_time(const void *aptr, const void *bptr)
@@ -701,18 +713,17 @@ static int sort_by_time(const void *aptr, const void *bptr)
 	return r;
 }
 
-static int sort_by_time_des(const void *aptr, const void *bptr)
+static int sort_by_type_des(const void *aptr, const void *bptr)
 {
 	int r;
 	const struct item_rec *a = (struct item_rec*)aptr;
 	const struct item_rec *b = (struct item_rec*)bptr;
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
-	if(!r) r = (b->mtime - a->mtime);
-	if(!r) r = sort_by_name(a, b);
-	
+	if(!r) r = (a->db_type - b->db_type);
+	if(!r) r = sort_by_suffix_des(a, b);
+
 	return r;
 }
-
 
 static int sort_by_type(const void *aptr, const void *bptr)
 {
@@ -720,26 +731,14 @@ static int sort_by_type(const void *aptr, const void *bptr)
 	const struct item_rec *a = (struct item_rec*)aptr;
 	const struct item_rec *b = (struct item_rec*)bptr;
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
-	if(!r) r = (a->db_type - b->db_type);
+	if(!r) r = (b->db_type - a->db_type);
 	if(!r) r = sort_by_suffix(a, b);
 
 	return r;
 }
 
-static int sort_by_type_des(const void *aptr, const void *bptr)
-{
-	int r;
-	const struct item_rec *a = (struct item_rec*)aptr;
-	const struct item_rec *b = (struct item_rec*)bptr;
-	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
-	if(!r) r = (b->db_type - a->db_type);
-	if(!r) r = sort_by_suffix_des(a, b);
 
-	return r;
-}
-
-
-static int sort_by_suffix(const void *aptr, const void *bptr)
+static int sort_by_suffix_des(const void *aptr, const void *bptr)
 {
 	int r;
 	const struct item_rec *a = (struct item_rec*)aptr;
@@ -757,10 +756,10 @@ static int sort_by_suffix(const void *aptr, const void *bptr)
 		} else r = 0;
 	}
 
-	return r ? r : sort_by_name(a, b);
+	return r ? r : sort_by_name_des(a, b);
 }
 
-static int sort_by_suffix_des(const void *aptr, const void *bptr)
+static int sort_by_suffix(const void *aptr, const void *bptr)
 {
 	int r;
 	const struct item_rec *a = (struct item_rec*)aptr;
@@ -778,7 +777,19 @@ static int sort_by_suffix_des(const void *aptr, const void *bptr)
 		} else r = 0;
 	}
 
-	return r ? r : sort_by_name_des(a, b);
+	return r ? r : sort_by_name(a, b);
+}
+
+static int sort_by_size_des(const void *aptr, const void *bptr)
+{
+	int r;
+	const struct item_rec *a = (struct item_rec*)aptr;
+	const struct item_rec *b = (struct item_rec*)bptr;
+	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
+	if(!r) r = (b->size - a->size);
+	if(!r) r = sort_by_name_des(b, a);
+
+	return r;
 }
 
 static int sort_by_size(const void *aptr, const void *bptr)
@@ -789,18 +800,6 @@ static int sort_by_size(const void *aptr, const void *bptr)
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
 	if(!r) r = (a->size - b->size);
 	if(!r) r = sort_by_name(a, b);
-
-	return r;
-}
-
-static int sort_by_size_des(const void *aptr, const void *bptr)
-{
-	int r;
-	const struct item_rec *a = (struct item_rec*)aptr;
-	const struct item_rec *b = (struct item_rec*)bptr;
-	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
-	if(!r) r = (b->size - a->size);
-	if(!r) r = sort_by_name(b, a);
 
 	return r;
 }
