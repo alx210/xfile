@@ -33,6 +33,7 @@ struct path_field_class_rec {
 
 struct path_field_part {
 	char *home;
+	char *real_home;
 	XmRenderTable text_rt;
 	
 	Dimension font_height;

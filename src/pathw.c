@@ -319,7 +319,11 @@ static void initialize(Widget wreq, Widget wnew,
 	wp->wcomp = NULL;
 	wp->comp_ids = NULL;
 	wp->home = getenv("HOME");
-	if(!wp->home) wp->compact_path = False;
+	if(wp->home) wp->real_home = realpath(wp->home, NULL);
+	if(!wp->home || !wp->real_home) {
+		WARNING(wnew, "Invalid HOME path");
+		wp->compact_path = False;
+	}
 	wr->manager.shadow_thickness = wp->shadow_thickness;
 	
 	XmRenderTableGetDefaultFontExtents(wp->text_rt,
@@ -684,19 +688,27 @@ static void default_shadow_thickness(Widget w, int offset, XrmValue *pv)
 int path_field_set_location(Widget w, const char *location, Boolean notify)
 {
 	struct path_field_part *wp = PART(w);
+	char *subst_path = NULL;
 	
 	/* Make sure we're not heading into an infinite callback loop */
 	if(wp->processing_callbacks && notify) {
-		WARNING(w, "Can't set location from a notify callback!\n");
+		WARNING(w, "Can't set location from a notify callback!");
 		return EINVAL;
 	}
 
 	/* replace $HOME part with a ~ if requested */
-	if(wp->compact_path && !strncmp(location, wp->home, strlen(wp->home)) ) {
+	if(wp->compact_path) {
+		if(!strncmp(location, wp->home, strlen(wp->home)) )
+			subst_path = wp->home;
+		else if (!strncmp(location, wp->real_home, strlen(wp->real_home)) )
+			subst_path = wp->real_home;
+	}
+	
+	if(subst_path) {
 		char *path, *p;
 
 		path = XtMalloc(strlen(location));
-		p = (char*) &location[strlen(wp->home)];
+		p = (char*) location + strlen(subst_path);
 		sprintf(path, "~%s", p);
 		
 		if(notify && !notify_client(w, path)) {
