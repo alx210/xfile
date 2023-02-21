@@ -10,6 +10,8 @@ LIBDIRS = -L/usr/local/lib
 
 CFLAGS += -O2 -Wall
 
+SHELL = sh
+
 .include "common.mf"
 APPDEFS = $(APPDEFS_XFT)
 
