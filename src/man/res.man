@@ -124,6 +124,11 @@ Default is 2\.
 Specifies the amount of space between columns in detailed list view\.
 Default is derived from font size used to render the text\.
 .TP
+\fBlookupTimeout\fP \fIinteger\fP
+This resource specifies the amount of time in seconds before incremental
+search is reset\. It may also be reset by pressing the key bound to osfCancel
+(Escape by default)\.
+.TP
 \fBmarginWidth\fP \fIDimension\fP, \fBmarginHeight\fP \fIDimension\fP
 Specifies the amount of space between edges of the list view and displayed
 items. Default is 2\.

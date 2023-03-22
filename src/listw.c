@@ -338,7 +338,16 @@ static XtResource resources[] = {
 		RFO(file_list.silent),
 		XtRImmediate,
 		(void*)False
-	}
+	},
+	{
+		XfNlookupTimeOut,
+		XfCLookupTimeOut,
+		XtRShort,
+		sizeof(unsigned short),
+		RFO(file_list.lookup_time),
+		XtRImmediate,
+		(void*)DEF_LOOKUP_TIMEOUT
+	},
 };
 #undef RFO
 
@@ -1738,6 +1747,13 @@ static void initialize(Widget wreq, Widget wnew,
 		WARNING(wnew, "shortenLabels length too short, using default!");
 		fl->file_list.shorten = SHORTEN_LEN_MAX;
 	}
+	
+	if(fl->file_list.lookup_time < MIN_LOOKUP_TIMEOUT ||
+		fl->file_list.lookup_time > MAX_LOOKUP_TIMEOUT) {
+		WARNING(wnew, "Invalid lookupTimeout value, using default!");
+		fl->file_list.lookup_time = DEF_LOOKUP_TIMEOUT;
+	}
+	fl->file_list.lookup_time *= 1000;
 
 	memset(fl->file_list.field_widths, 0,
 		sizeof(fl->file_list.field_widths));
@@ -2068,7 +2084,7 @@ static void lookup_input(Widget w, XEvent *evt,
 	
 		fl->lookup_timeout = XtAppAddTimeOut(
 			XtWidgetToApplicationContext(w),
-			LOOKUP_TIMEOUT, lookup_timeout_cb, (XtPointer)w);
+			fl->lookup_time, lookup_timeout_cb, (XtPointer)w);
 	}
 }
 

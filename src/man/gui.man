@@ -4,6 +4,11 @@ By default, icon size is deduced from label font height\. This can be controlled
 wit the iconSize resource. Custom icons may be installed in \.xfile/icons user's
 home sub-directory (see also the FILES section)\. If an icon specified in the
 type database cannot be found, a built-in, generic icon will be used instead\.
+.PP
+Typing into the directory view will incrementally select the next matching
+file name\. Incremental search will be reset after a few seconds, or when
+the key bound to osfCancel is pressed (see the FileList widget
+\fBlookupTimeout\fP resource)\.
 .SS Mount Points
 For directories, which are mount points un/mount action will be displayed in the
 context menu\. Depending on system configuration, alternate un/mount command may

@@ -95,6 +95,8 @@ enum { XfCOMPACT, XfDETAILED };
 #define XfCShortenLabels "ShortenLabels"
 #define XfNsilent "silent"
 #define XfCSilent "Silent"
+#define XfNlookupTimeOut "lookupTimeout"
+#define XfCLookupTimeOut "LookupTimeout"
 
 
 #define CreateFileList(parent, name, args, nargs) \

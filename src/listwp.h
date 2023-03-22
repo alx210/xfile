@@ -23,7 +23,9 @@
 /* Max number of chars for incremental search and how much time
  * passes between key presses until we reset */
 #define LOOKUP_STR_MAX 64
-#define LOOKUP_TIMEOUT 1500
+#define DEF_LOOKUP_TIMEOUT 3
+#define MIN_LOOKUP_TIMEOUT 1
+#define MAX_LOOKUP_TIMEOUT 10
 
 /* Size of widget struct fields that store mode dependent data */
 #define NVIEW_MODES 2
@@ -190,6 +192,7 @@ struct file_list_part {
 	Dimension outline_width;
 	Dimension drag_offset;
 	unsigned short shorten;
+	unsigned short lookup_time;
 	Boolean show_contents;
 	Boolean grab_prim_sel;
 	Boolean silent;
