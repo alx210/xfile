@@ -504,7 +504,11 @@ void copy_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	char *dest;
 	int rv;
 	
-	if(!last_dest) last_dest = get_working_dir();
+	if(!last_dest || access(last_dest, R_OK|X_OK)) {
+		if(last_dest) free(last_dest);
+		last_dest = get_working_dir();
+	}
+
 	dest = dir_select_dlg(app_inst.wshell,
 		"Copying - Select Destination Directory", last_dest);
 	
@@ -537,7 +541,11 @@ void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	char *dest;
 	int rv;
 	
-	if(!last_dest) last_dest = get_working_dir();
+	if(!last_dest || access(last_dest, R_OK|X_OK)) {
+		if(last_dest) free(last_dest);
+		last_dest = get_working_dir();
+	}
+
 	dest = dir_select_dlg(app_inst.wshell,
 		"Moving - Select Destination Directory", last_dest);
 	
@@ -606,6 +614,24 @@ void delete_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	rv = delete_files(app_inst.cur_sel.names, app_inst.cur_sel.count);
 	
 	if(rv) {
+		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+			"Could not complete requested action.\n%s.",
+			strerror(errno), NULL);
+	} else {
+		force_update();
+	}
+}
+
+void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
+{
+	char *link;
+	
+	link = input_string_dlg(app_inst.wshell,
+		"Specify a name for the symbolic link.\n"
+		"It may contain either absolute or relative path.", NULL, 0);
+	if(!link) return;
+	
+	if(symlink(app_inst.cur_sel.names[0], link) == -1) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Could not complete requested action.\n%s.",
 			strerror(errno), NULL);

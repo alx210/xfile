@@ -7,7 +7,7 @@
 
 #define APP_VER 1
 #define APP_REV 0
-#define APP_BLD "Beta"
+#define APP_BLD __DATE__
 
 #define DESCRIPTION_CS "XFile - File manager for Unix/X11"
 

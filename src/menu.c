@@ -248,7 +248,7 @@ Widget get_menu_item(Widget wmenu, const char *name)
 {
 	Widget w = XtNameToWidget(wmenu, name);
 	dbg_assert(w);
-	if(!w) stderr_msg("No such menu item: %s\n", name);
+	if(!w) stderr_msg("No such menu item \'%s\'\n", name);
 	return w;
 }
 
@@ -258,7 +258,7 @@ void enable_menu_item(Widget wmenu, const char *name, Boolean enable)
 	Widget w = XtNameToWidget(wmenu, name);
 	dbg_assert(w); /* must exist if the meditating guru is asking for it */
 	if(!w) {
-		stderr_msg("No such menu item: %s\n", name);
+		stderr_msg("No such menu item \'%s\'\n", name);
 		return;
 	}
 	XtSetSensitive(w, enable);

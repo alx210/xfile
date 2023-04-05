@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 alx@fastestcode.org
+ * Copyright (C) 2023 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -945,7 +945,9 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 			} else {
 				msg.db_index = DB_UNKNOWN;
 			}
-		dbg_trace("%s: mounted %s\n", ent->d_name, is_mounted ? "True" : "False");
+			dbg_trace("%s: mounted %s\n",
+				ent->d_name, is_mounted ? "True" : "False");
+
 			msg.size = st.st_size;
 			msg.name_len = strlen(ent->d_name);
 			msg.mode = st.st_mode;

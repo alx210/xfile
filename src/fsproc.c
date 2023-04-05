@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 alx@fastestcode.org
+ * Copyright (C) 2023 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -938,9 +938,7 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 	}
 
 	if(wpd->copy_buffer) free(wpd->copy_buffer);
-	#ifdef FSPROC_SYNC
-	sync();
-	#endif
+
 	exit(EXIT_SUCCESS);
 	return 0;
 }

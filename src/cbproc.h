@@ -15,6 +15,7 @@ void context_action_cb(Widget, XtPointer, XtPointer);
 /* Main menu callbacks */
 void make_dir_cb(Widget, XtPointer, XtPointer);
 void make_file_cb(Widget, XtPointer, XtPointer);
+void link_to_cb(Widget, XtPointer, XtPointer);
 void copy_to_cb(Widget, XtPointer, XtPointer);
 void move_to_cb(Widget, XtPointer, XtPointer);
 void rename_cb(Widget, XtPointer, XtPointer);

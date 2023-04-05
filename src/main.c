@@ -561,14 +561,15 @@ static void create_main_menus(void)
 		{IT_CASCADE, "fileMenu", "&File", NULL, NULL},
 		/* context dependent action items will be added here at runtime */
 		{IT_SEPARATOR, "actionsSeparator", NULL},
-		{IT_PUSH, "makeDirectory", "Make D&irectory...", make_dir_cb, NULL},
-		{IT_PUSH, "makeFile", "Make &File...", make_file_cb, NULL},
+		{IT_PUSH, "makeDirectory", "&Make Directory...", make_dir_cb, NULL},
+		{IT_PUSH, "makeFile", "M&ake File...", make_file_cb, NULL},
 		{IT_SEPARATOR },
 		{IT_PUSH, "copyTo", "&Copy...", copy_to_cb, NULL},
 		{IT_PUSH, "moveTo", "&Move...", move_to_cb, NULL},
+		{IT_PUSH, "linkTo", "&Link...", link_to_cb, NULL},
 		{IT_PUSH, "rename", "&Rename", rename_cb, NULL},
 		{IT_PUSH, "delete", "&Delete", delete_cb, NULL},
-		{IT_PUSH, "attributes", "&Attributes", attributes_cb, NULL},
+		{IT_PUSH, "attributes", "A&ttributes", attributes_cb, NULL},
 		{IT_SEPARATOR },
 		{IT_PUSH, "exit", "&Exit", window_close_cb, NULL},
 		{IT_END },
@@ -623,6 +624,7 @@ static void create_main_menus(void)
 		{IT_SEPARATOR, "actionsSeparator", NULL, NULL},
 		{IT_PUSH, "copyTo", "&Copy...", copy_to_cb, NULL},
 		{IT_PUSH, "moveTo", "&Move...", move_to_cb, NULL},
+		{IT_PUSH, "linkTo", "&Link...", link_to_cb, NULL},
 		{IT_PUSH, "rename", "&Rename", rename_cb, NULL},
 		{IT_PUSH, "delete", "&Delete", delete_cb, NULL},
 		{IT_SEPARATOR, NULL },
@@ -1051,6 +1053,7 @@ void set_ui_sensitivity(short flags)
 		"*attributes",
 		"*copyTo",
 		"*moveTo",
+		"*linkTo",
 		"*delete"
 	};
 	

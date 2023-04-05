@@ -9,6 +9,8 @@
 *fileMenu.copyTo.accelerator: <Key>F4
 *fileMenu.moveTo.acceleratorText: F3
 *fileMenu.moveTo.accelerator: <Key>F3
+! *fileMenu.linkTo.acceleratorText: Ctrl+L
+! *fileMenu.linkTo.accelerator: Ctrl<Key>l
 *fileMenu.rename.acceleratorText: F2
 *fileMenu.rename.accelerator: <Key>F2
 *fileMenu.delete.acceleratorText: Delete
