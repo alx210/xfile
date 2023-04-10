@@ -38,14 +38,6 @@ static Bool xrm_enum_cb(XrmDatabase *rdb, XrmBindingList bindings,
 	XrmValue *value, XPointer closure)
 {
 	static size_t nalloc = 0;
-	XrmRepresentation title_rep;
-	XrmValue title_value;
-	XrmQuark title_name_list[] = {
-		name_list[0], name_list[1], NULLQUARK, qtitle_name, NULLQUARK
-	};
-	XrmQuark title_class_list[] = {
-		class_list[0], class_list[1], NULLQUARK, qtitle_class, NULLQUARK
-	};
 	
 	if( ((quarks[0] == name_list[0]) || (quarks[0] == class_list[0])) &&
 		((quarks[1] == name_list[1]) || (quarks[1] == class_list[1])) ) {
@@ -62,15 +54,6 @@ static Bool xrm_enum_cb(XrmDatabase *rdb, XrmBindingList bindings,
 		memset(&tools[ntools], 0, sizeof(struct user_tool_rec));
 		tools[ntools].name = XrmQuarkToString(quarks[2]);
 		tools[ntools].command = strdup(value->addr);
-		tools[ntools].title = tools[ntools].name;
-		
-		title_name_list[2] = quarks[2];
-		title_class_list[2] = quarks[2];
-		
-		if(XrmQGetResource(XtDatabase(app_inst.display), title_name_list,
-			title_class_list, &title_rep, &title_value)) {
-			tools[ntools].title = strdup(title_value.addr);
-		}
 		
 		ntools++;
 	}

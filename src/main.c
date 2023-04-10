@@ -656,7 +656,6 @@ static void create_main_menus(void)
 		for(i = 0; i < nuser_tools; i++) {
 			tool_menu[i + 1].type = IT_PUSH;
 			tool_menu[i + 1].name = user_tools[i].name;
-			tool_menu[i + 1].label = user_tools[i].title;
 			tool_menu[i + 1].callback = user_tool_cbproc;
 			tool_menu[i + 1].cb_data = &user_tools[i];
 		}

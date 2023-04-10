@@ -23,12 +23,9 @@ in the order they were defined. First action in the list is the default -
 that is, it's being run whenever an item in the list is activated.
 .SS Tools Menu
 User defined commands may be added to the \fBTools\fP drop-down menu using
-following X resources:
+following X resource:
 .PP
 XFile\.tools\.<tool name>: <command>
-.br
-XFile\.tools\.<tool name>\.title: <menu item title>
-.br
 .PP
 The command string may contain following context dependent variables:
 .PP
@@ -41,7 +38,6 @@ The command string may contain following context dependent variables:
 .PP
 Environment variables may also be specified using \fBsh\fP syntax.
 .PP
-If \fBtitle\fP resource is omitted, tool name will be used.
-A mnemonic character may be specified by prefixing it with ampersand.
-To set standard Motif resources, such as accelerators, menu item widgets in
-the Tools menu may be referred to by XFile\.mainMenu\.toolsMenu\.\fI<tool name>\fP\.
+To set standard Motif resources, such as label string, mnemonic and
+accelerators, menu item widgets in the Tools menu may be referred to as
+XFile\.mainMenu\.toolsMenu\.\fI<tool name>\fP\.

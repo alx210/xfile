@@ -12,22 +12,24 @@ XFile.userMounts: True
 XFile.mountCommand: mount
 XFile.unmountCommand: umount
 
-! EXAMPLE: mount daemon managed media directory
+!! EXAMPLE: mount daemon managed media directory
 ! XFile.mediaDirectory: /media/$LOGNAME
 ! XFile.mediaUnmountCommand: udevil umount
 ! XFile.mediaMountCommand: udevil mount
 
-! EXAMPLE: tools menu entry (browse CWD with XImaging)
+!! EXAMPLE: tools menu entry (browse CWD with XImaging)
 ! XFile.tools.ximaging: ximaging %p
-! XFile.tools.ximaging.title: &XImaging
-! The widget inherits tool's name, hence its resources may be set as follows
+!! The widget inherits tool's name, hence its resources may be set as follows
+! XFile*toolsMenu.ximaging.labelString: XImaging
+! XFile*toolsMenu.ximaging.mnemonic: X
 ! XFile*toolsMenu.ximaging.acceleratorText: F11
 ! XFile*toolsMenu.ximaging.accelerator: <Key>F11
 
-! EXAMPLE: tools menu entry (file search with prompt for pattern)
+!! EXAMPLE: tools menu entry (file search with prompt for pattern)
 ! XFile.tools.find: xterm -hold -e find %p -name %u
-! XFile.tools.find.title: &Find...
-! The widget inherits tool's name, hence its resources may be set as follows
+!! The widget inherits tool's name, hence its resources may be set as follows
+! XFile*toolsMenu.find.labelString: Find...
+! XFile*toolsMenu.find.mnemonic: F
 ! XFile*toolsMenu.find.acceleratorText: F3
 ! XFile*toolsMenu.find.accelerator: <Key>F3
 

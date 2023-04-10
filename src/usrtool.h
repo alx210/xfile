@@ -8,7 +8,6 @@
 
 struct user_tool_rec {
 	char *name;
-	char *title;
 	char *command;
 	char *hist;
 };
