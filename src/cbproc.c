@@ -587,6 +587,7 @@ void rename_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	} else {
 		force_update();
 	}
+	free(target);
 }
 
 void delete_cb(Widget w, XtPointer pclient, XtPointer pcall)
@@ -597,7 +598,7 @@ void delete_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	Boolean have_subdirs = False;
 	
 	for(i = 0; i < app_inst.cur_sel.count; i++) {
-		if(!stat(app_inst.cur_sel.names[i], &st) &&
+		if(!lstat(app_inst.cur_sel.names[i], &st) &&
 			S_ISDIR(st.st_mode)) have_subdirs = True;
 	}
 	
@@ -625,19 +626,24 @@ void delete_cb(Widget w, XtPointer pclient, XtPointer pcall)
 void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	char *link;
+	char *target;
 	
 	link = input_string_dlg(app_inst.wshell,
 		"Specify a name for the symbolic link.\n"
 		"It may contain either absolute or relative path.", NULL, 0);
 	if(!link) return;
 	
-	if(symlink(app_inst.cur_sel.names[0], link) == -1) {
+	target = realpath(app_inst.cur_sel.names[0], NULL);
+	
+	if(!target || (symlink(target, link) == -1) ) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Could not complete requested action.\n%s.",
 			strerror(errno), NULL);
 	} else {
 		force_update();
 	}
+	free(link);
+	free(target);
 }
 
 void attributes_cb(Widget w, XtPointer pclient, XtPointer pcall)
