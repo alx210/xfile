@@ -143,7 +143,7 @@ they can be pasted using Shift+Insert or the third mouse button\.
 \fBshortenLabels\fP \fIInteger\fP
 Specifies length in characters for file name labels at which these will be
 abbreviated\. The value of zero disables label shortening\. The minimum value
-allowed is 16\.
+allowed is 12\.
 .TP
 \fBsortDirection\fP ascend|descend
 Specifies the file name sorting direction of displayed items. Default is ascend\.

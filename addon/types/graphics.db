@@ -1,6 +1,10 @@
 GIMP Image {
 	icon xcf
-	match_name *.xcf
+	match_name {
+		*.xcf
+		*.psd
+		*.PSD
+	}
 	action &Open: gimp %n
 }
 
@@ -40,4 +44,3 @@ XFig Drawing {
 	}
 	action &Open: xfig %n
 }
-

@@ -56,3 +56,4 @@ XFile.variable.webBrowser: links -g
 *FileList.sortOrder: name
 *FileList.sortDirection: descend
 *FileList.lookupTimeout: 3
+*FileList.shortenLabels: 0
