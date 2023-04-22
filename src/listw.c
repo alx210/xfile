@@ -993,13 +993,20 @@ void update_sbar_visibility(Widget w,
 	Dimension view_width, Dimension view_height)
 {
 	struct file_list_part *fl = FL_PART(w);
+	Boolean geom_changed = False;
 
 	if(fl->whscrl) {
-		if(view_width >= fl->list_width || !fl->show_contents)
+		if(view_width >= fl->list_width || !fl->show_contents) {
+			if(XtIsManaged(fl->whscrl)) geom_changed = True;
 			XtUnmanageChild(fl->whscrl);
-		else
+		} else {
+			if(!XtIsManaged(fl->whscrl)) geom_changed = True;
 			XtManageChild(fl->whscrl);
+		}
 	}
+	/* If we've (un)managed whscrl above, container geometry request handler
+	 * has already recursed here with updated coordinates, so just return */
+	if(geom_changed) return;
 
 	if(fl->wvscrl) {
 		if(view_height >= fl->list_height || !fl->show_contents)
@@ -1868,7 +1875,6 @@ static Boolean set_values(Widget wcur, Widget wreq,
 	}
 
 	compute_placement(wset, req->core.width, req->core.height);
-	update_sbar_range(wset, CORE_WIDTH(wset), CORE_HEIGHT(wset));
 	update_sbar_visibility(wset, CORE_WIDTH(wset), CORE_HEIGHT(wset));
 	
 	return (XtIsRealized(wset) ? True : False);
