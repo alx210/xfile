@@ -153,6 +153,7 @@ struct file_list_part {
 	unsigned short field_widths[NFIELDS];
 	unsigned int row_height;
 	unsigned int ncolumns;
+	Boolean in_sb_update;
 
 	/* selection state */
 	unsigned int cursor;

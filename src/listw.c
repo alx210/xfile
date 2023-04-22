@@ -76,6 +76,7 @@ static void update_sbar_range(Widget, Dimension, Dimension);
 static void update_sbar_visibility(Widget, Dimension, Dimension);
 static void hscroll_cb(Widget, XtPointer, XtPointer);
 static void vscroll_cb(Widget, XtPointer, XtPointer);
+static void get_view_dimensions(Widget, Boolean, Dimension*, Dimension*);
 static Boolean get_at_xy(Widget, int, int, unsigned int*);
 static Boolean hit_test(Widget w, int x, int y,
 	unsigned int, Boolean*);
@@ -896,7 +897,10 @@ static void compute_placement(Widget w,
 	}
 	
 	if(fl->view_mode == XfCOMPACT) {
-		cols_max = ((float)view_width / (fl->horz_spacing + width_max));
+		if((view_width - fl->margin_w * 2) > 0) {
+			cols_max = ((float)view_width - fl->margin_w * 2) /
+				(fl->horz_spacing + width_max);
+		}
 		if(!cols_max) cols_max = 1;
 	}
 	
@@ -916,13 +920,11 @@ static void compute_placement(Widget w,
 		icol++;
 	}
 	
-	fl->ncolumns = (fl->num_items >= cols_max) ? cols_max : fl->num_items;
+	fl->ncolumns = (fl->num_items < cols_max) ? fl->num_items : cols_max;
 	fl->list_width = fl->ncolumns *
-		(width_max + fl->horz_spacing) + fl->margin_w;
+		(width_max + fl->horz_spacing) + fl->margin_w * 2;
 	fl->list_height = cy + fl->item_height_max + fl->margin_h;
 	fl->row_height = fl->item_height_max + fl->horz_spacing;
-	
-	update_sbar_range(w, view_width, view_height);
 }
 
 /*
@@ -993,27 +995,66 @@ void update_sbar_visibility(Widget w,
 	Dimension view_width, Dimension view_height)
 {
 	struct file_list_part *fl = FL_PART(w);
-	Boolean geom_changed = False;
+	Boolean need_hsb = False;
+	Boolean need_vsb = False;
+	Dimension hsb_size = fl->whscrl ? XtHeight(fl->whscrl) : 0;
+	Dimension vsb_size = fl->wvscrl ? XtWidth(fl->wvscrl) : 0;
 
-	if(fl->whscrl) {
-		if(view_width >= fl->list_width || !fl->show_contents) {
-			if(XtIsManaged(fl->whscrl)) geom_changed = True;
-			XtUnmanageChild(fl->whscrl);
-		} else {
-			if(!XtIsManaged(fl->whscrl)) geom_changed = True;
-			XtManageChild(fl->whscrl);
-		}
-	}
-	/* If we've (un)managed whscrl above, container geometry request handler
-	 * has already recursed here with updated coordinates, so just return */
-	if(geom_changed) return;
+	fl->in_sb_update = True;	
 
-	if(fl->wvscrl) {
-		if(view_height >= fl->list_height || !fl->show_contents)
-			XtUnmanageChild(fl->wvscrl);
-		else
-			XtManageChild(fl->wvscrl);
+	if(view_width < vsb_size || view_height < hsb_size) {
+		XtUnmanageChild(fl->whscrl);
+		XtUnmanageChild(fl->wvscrl);
+		return;
 	}
+	
+	if(fl->wvscrl && (view_height < fl->list_height))
+		view_width -= vsb_size;
+
+	if(fl->whscrl && (view_width < fl->list_width))
+		view_height -= hsb_size;
+
+	if(fl->wvscrl && (view_height < fl->list_height) )
+		need_vsb = True;
+	if(fl->whscrl && (view_width < fl->list_width) )
+		need_hsb = True;
+
+	if(need_hsb && fl->whscrl)
+		XtManageChild(fl->whscrl);
+	else if(fl->wvscrl)
+		XtUnmanageChild(fl->whscrl);
+
+	if(need_vsb && fl->wvscrl)
+		XtManageChild(fl->wvscrl);
+	else if(fl->wvscrl)
+		XtUnmanageChild(fl->wvscrl);
+	
+	fl->in_sb_update = False;
+}
+
+/*
+ * Returns view dimensions including space occupied by scrollbars
+ */
+static void get_view_dimensions(Widget w, Boolean sbars,
+	Dimension *rwidth, Dimension *rheight)
+{
+	struct file_list_part *fl = FL_PART(w);
+	Dimension width = CORE_WIDTH(w);
+	Dimension height = CORE_HEIGHT(w);
+	
+	if(sbars) {
+		Dimension hsb_size = fl->whscrl ? XtHeight(fl->whscrl) : 0;
+		Dimension vsb_size = fl->wvscrl ? XtWidth(fl->wvscrl) : 0;
+
+		if(fl->wvscrl && XtIsManaged(fl->wvscrl))
+			width += hsb_size;
+
+		if(fl->whscrl && XtIsManaged(fl->whscrl))
+			height += vsb_size;
+	}
+	
+	*rwidth = width;
+	*rheight = height;
 }
 
 
@@ -1667,20 +1708,28 @@ static void expose(Widget w, XEvent *evt, Region reg)
 
 static void resize(Widget w)
 {
-	compute_placement(w, CORE_WIDTH(w), CORE_HEIGHT(w));
+	struct file_list_part *fl = FL_PART(w);
+	if(!fl->in_sb_update) {
+		update_sbar_range(w, CORE_WIDTH(w), CORE_HEIGHT(w));
+	}
 }
 
 static XtGeometryResult query_geometry(Widget w,
 	XtWidgetGeometry *ig, XtWidgetGeometry *pg)
 {
+	struct file_list_part *fl = FL_PART(w);
+	
 	if(ig->request_mode & (CWWidth | CWHeight)) {
 		Dimension rwidth = (ig->request_mode & CWWidth) ?
 			ig->width : CORE_WIDTH(w);
 		Dimension rheight = (ig->request_mode & CWHeight) ?
 			ig->height : CORE_HEIGHT(w);
-
-		compute_placement(w, rwidth, rheight);
-		update_sbar_visibility(w, rwidth,rheight);
+		
+		if(!fl->in_sb_update) {
+			compute_placement(w, rwidth, rheight);
+			update_sbar_visibility(w, rwidth,rheight);
+			update_sbar_range(w, rwidth, rheight);
+		}
 	}
 
 	memcpy(pg, ig, sizeof(XtWidgetGeometry));
@@ -1749,6 +1798,7 @@ static void initialize(Widget wreq, Widget wnew,
 	fl->file_list.show_contents = False;
 	fl->file_list.sz_lookup[0] = '\0';
 	fl->file_list.dragging = False;
+	fl->file_list.in_sb_update = False;
 
 	if(fl->file_list.shorten && (fl->file_list.shorten < SHORTEN_LEN_MIN)) {
 		WARNING(wnew, "shortenLabels length too short, using default!");
@@ -1876,6 +1926,7 @@ static Boolean set_values(Widget wcur, Widget wreq,
 
 	compute_placement(wset, req->core.width, req->core.height);
 	update_sbar_visibility(wset, CORE_WIDTH(wset), CORE_HEIGHT(wset));
+	update_sbar_range(wset, CORE_WIDTH(wset), CORE_HEIGHT(wset));
 	
 	return (XtIsRealized(wset) ? True : False);
 }
@@ -2790,9 +2841,14 @@ int file_list_add(Widget w,
 	compute_item_extents(w, i);
 	
 	if(fl->show_contents) {
+		Dimension view_width, view_height;
+		
+		get_view_dimensions(w, True, &view_width, &view_height);
 		sort_list(w);
-		compute_placement(w, CORE_WIDTH(w), CORE_HEIGHT(w));
-		update_sbar_visibility(w, CORE_WIDTH(w), CORE_HEIGHT(w));
+		compute_placement(w, view_width, view_height);
+		update_sbar_visibility(w, view_width, view_height);
+		get_view_dimensions(w, False, &view_width, &view_height);
+		update_sbar_range(w, view_width, view_height);
 		redraw_all(w);
 	}
 	if(selected) sel_change_handler(w);
@@ -2855,9 +2911,14 @@ int file_list_remove(Widget w, const char *name)
 	
 	/* recompute layout and redraw if contents are shown */
 	if(fl->show_contents) {
+		Dimension view_width, view_height;
+		
+		get_view_dimensions(w, True, &view_width, &view_height);
 		sort_list(w);
-		compute_placement(w, CORE_WIDTH(w), CORE_HEIGHT(w));
-		update_sbar_visibility(w, CORE_WIDTH(w), CORE_HEIGHT(w));
+		compute_placement(w, view_width, view_height);
+		update_sbar_visibility(w, view_width, view_height);
+		get_view_dimensions(w, False, &view_width, &view_height);
+		update_sbar_range(w, view_width, view_height);
 		redraw_all(w);
 	}
 	if(selected) sel_change_handler(w);	
@@ -2972,6 +3033,7 @@ void file_list_show_contents(Widget w, Boolean show)
 
 	fl->show_contents = show;	
 	update_sbar_visibility(w, CORE_WIDTH(w), CORE_HEIGHT(w));
+	update_sbar_range(w, CORE_WIDTH(w), CORE_HEIGHT(w));
 	redraw_all(w);
 }
 
