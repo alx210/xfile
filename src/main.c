@@ -607,11 +607,15 @@ static void create_main_menus(void)
 		{IT_END },
 
 		{IT_CASCADE, "toolsMenu", "&Tools", NULL, NULL},
-		{IT_PUSH, "newWindow","&New Window", new_window_cb, NULL},
 		{IT_PUSH, "terminal", "&Terminal", exec_terminal_cb, NULL},
 		/*{IT_PUSH, "search", "&Search", NULL},*/
 		{IT_END },
-				
+		
+		{IT_CASCADE, "windowMenu", "&Window", NULL, NULL},
+		{IT_PUSH, "new","&New...", new_window_cb, NULL},
+		{IT_PUSH, "duplicate","&Duplicate", dup_window_cb, NULL},
+		{IT_END },
+		
 		{IT_CASCADE_HELP, "helpMenu", "&Help", NULL, NULL},
 		/*{IT_PUSH, "manual", "&User Manual", NULL},*/
 		{IT_PUSH, "fileTypes", "&File Types", dbinfo_cb, NULL},

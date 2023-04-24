@@ -22,8 +22,8 @@ XFile.unmountCommand: umount
 !! The widget inherits tool's name, hence its resources may be set as follows
 ! XFile*toolsMenu.ximaging.labelString: XImaging
 ! XFile*toolsMenu.ximaging.mnemonic: X
-! XFile*toolsMenu.ximaging.acceleratorText: F11
-! XFile*toolsMenu.ximaging.accelerator: <Key>F11
+! XFile*toolsMenu.ximaging.acceleratorText: F9
+! XFile*toolsMenu.ximaging.accelerator: <Key>F9
 
 !! EXAMPLE: tools menu entry (file search with prompt for pattern)
 ! XFile.tools.find: xterm -hold -e find %p -name %u

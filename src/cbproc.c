@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <ctype.h>
 #include <errno.h>
 #include <unistd.h>
 #include <Xm/Xm.h>
@@ -618,8 +619,6 @@ void delete_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Could not complete requested action.\n%s.",
 			strerror(errno), NULL);
-	} else {
-		force_update();
 	}
 }
 
@@ -633,7 +632,10 @@ void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		"It may contain either absolute or relative path.", NULL, 0);
 	if(!link) return;
 	
-	target = realpath(app_inst.cur_sel.names[0], NULL);
+	if(strchr(link, '/'))
+		target = realpath(app_inst.cur_sel.names[0], NULL);
+	else
+		target = strdup(app_inst.cur_sel.names[0]);
 	
 	if(!target || (symlink(target, link) == -1) ) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
@@ -854,6 +856,47 @@ void reread_cb(Widget w, XtPointer pclient, XtPointer pcall)
 }
 
 void new_window_cb(Widget w, XtPointer pclient, XtPointer pcall)
+{
+	char *home, *input, *path;
+	
+	home = getenv("HOME");
+	if(!home) home = "/";
+
+	get_input: /* on failed access() check below */	
+	input = input_string_dlg(app_inst.wshell,
+		"Specify path to browse.", "~", ISF_PRESELECT);
+	
+	if(!input) return;
+	
+	path = input;
+	
+	while(isspace(*path)) path++;
+
+	if(*path == '\0') {
+		path = home;
+	} else if(*path == '~') {
+		size_t len = strlen(home) + strlen(path) + 1;
+		char *p;
+
+		p = malloc(len);
+		sprintf(p, "%s/%s", home, path + 1);
+		free(input);
+		path = input = p;
+	}
+
+	if(!access(path, X_OK)) {
+		fork_xfile(path);
+	} else {
+		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+			"Error accessing \'%s\'\n%s.", path, strerror(errno));
+		free(input);
+		goto get_input;
+	}
+	
+	free(input);
+}
+
+void dup_window_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	fork_xfile(app_inst.location);
 }

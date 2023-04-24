@@ -42,6 +42,7 @@ void path_change_cb(Widget, XtPointer, XtPointer);
 void show_path_field_cb(Widget, XtPointer, XtPointer);
 void show_status_field_cb(Widget, XtPointer, XtPointer);
 void new_window_cb(Widget, XtPointer, XtPointer);
+void dup_window_cb(Widget, XtPointer, XtPointer);
 void about_cb(Widget, XtPointer, XtPointer);
 void dbinfo_cb(Widget, XtPointer, XtPointer);
 void sub_shell_destroy_cb(Widget, XtPointer, XtPointer);

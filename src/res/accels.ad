@@ -35,7 +35,10 @@
 *viewMenu.filter.acceleratorText: Ctrl+F
 *viewMenu.filter.accelerator: Ctrl<Key>F
 
-*toolsMenu.newWindow.acceleratorText: F9
-*toolsMenu.newWindow.accelerator: <Key>F9
 *toolsMenu.terminal.acceleratorText: F10
 *toolsMenu.terminal.accelerator: <Key>F10
+
+*windowMenu.new.acceleratorText: F11
+*windowMenu.new.accelerator: <Key>F11
+*windowMenu.duplicate.acceleratorText: F12
+*windowMenu.duplicate.accelerator: <Key>F12
