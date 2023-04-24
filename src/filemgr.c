@@ -289,6 +289,7 @@ void set_sel_status_text(void)
 			
 	if(app_inst.cur_sel.count > 1) {
 
+		Boolean enoent = False;
 		size_t size_total = 0;
 		unsigned int i;
 		unsigned int n;
@@ -297,10 +298,15 @@ void set_sel_status_text(void)
 			if(!stat(app_inst.cur_sel.names[i], &st)) {
 				size_total += st.st_size;
 				n++;
+			} else if(errno == ENOENT) {
+				enoent = True;
 			}
 		}
 		set_status_text("%s in %u items selected",
 			get_size_string(size_total, sz_size), n);
+
+		if(enoent) force_update();
+
 	} else if(app_inst.cur_sel.count == 1) {
 		char *sz_owner;
 		char *disp_name;
@@ -310,8 +316,12 @@ void set_sel_status_text(void)
 		disp_name = gronk_ctrl_chars(app_inst.cur_sel.names[0]);
 		
 		if(stat(app_inst.cur_sel.names[0], &st)) {
-			set_status_text("Cannot stat '\%s\': %s",
-				disp_name, strerror(errno));
+			if(errno == ENOENT) {
+		 		force_update();
+			} else {
+				set_status_text("Cannot stat '\%s\': %s",
+					disp_name, strerror(errno));
+			}
 			return;
 		}
 
