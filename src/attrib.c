@@ -184,8 +184,6 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 
 	/* set initial toggle button states */
 	if(dlg_data->nfiles == 1) {
-		Arg arg;
-		XmString xms;
 		struct tm tm_file;
 		char *file_name = dlg_data->files[0];
 		char *link_name = NULL;
@@ -229,43 +227,26 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 		
 		psz = gronk_ctrl_chars(link_name ? link_name : file_name);
 		if(link_name) free(link_name);
-		xms = XmStringCreateLocalized(psz);
+		XmTextFieldSetString(dlg_data->wattrib[GID_NAME], psz);
 		free(psz);
-		XtSetArg(arg, XmNlabelString, xms);
-		XtSetValues(dlg_data->wattrib[GID_NAME], &arg, 1);
-		XmStringFree(xms);
 
-		xms = XmStringCreateLocalized(get_size_string(st.st_size, sz_size));
-		XtSetArg(arg, XmNlabelString, xms);
-		XtSetValues(dlg_data->wattrib[GID_SIZE], &arg, 1);
-		XmStringFree(xms);
-		
-		xms = XmStringCreateLocalized(
-			get_unix_type_string( (is_symlink ? lst.st_mode : st.st_mode) ));
-		XtSetArg(arg, XmNlabelString, xms);
-		XtSetValues(dlg_data->wattrib[GID_TYPE], &arg, 1);
-		XmStringFree(xms);
+		XmTextFieldSetString(dlg_data->wattrib[GID_SIZE],
+			get_size_string(st.st_size, sz_size));
+				
+		XmTextFieldSetString(dlg_data->wattrib[GID_TYPE],
+			get_unix_type_string( (is_symlink ? lst.st_mode : st.st_mode) ) );
 		
 		localtime_r(&st.st_ctime, &tm_file);
 		strftime(sz_time, TIME_BUFSIZ, DEF_TIME_FMT, &tm_file);
-		xms = XmStringCreateLocalized(sz_time);
-		XtSetArg(arg, XmNlabelString, xms);
-		XtSetValues(dlg_data->wattrib[GID_CTIME], &arg, 1);
-		XmStringFree(xms);
+		XmTextFieldSetString(dlg_data->wattrib[GID_CTIME], sz_time);
 
 		localtime_r(&st.st_mtime, &tm_file);
 		strftime(sz_time, TIME_BUFSIZ, DEF_TIME_FMT, &tm_file);
-		xms = XmStringCreateLocalized(sz_time);
-		XtSetArg(arg, XmNlabelString, xms);
-		XtSetValues(dlg_data->wattrib[GID_MTIME], &arg, 1);
-		XmStringFree(xms);
+		XmTextFieldSetString(dlg_data->wattrib[GID_MTIME], sz_time);
 
 		localtime_r(&st.st_atime, &tm_file);
 		strftime(sz_time, TIME_BUFSIZ, DEF_TIME_FMT, &tm_file);
-		xms = XmStringCreateLocalized(sz_time);
-		XtSetArg(arg, XmNlabelString, xms);
-		XtSetValues(dlg_data->wattrib[GID_ATIME], &arg, 1);
-		XmStringFree(xms);
+		XmTextFieldSetString(dlg_data->wattrib[GID_ATIME], sz_time);
 		
 		/* mode toggle gadgets */
 		for(i = 0; i < 3; i++) {
@@ -381,6 +362,7 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 	Widget wlabel[NUM_ATT_GAD];
 	Widget wtop;
 	XmString xms;
+	Pixel frame_bg;
 	XtCallbackRec cbr[2] = { NULL };
 
 	n = 0;
@@ -401,6 +383,10 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 	XmStringFree(xms);
 	XtSetArg(args[0], XmNmwmFunctions, MWM_FUNC_MOVE | MWM_FUNC_CLOSE);
 	XtSetValues(XtParent(wdlg), args, 1);
+	
+	/* Get background color for non-editable text fields */
+	XtSetArg(args[0], XmNbackground, &frame_bg);
+	XtGetValues(wdlg, args, 1);
 	
 	/* general properties */
 	n = 0;
@@ -424,16 +410,22 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 	wdata_rc = XmCreateRowColumn(wdlg, "data", args, n);
 	
 	for(i = 0; i < NUM_ATT_GAD; i++) {
-		char name[64];
 		n = 0;
 		xms = XmStringCreateLocalized((char*)attrib_sz[i]);
+		XtSetArg(args[n], XmNmarginHeight, 2); n++;
 		XtSetArg(args[n], XmNlabelString, xms); n++;
 		wlabel[i] = XmCreateLabelGadget(wlabel_rc, "label", args, n);
 		XmStringFree(xms);
-
+		
 		n = 0;
-		snprintf(name, 64, "label%s", attrib_sz[i]);
-		dlg_data->wattrib[i] = XmCreateLabelGadget(wdata_rc, name, args, n);
+		XtSetArg(args[n], XmNmarginHeight, 1); n++;
+		XtSetArg(args[n], XmNhighlightThickness, 1); n++;
+		XtSetArg(args[n], XmNshadowThickness, 0); n++;
+		XtSetArg(args[n], XmNcursorPositionVisible, False); n++;
+		XtSetArg(args[n], XmNeditable, False); n++;
+		XtSetArg(args[n], XmNbackground, frame_bg); n++;
+		dlg_data->wattrib[i] = XmCreateTextField(
+			wdata_rc, "attribute", args, n);
 	}
 	if(dlg_data->nfiles > 1) {
 		XtManageChild(dlg_data->wattrib[GID_SIZE]);
@@ -443,10 +435,7 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 		XtManageChildren(wlabel, NUM_ATT_GAD);
 	}
 	
-	xms = XmStringCreateLocalized("(computing)");
-	XtSetArg(args[0], XmNlabelString, xms);
-	XtSetValues(dlg_data->wattrib[GID_SIZE], args, 1);
-	XmStringFree(xms);
+	XmTextFieldSetString(dlg_data->wattrib[GID_SIZE], "(computing)");
 
 	/* owner */
 	n = 0;
@@ -897,8 +886,6 @@ static void totals_update_cb(XtPointer cbd, XtIntervalId *iid)
 		(struct attrib_dlg_data*) cbd;
 	char size_sz[SIZE_CS_MAX + 3];
 	char *items_sz = NULL;
-	XmString label;
-	Arg args[5];
 	
 	if(dlg_data->wp_running) {
 		/* hopefully this signifies clearly enough that we're still counting */	
@@ -935,11 +922,7 @@ static void totals_update_cb(XtPointer cbd, XtIntervalId *iid)
 		char content_sz[strlen(size_sz) + strlen(items_sz) + 4];
 
 		sprintf(content_sz, "%s (%s)", size_sz, items_sz);
-
-		label = XmStringCreateLocalized(content_sz);
-		XtSetArg(args[0], XmNlabelString, label);
-		XtSetValues(dlg_data->wattrib[GID_SIZE], args, 1);
-		XmStringFree(label);
+		XmTextFieldSetString(dlg_data->wattrib[GID_SIZE], content_sz);
 	}
 	
 	if(items_sz) free(items_sz);
