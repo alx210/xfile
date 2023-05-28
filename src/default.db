@@ -73,6 +73,7 @@ Tarball {
 	icon tar
 	match_name {
 		*.tar
+		*.tgz
 		*.tar.[zZ]
 		*.tar.xz
 		*.tar.gz
