@@ -931,7 +931,7 @@ static void xfile_open(int argc, char **argv)
 			name = strdup(argv[i]);
 		
 		path = get_working_dir();
-		if(escape_string(path, &esc_str)) {
+		if(!escape_string(path, &esc_str)) {
 			free(path);
 			path = esc_str;
 		}
