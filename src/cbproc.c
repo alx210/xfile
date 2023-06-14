@@ -928,7 +928,7 @@ void path_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Specified path \'%s\' is not a directory.",cbd->value);
 		cbd->accept = False;
-	} else if(set_location(cbd->value, True)) {
+	} else if(!set_location(cbd->value, True)) {
 		cbd->accept = True;
 	} else {
 		cbd->accept = False;
