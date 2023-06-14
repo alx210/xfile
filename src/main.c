@@ -1073,7 +1073,8 @@ void set_ui_sensitivity(short flags)
 	};
 	
 	char *single_ops[] = {
-		"*rename"
+		"*rename",
+		"*linkTo"
 	};
 	
 	for(i = 0; i < XtNumber(sel_ops); i++) {
