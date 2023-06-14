@@ -920,9 +920,15 @@ void path_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	struct path_field_cb_data *cbd = (struct path_field_cb_data*) pcall;
 	struct stat st;
 	
-	dbg_trace("%s\n", cbd->value);
-	if(!stat(cbd->value, &st) && S_ISDIR(st.st_mode) &&
-		!set_location(cbd->value, True)) {
+	if(stat(cbd->value, &st) == -1) {
+		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+			"Error accessing \'%s\'\n%s.",cbd->value, strerror(errno));	
+		cbd->accept = False;
+	} else if(!S_ISDIR(st.st_mode)) {
+		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+			"Specified path \'%s\' is not a directory.",cbd->value);
+		cbd->accept = False;
+	} else if(set_location(cbd->value, True)) {
 		cbd->accept = True;
 	} else {
 		cbd->accept = False;

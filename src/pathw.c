@@ -201,12 +201,14 @@ static void input_activate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	if(notify_client(wparent, new_path)) {
 		path_field_set_location(wparent, new_path, False);
 		XtFree(new_path);	
-	} else {
+	} else if(wp->tmp_path) {
 		XmTextFieldSetString(w, wp->tmp_path);
 	}
 	
-	XtFree(wp->tmp_path);
-	wp->tmp_path = NULL;
+	if(wp->tmp_path) {
+		XtFree(wp->tmp_path);
+		wp->tmp_path = NULL;
+	}
 	wp->editing = False;
 	
 	/* assuming the next widget is whatever this path box sets path for
@@ -244,6 +246,7 @@ static void input_unfocus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	if(wp->tmp_path) {
 		XmTextFieldSetString(w, wp->tmp_path);
 		XtFree(wp->tmp_path);
+		wp->tmp_path = NULL;
 	}
 	wp->editing = False;
 	for(i = 0; i < wp->ncomp; i++)
