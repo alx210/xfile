@@ -63,6 +63,7 @@ common_install: xfile xfile.ad xfile.1
 	install -o 0 -g 0 -m 775 -d $(SHAREDIR)/icons
 	for n in icons/*.xpm; do install -o 0 -g 0 -m 664 $$n $(SHAREDIR)/$$n; done
 	install -o 0 -g 0 -m 664 icons/README $(SHAREDIR)/README.icons
+	install -o 0 -g 0 -m 664 xbm/cabinet.xpm $(PREFIX)/share/pixmaps/xfile_48x48.xpm
 
 # Removal
 uninstall:
