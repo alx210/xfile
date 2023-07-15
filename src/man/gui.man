@@ -1,7 +1,7 @@
 .SH USER INTERFACE
 .SS Directory View
 By default, icon size is deduced from label font height\. This can be controlled
-wit the iconSize resource. Custom icons may be installed in \.xfile/icons user's
+with the iconSize resource. Custom icons may be installed in \.xfile/icons user's
 home sub-directory (see also the FILES section)\. If an icon specified in the
 type database cannot be found, a built-in, generic icon will be used instead\.
 .PP

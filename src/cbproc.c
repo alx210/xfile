@@ -176,6 +176,7 @@ static void exec_string_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	set_action_status_text("Executing", exp_cmd);
 	rv = spawn_command(exp_cmd);
 	if(rv) {
+		unescape_string(exp_cmd);
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Error executing action command:\n%s\n%s.",
 			exp_cmd, strerror(rv));
@@ -273,7 +274,12 @@ static void action_status_timer_cb(XtPointer closure, XtIntervalId *iid)
 /* Temporarily sets status-bar text message */
 static void set_action_status_text(const char *action, const char *cmd)
 {
-	set_status_text("%s %s", action, cmd);
+	char *str = strdup(cmd);
+	
+	unescape_string(str);
+	set_status_text("%s: %s", action, str);
+	free(str);
+
 	XtAppAddTimeOut(app_inst.context, EXEC_STATUS_TIMEOUT,
 		action_status_timer_cb, NULL);
 }

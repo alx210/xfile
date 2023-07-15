@@ -256,6 +256,21 @@ int escape_string(const char *string, char **result)
 }
 
 /*
+ * Does the opposite of escape_string, modifying the string specified
+ */
+void unescape_string(char *str)
+{
+	char *p = str;
+	
+	while(*p) {
+		if(*p == '\\')
+			memmove(p, p + 1, strlen(p));
+
+		p++;
+	}
+}
+
+/*
  * Splits cmd_spec into separate arguments, cmd_spec will be modified in
  * process and pointers into it placed in argv, terminated with NULL.
  * Quotation marks and escape character \ are threated same way as by sh(1).

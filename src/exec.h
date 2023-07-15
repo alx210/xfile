@@ -33,6 +33,8 @@ int expand_env_vars(const char *in, struct env_var_rec *vars, char **out);
  */
 int escape_string(const char *string, char **result);
 
+/* Does the opposite of escape_string, modifying the string specified */
+void unescape_string(char *str);
 
 /*
  * Splits cmd_spec into separate arguments, cmd_spec will be modified in
