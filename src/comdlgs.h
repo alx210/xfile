@@ -53,8 +53,8 @@ char* dir_select_dlg(Widget parent, const char *title,
  * Returns a valid string or NULL if cancelled. If a non NULL pointer
  * is returned it must be freed by the caller.
  */
-char* input_string_dlg(Widget parent, const char *msg_str,
-	const char *init_str, int flags);
+char* input_string_dlg(Widget parent, const char *title,
+	const char *msg_str, const char *init_str, int flags);
 
 /* input_string_dlg flags */
 #define ISF_PRESELECT 0x01	/* preselect the text (title for file names) */

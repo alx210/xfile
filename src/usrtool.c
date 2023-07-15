@@ -124,7 +124,8 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 	if((token = strstr(tool->command, "%u"))) {
 		if( (token != tool->command) ||
 			( (*(token - 1) != '%' ) && (*(token - 1) != '\\' ) ) ) {
-			user_param = input_string_dlg(app_inst.wshell,
+			user_param = input_string_dlg(app_inst.wshell, 
+				"Command Arguments",
 				"Specify additional arguments",	tool->hist, ISF_PRESELECT);
 			if(tool->hist) free(tool->hist);
 			tool->hist = user_param;

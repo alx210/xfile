@@ -247,8 +247,8 @@ static void msgbox_popup_cb(Widget w, XtPointer client, XtPointer call)
  * Displays a blocking file title input dialog.
  * Returns a valid string or NULL if cancelled.
  */
-char* input_string_dlg(Widget parent, const char *msg_str,
-	const char *init_str, int flags)
+char* input_string_dlg(Widget parent, const char *title,
+	const char *msg_str, const char *init_str, int flags)
 {
 	Widget dlg;
 	Arg arg[8];
@@ -260,7 +260,7 @@ char* input_string_dlg(Widget parent, const char *msg_str,
 	struct input_dlg_data idd = {flags, NULL, False, False };
 
 	XtSetArg(arg[i], XmNdialogType, XmDIALOG_PROMPT); i++;
-	XtSetArg(arg[i], XmNtitle, APP_TITLE); i++;
+	XtSetArg(arg[i], XmNtitle, title ? title : APP_TITLE); i++;
 	XtSetArg(arg[i], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); i++;
 
 	dlg = XmCreatePromptDialog(parent, "inputDialog", arg, i);

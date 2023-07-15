@@ -15,7 +15,7 @@ context menu\. Depending on system configuration, alternate un/mount command may
 be specified (see mountCommand, unmountCommand), or disabled (see userMounts)\.
 .PP
 Additionally, XFile may be configured to utilize a user mount daemon that
-manages a "media" directory (see mediaDirectory, mediaOwner, mediaMountCommand,
+manages a "media" directory (see mediaDirectory, mediaMountCommand,
 mediaUnmountCommand X resources)\.
 .SS File/Context Menu
 Actions defined in the file type database appear first in File/Context menus,
