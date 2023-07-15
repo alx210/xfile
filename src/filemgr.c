@@ -762,7 +762,7 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 		if(list_size < (nfiles + 1)) {
 			size_t new_size = list_size + FILE_LIST_GROW_BY;
 			file_list = realloc(file_list, sizeof(struct watch_rec) * new_size);
-			if(!file_list) return errno;
+			if(!file_list) return RP_ENOMEM;
 			list_size = new_size;
 		}
 		file_list[nfiles].name = strdup(ent->d_name);
@@ -897,7 +897,7 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 					size_t new_size = list_size + FILE_LIST_GROW_BY;
 					file_list = realloc(file_list,
 						sizeof(struct watch_rec) * new_size);
-					if(!file_list) return errno;
+					if(!file_list) return RP_ENOMEM;
 					list_size = new_size;
 				}
 				file_list[nfiles].name = strdup(ent->d_name);
