@@ -113,7 +113,7 @@ static void read_error_msg(const char*, const char*, Boolean);
 static void xt_read_proc_sig_handler(XtPointer,XtSignalId*);
 static void read_proc_sigterm(int sig);
 static void read_proc_sigalrm(int sig);
-static Boolean filter(const char*);
+static Boolean filter(const char*, mode_t);
 static void status_timeout_cb(XtPointer, XtIntervalId*);
 
 /* Local variables */
@@ -265,8 +265,8 @@ void set_default_status_text(void)
 		if(app_inst.nfiles_hidden)
 			set_status_text("%s in %u %s (%u %s)",
 				get_size_string(app_inst.size_shown, sz_size),
-				app_inst.nfiles_shown, item_noun, app_inst.nfiles_hidden,
-				app_inst.filter ? "filtered out" : "not shown");
+				app_inst.nfiles_shown, item_noun,
+				app_inst.nfiles_hidden, "not shown");
 		else
 			set_status_text("%s in %u items",
 				get_size_string(app_inst.size_shown, sz_size),
@@ -274,8 +274,8 @@ void set_default_status_text(void)
 	} else {
 		if(app_inst.nfiles_hidden)
 			set_status_text("%u %s (%u %s)",
-				app_inst.nfiles_shown, item_noun, app_inst.nfiles_hidden,
-				app_inst.filter ? "filtered out" : "not shown");
+				app_inst.nfiles_shown, item_noun,
+				app_inst.nfiles_hidden, "not shown");
 		else
 			set_status_text("%u %s", app_inst.nfiles_shown, item_noun);
 	}
@@ -669,10 +669,13 @@ static void read_error_msg(const char *path, const char *estr, Boolean blocking)
 /*
  * Returns True if file_name should be displayed
  */
-static Boolean filter(const char *file_name)
+static Boolean filter(const char *file_name, mode_t mode)
 {
 	if(file_name[0] == '.' && !app_res.show_all)
 		return False;
+
+	if(S_ISDIR(mode) && !app_res.filter_dirs)
+		return True;
 
 	if(app_inst.filter) {
 		char *filter = app_inst.filter;
@@ -737,11 +740,6 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 		if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
 			continue;
 		
-		if(!filter(ent->d_name)) {
-			files_skipped++;
-			continue;
-		}
-
 		if(lstat(ent->d_name, &st) == -1) {
 			msg.stat_errno = errno;
 			memset(&st, 0, sizeof(struct stat));
@@ -753,6 +751,11 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 			}
 		} else {
 			msg.is_symlink = False;
+		}
+
+		if( !filter(ent->d_name, st.st_mode) ) {
+			files_skipped++;
+			continue;
 		}
 
 		files_total++;
@@ -863,11 +866,6 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 			if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
 				continue;
 
-			if(!filter(ent->d_name)) {
-				files_skipped++;
-				continue;
-			}
-
 			for(i = 0; i < nfiles; i++) {
 				if(!strcmp(file_list[i].name, ent->d_name)) {
 					file_list[i].touched = True;
@@ -886,6 +884,11 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 				}
 			} else {
 				msg.is_symlink = False;
+			}
+
+			if( !filter(ent->d_name, st.st_mode) ) {
+				files_skipped++;
+				continue;
 			}
 
 			files_total++;
