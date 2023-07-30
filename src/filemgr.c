@@ -406,6 +406,7 @@ static void xt_read_proc_sig_handler(XtPointer p, XtSignalId *id)
 	
 	/* reset global context data */
 	memset(&app_inst.cur_sel, 0, sizeof(struct file_list_sel));
+	app_inst.nfiles_read = 0;
 	app_inst.nfiles_shown = 0;
 	app_inst.nfiles_hidden = 0;
 	app_inst.size_shown = 0;
@@ -417,6 +418,7 @@ static void xt_read_proc_sig_handler(XtPointer p, XtSignalId *id)
 
 	set_default_status_text();
 	set_ui_sensitivity(0);
+	update_shell_title(NULL);
 }
 
 
@@ -434,6 +436,7 @@ static int read_directory(void)
 
 	/* reset global context data */
 	memset(&app_inst.cur_sel, 0, sizeof(struct file_list_sel));
+	app_inst.nfiles_read = 0;
 	app_inst.nfiles_shown = 0;
 	app_inst.nfiles_hidden = 0;
 	app_inst.size_shown = 0;
@@ -492,7 +495,7 @@ static void status_timeout_cb(XtPointer data, XtIntervalId *iid)
 	if(rp_data.init_done) return;
 	
 	set_status_text("Reading %s (%u items)",
-		app_inst.location, app_inst.nfiles_shown);
+		app_inst.location, app_inst.nfiles_read);
 	XtAppAddTimeOut(app_inst.context,
 		STATUS_UPDATE_INT, status_timeout_cb, NULL);
 }
@@ -542,28 +545,35 @@ static void reader_callback_proc(XtPointer cd, int *pfd, XtInputId *iid)
 	}
 	
 	switch(msg.reason) {
-		case MSG_EOD:
-		app_inst.nfiles_hidden = msg.files_skipped;
-		app_inst.nfiles_shown = msg.files_total;
-		app_inst.size_shown = msg.size_total;
+		case MSG_EOD: {
+			Boolean changed = 
+				(app_inst.nfiles_hidden != msg.files_skipped ||
+				app_inst.nfiles_shown != msg.files_total ||
+				app_inst.size_shown != msg.size_total) ? True : False;
 
-		if(!rp_data.init_done) {
-			rp_data.init_done = True;
-			if(xt_update_iid) {
-				XtRemoveTimeOut(xt_update_iid);
-				xt_update_iid = None;
+			app_inst.nfiles_hidden = msg.files_skipped;
+			app_inst.nfiles_shown = msg.files_total;
+			app_inst.size_shown = msg.size_total;
+
+			if(!rp_data.init_done) {
+				rp_data.init_done = True;
+				if(xt_update_iid) {
+					XtRemoveTimeOut(xt_update_iid);
+					xt_update_iid = None;
+				}
+
+				set_ui_sensitivity(UIF_DIR);
+				file_list_show_contents(app_inst.wlist, True);
+				update_shell_title(app_inst.location);
 			}
 
-			set_ui_sensitivity(UIF_DIR);
-			file_list_show_contents(app_inst.wlist, True);
-			update_shell_title(app_inst.location);
-			set_default_status_text();
-		}
-		if(app_inst.cur_sel.count)
-			set_sel_status_text();
-		else
-			set_default_status_text();
-		break;
+			if(changed) {
+				if(app_inst.cur_sel.count)
+					set_sel_status_text();
+				else
+					set_default_status_text();
+			}
+		} break;
 		
 		case MSG_UPDATE:
 		update = True; /* ...and fall trough */
@@ -632,8 +642,7 @@ static void reader_callback_proc(XtPointer cd, int *pfd, XtInputId *iid)
 		
 		res = file_list_add(app_inst.wlist, &fli, update);
 		
-		/* we use just that one for status update */
-		app_inst.nfiles_shown = msg.files_total;
+		app_inst.nfiles_read = msg.files_total;
 		
 		if(res)	{
 			read_error_msg(app_inst.location, strerror(res), False);
@@ -655,9 +664,6 @@ static void read_error_msg(const char *path, const char *estr, Boolean blocking)
 	char tmpl[] = "Error reading %s\n%s.";
 	char *buffer;
 
-	update_shell_title(NULL);
-	set_status_text("Error reading directory");
-	
 	if(!estr) estr = "Unexpected error";
 	buffer = malloc(snprintf(NULL, 0, tmpl, path, estr) + 1);
 	sprintf(buffer, tmpl, path, estr);

@@ -11,11 +11,11 @@ XFile is a file manager for Unix systems running X11\.
 .SS Options
 .TP
 \fB+/-a\fP
-Ignore/show entries starting with a dot character. 
+Ignore/show file names starting with a dot\. 
 .TP
 \fB-f\fP <glob pattern>
 Hide files matching glob pattern specified\. Prefix the pattern with the
-negation ! character to hide matching files\.
+! character to negate\.
 .TP
 \fb-l\fP
 Invert sort direction (see sortDirection resource)\.

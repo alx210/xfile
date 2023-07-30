@@ -692,7 +692,8 @@ void select_pattern_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	if(last_input) free(last_input);
 	last_input = input;
 	
-	file_list_select_pattern(app_inst.wlist, input, True);
+	if(file_list_select_pattern(app_inst.wlist, input, True))
+		set_status_text("No files matched %s", input);
 }
 
 void toggle_detailed_cb(Widget w, XtPointer pclient, XtPointer pcall)

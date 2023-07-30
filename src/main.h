@@ -76,6 +76,7 @@ struct app_inst_data {
 	char *location;
 	struct file_list_sel cur_sel;
 
+	unsigned int nfiles_read;
 	unsigned int nfiles_shown;
 	unsigned int nfiles_hidden;
 	unsigned long size_shown;
