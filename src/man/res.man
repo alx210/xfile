@@ -155,6 +155,11 @@ Specifies the sorting order of displayed items. Default is \fIname\fP\.
 Specifies whether audible feedback is enabled for item look\-up\.
 Default is \fBTrue\fP\.
 .TP
+\fBnumberedSort\fP \fIBoolean\fP
+Specifies whether coinciding strings of digits in file names should be
+compared numerically, so that numbered files will be listed in the order
+expected\. Default is \fBTrue\fP\.
+.TP
 \fBviewMode\fP compact|detailed
 Specifies the view mode. Default is compact\.
 .SS File List Widget Fonts

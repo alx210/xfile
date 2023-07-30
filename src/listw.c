@@ -61,8 +61,11 @@ static char* shorten_mb_string(const char*, size_t, Boolean ltor);
 static size_t mb_strlen(const char*);
 static void compute_item_extents(Widget, unsigned int);
 static void sort_list(Widget);
+static int compare_names(const char*, const char*);
 static int sort_by_name(const void*, const void*);
 static int sort_by_name_des(const void*, const void*);
+static int num_sort_by_name(const void*, const void*);
+static int num_sort_by_name_des(const void*, const void*);
 static int sort_by_time(const void*, const void*);
 static int sort_by_time_des(const void*, const void*);
 static int sort_by_type(const void*, const void*);
@@ -348,6 +351,15 @@ static XtResource resources[] = {
 		RFO(file_list.lookup_time),
 		XtRImmediate,
 		(void*)DEF_LOOKUP_TIMEOUT
+	},
+	{
+		XfNnumberedSort,
+		XfCNumberedSort,
+		XtRBoolean,
+		sizeof(Boolean),
+		RFO(file_list.numbered_sort),
+		XtRImmediate,
+		(void*)True
 	},
 };
 #undef RFO
@@ -647,9 +659,15 @@ static void sort_list(Widget w)
 
 	switch(fl->sort_order) {
 		case XfNAME:
-		qsort(fl->items, fl->num_items,
-			sizeof(struct item_rec),
-			asc ? sort_by_name : sort_by_name_des);
+		if(fl->numbered_sort) {
+			qsort(fl->items, fl->num_items,
+				sizeof(struct item_rec),
+				asc ? num_sort_by_name : num_sort_by_name_des);
+		} else {
+			qsort(fl->items, fl->num_items,
+				sizeof(struct item_rec),
+				asc ? sort_by_name : sort_by_name_des);
+		}
 		break;
 		
 		case XfTIME:
@@ -679,6 +697,59 @@ static void sort_list(Widget w)
 }
 
 /*
+ * This is like strcasecmp, except it will compare
+ * coinciding strings of digits numerically
+ */
+static int compare_names(const char *a, const char *b)
+{
+	int res;
+	
+	for( ; *a && *b; a++, b++) {
+		if(isdigit(*a) && isdigit(*b)) {
+			const char *sp_a = a;
+			const char *sp_b = b;
+			unsigned int ai = 0;
+			unsigned int bi = 0;
+			unsigned int fa = 1;
+			const char *p;
+
+			while(*sp_a && isdigit(*sp_a)) sp_a++;
+			while(*sp_b && isdigit(*sp_b)) sp_b++;
+
+			p = sp_a;
+
+			do {
+				p--;
+				ai += (*p - '0') * fa;
+				fa *= 10;
+			} while(p != a);
+
+			p = sp_b;
+			fa = 1;
+
+			do {
+				p--;
+				bi += (*p - '0') * fa;
+				fa *= 10;
+			} while(p != b);
+			
+			a = sp_a;
+			b = sp_b;
+			
+			res = (ai - bi);
+			if(res) return res;
+		} else {
+			res = tolower(*a) - tolower(*b);
+			if(res) return res;
+		}
+	}
+	
+	if(*a) res = 1; else if(*b) res = -1; else res = 0;
+	
+	return res;
+}
+
+/*
  * Different flavors of quick sort compare functions
  */
 static int sort_by_name_des(const void *aptr, const void *bptr)
@@ -697,6 +768,25 @@ static int sort_by_name(const void *aptr, const void *bptr)
 	const struct item_rec *b = (struct item_rec*)bptr;
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
 	return r ? r : strcasecmp(b->name, a->name);
+}
+
+
+static int num_sort_by_name_des(const void *aptr, const void *bptr)
+{
+	int r;
+	const struct item_rec *a = (struct item_rec*)aptr;
+	const struct item_rec *b = (struct item_rec*)bptr;
+	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
+	return r ? r : compare_names(a->name, b->name);
+}
+
+static int num_sort_by_name(const void *aptr, const void *bptr)
+{
+	int r;
+	const struct item_rec *a = (struct item_rec*)aptr;
+	const struct item_rec *b = (struct item_rec*)bptr;
+	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
+	return r ? r : compare_names(b->name, a->name);
 }
 
 static int sort_by_time_des(const void *aptr, const void *bptr)

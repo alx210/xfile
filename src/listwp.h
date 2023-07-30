@@ -197,6 +197,7 @@ struct file_list_part {
 	Boolean show_contents;
 	Boolean grab_prim_sel;
 	Boolean silent;
+	Boolean numbered_sort;
 	XmRenderTable label_rt;
 	XtCallbackList default_action_cb;
 	XtCallbackList sel_change_cb;
