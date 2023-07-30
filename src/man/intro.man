@@ -20,8 +20,8 @@ negation ! character to hide matching files\.
 \fb-l\fP
 Invert sort direction (see sortDirection resource)\.
 .TP
-\fB-s\fP(s|t|f|x)
-Specify sort order: \fBs\fPize, \fBt\fPime, \fBf\fPile type, suffi\fBx\fP\.
+\fB-s\fP(n|s|t|f|x)
+Specify sort order: \fBn\fPame, \fBs\fPize, \fBt\fPime, \fBf\fPile type, suffi\fBx\fP\.
 .SS Arguments
 XFile will display current working directory if invoked without arguments\.
 .PP

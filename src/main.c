@@ -455,6 +455,7 @@ static void create_main_window(void)
 			case 't': v = XfTIME; break;
 			case 'f': v = XfTYPE; break;
 			case 'x': v = XfSUFFIX; break;
+			case 'n': v = XfNAME; break;
 			default :
 			stderr_msg("Illegal sort option specified, using default.\n");
 			v = XfNAME;
