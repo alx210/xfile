@@ -268,9 +268,9 @@ void set_default_status_text(void)
 				app_inst.nfiles_shown, item_noun,
 				app_inst.nfiles_hidden, "not shown");
 		else
-			set_status_text("%s in %u items",
+			set_status_text("%s in %u %s",
 				get_size_string(app_inst.size_shown, sz_size),
-				app_inst.nfiles_shown);
+				app_inst.nfiles_shown, item_noun);
 	} else {
 		if(app_inst.nfiles_hidden)
 			set_status_text("%u %s (%u %s)",
@@ -557,6 +557,7 @@ static void reader_callback_proc(XtPointer cd, int *pfd, XtInputId *iid)
 
 			if(!rp_data.init_done) {
 				rp_data.init_done = True;
+				changed = True;
 				if(xt_update_iid) {
 					XtRemoveTimeOut(xt_update_iid);
 					xt_update_iid = None;
