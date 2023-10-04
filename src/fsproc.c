@@ -720,7 +720,7 @@ static void progress_cb(XtPointer cd, int *pfd, XtInputId *iid)
 	}
 	
 	if(feedback == FBT_FATAL) {
-		quit_with_error(d, NULL);
+		quit_with_error(d, emsg);
 	} else if(feedback != FBT_NONE) {
 		feedback_dialog(d, feedback, emsg);
 	}
@@ -805,13 +805,13 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 
 	if(wpd->dest) {
 		if(stat(wpd->dest, &st_dest) == -1) {
-			wp_post_message(wpd, FBT_FATAL, NULL, cdest, NULL,
-				wp_error_string("Error accessing", cdest,
+			wp_post_message(wpd, FBT_FATAL, NULL, wpd->dest, NULL,
+				wp_error_string("Error accessing", wpd->dest,
 				NULL, strerror(errno)));
 			exit(EXIT_SUCCESS);
 		} else if(!S_ISDIR(st_dest.st_mode)) {
-			wp_post_message(wpd, FBT_FATAL, NULL, cdest, NULL,
-				wp_error_string("Error writing", cdest,
+			wp_post_message(wpd, FBT_FATAL, NULL, wpd->dest, NULL,
+				wp_error_string("Error writing", wpd->dest,
 				NULL, strerror(ENOTDIR)));
 			exit(EXIT_SUCCESS);			
 		}
