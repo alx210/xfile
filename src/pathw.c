@@ -37,7 +37,6 @@ static Boolean set_values(Widget, Widget, Widget, ArgList, Cardinal*);
 static void default_render_table(Widget, int, XrmValue*);
 static void default_shadow_thickness(Widget, int, XrmValue*);
 static void comp_button_cb(Widget, XtPointer, XtPointer);
-static void input_change_cb(Widget, XtPointer, XtPointer);
 static void input_activate_cb(Widget, XtPointer, XtPointer);
 static void input_focus_cb(Widget, XtPointer, XtPointer);
 static void input_unfocus_cb(Widget, XtPointer, XtPointer);
@@ -183,15 +182,6 @@ static void comp_button_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	set_path_from_component(XtParent(w), *id);
 }
 
-static void input_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
-{
-	XmTextVerifyCallbackStruct *vcs = (XmTextVerifyCallbackStruct*)pcall;
-	
-	if(vcs->reason == XmCR_MODIFYING_TEXT_VALUE) {
-		vcs->doit = True;
-	}
-}
-
 static void input_activate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	Widget wparent = XtParent(w);
@@ -205,10 +195,6 @@ static void input_activate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		XmTextFieldSetString(w, wp->tmp_path);
 	}
 	
-	if(wp->tmp_path) {
-		XtFree(wp->tmp_path);
-		wp->tmp_path = NULL;
-	}
 	wp->editing = False;
 	
 	/* assuming the next widget is whatever this path box sets path for
@@ -223,18 +209,19 @@ static void input_focus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	Arg args[1];
 	struct path_field_part *wp = PART(pclient);
 	Cardinal i;
+	char *cur_path = XmTextFieldGetString(w);
 
 	for(i = 0; i < wp->ncomp; i++)
 		XtUnmapWidget(wp->wcomp[i]);
 
-	wp->tmp_path = XmTextFieldGetString(w);
 	wp->editing = True;
 
 	draw_outline((Widget)pclient);
 
 	XtSetArg(args[0], XmNcursorPositionVisible, True);
 	XtSetValues(w, args, 1);
-	XmTextFieldSetInsertionPosition(w, strlen(wp->tmp_path));
+	XmTextFieldSetInsertionPosition(w, strlen(cur_path));
+	XtFree(cur_path);
 }
 
 static void input_unfocus_cb(Widget w, XtPointer pclient, XtPointer pcall)
@@ -243,12 +230,11 @@ static void input_unfocus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	struct path_field_part *wp = PART(pclient);
 	Cardinal i;
 	
-	if(wp->tmp_path) {
+	if(wp->tmp_path)
 		XmTextFieldSetString(w, wp->tmp_path);
-		XtFree(wp->tmp_path);
-		wp->tmp_path = NULL;
-	}
+
 	wp->editing = False;
+
 	for(i = 0; i < wp->ncomp; i++)
 		XtMapWidget(wp->wcomp[i]);
 	
@@ -307,8 +293,6 @@ static void initialize(Widget wreq, Widget wnew,
 	int fheight, fascent, fdescent;
 	XtCallbackRec input_activate_cbr[] =
 		{ {input_activate_cb, (XtPointer)wnew }, { NULL, NULL } };
-	XtCallbackRec input_change_cbr[] =
-		{ {input_change_cb, (XtPointer)wnew }, { NULL, NULL } };
 	XtCallbackRec input_focus_cbr[] =
 		{ {input_focus_cb, (XtPointer)wnew }, { NULL, NULL } };
 	XtCallbackRec input_unfocus_cbr[] =
@@ -341,7 +325,6 @@ static void initialize(Widget wreq, Widget wnew,
 	XtSetArg(args[n], XmNfocusCallback, input_focus_cbr); n++;
 	XtSetArg(args[n], XmNlosingFocusCallback, input_unfocus_cbr); n++;
 	XtSetArg(args[n], XmNactivateCallback, input_activate_cbr); n++;
-	XtSetArg(args[n], XmNmodifyVerifyCallback, input_change_cbr); n++;
 	XtSetArg(args[n], XmNcursorPositionVisible, False); n++;
 	XtSetArg(args[n], XmNmarginWidth, wp->margin_width); n++;
 	XtSetArg(args[n], XmNmarginHeight, wp->margin_height); n++;
@@ -446,6 +429,7 @@ static void destroy(Widget w)
 	if(wp->wcomp) XtFree((char*)wp->wcomp);
 	if(wp->sz_comp) XtFree((char*)wp->sz_comp);
 	if(wp->comp_ids) XtFree((char*)wp->comp_ids);
+	if(wp->tmp_path) XtFree(wp->tmp_path);
 
 	wp->ncomp = 0;
 	wp->ncomp_max = 0;
@@ -571,6 +555,11 @@ static void update_location_data(Widget w, const char *path)
 	wp->comp_width = bx;
 	wp->ncomp = nc;
 	draw_outline(w);
+	
+	if(wp->tmp_path)
+		XtFree(wp->tmp_path);
+
+	wp->tmp_path = strdup(path);
 }
 
 /*
