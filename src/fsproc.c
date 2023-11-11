@@ -960,6 +960,7 @@ static int wp_copy_tree(struct wp_data *wpd,
 	struct stack *rec_stk = NULL;
 	struct stack *rem_stk = NULL;
 	struct stack *in_stk = NULL;
+	struct stack *ro_stk = NULL;
 	char *cur_path;
 	mode_t dir_mode;
 	int reply;
@@ -983,12 +984,16 @@ static int wp_copy_tree(struct wp_data *wpd,
 	/* set up stacks for recursion */
 	rec_stk = stk_alloc();
 	in_stk = stk_alloc();
-	if(!rec_stk || !in_stk) {
+	ro_stk = stk_alloc();
+	if(!rec_stk || !in_stk || !ro_stk) {
 		if(rec_stk) stk_free(rec_stk);
 		if(in_stk) stk_free(in_stk);
+		if(ro_stk) stk_free(ro_stk);
 		return ENOMEM;
 	}
 	if(stk_push(rec_stk, src, src_len + 1)) {
+		stk_free(in_stk);
+		stk_free(ro_stk);
 		stk_free(rec_stk);
 		return ENOMEM;
 	}
@@ -999,6 +1004,7 @@ static int wp_copy_tree(struct wp_data *wpd,
 			if(rem_stk) stk_free(rem_stk);
 			stk_free(rec_stk);
 			stk_free(in_stk);
+			stk_free(ro_stk);
 			return ENOMEM;
 		}
 	}
@@ -1035,14 +1041,19 @@ static int wp_copy_tree(struct wp_data *wpd,
 			}
 		}
 		
-		dir_mode = cd_st.st_mode;
-		
 		/* create destination directory */
 		dest_dir_fqn = build_path(NULL, dest, &cur_path[src_len], NULL);
 		if(!dest_dir_fqn) {
 			errv = errno;
 			free(cur_path);
 			break;
+		}
+		/* if source dir is read-only, make the copy writable temporarily */
+		if( !(cd_st.st_mode & WPERM) ) {
+			stk_push(ro_stk, dest_dir_fqn, strlen(dest_dir_fqn) + 1);
+			dir_mode = cd_st.st_mode | S_IWUSR;
+		} else {
+			dir_mode = cd_st.st_mode;
 		}
 		wp_check_create_path(wpd, dest_dir_fqn, dir_mode);
 		free(dest_dir_fqn);
@@ -1209,6 +1220,16 @@ static int wp_copy_tree(struct wp_data *wpd,
 	}
 	stk_free(rec_stk);
 	stk_free(in_stk);
+	
+	/* restore read-only directory attributes, if any */
+	while( (cur_path = stk_pop(ro_stk, NULL)) ) {
+		struct stat st;
+
+		if(!stat(cur_path, &st))
+			chmod(cur_path, st.st_mode & (~S_IWUSR));
+		free(cur_path);
+	}
+	stk_free(ro_stk);
 	
 	/* purge directory structure */
 	if(move) {
