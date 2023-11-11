@@ -1653,11 +1653,21 @@ static int wp_chattr_tree(struct wp_data *wpd, const char *src,
 	while( !errv && (cur_path = stk_pop(rec_stk, NULL)) ) {
 		Boolean eacces_once = False;
 		struct stat cd_st;
+		int rv;
 
 		wp_post_message(wpd, FBT_NONE, cur_path, NULL, NULL, NULL);
-
+		
 		retry_dir: /* see FB_RETRY_CONTINUE case below */
-		if( stat(cur_path, &cd_st) || !(dir = opendir(cur_path))) {
+
+		if(! (rv = lstat(cur_path, &cd_st)) ) {
+			/* skip symbolic links to directories */
+			if(S_ISLNK(cd_st.st_mode)) {
+				free(cur_path);
+				continue;
+			}
+		}
+
+		if(rv || !(dir = opendir(cur_path))) {
 			/* if read permission is requested, but not set,
 			 * tweak it here to be able to recurse */
 			if( (errno == EACCES) && !eacces_once &&
@@ -1713,7 +1723,7 @@ static int wp_chattr_tree(struct wp_data *wpd, const char *src,
 			}
 			
 			retry_sub_dir: /* see FB_RETRY_CONTINUE case below */
-			if(stat(cur_fqn, &st) == -1) {
+			if(lstat(cur_fqn, &st) == -1) {
 				int st_error = errno;
 				
 				if(wpd->ignore_read_err) continue;
@@ -1745,7 +1755,8 @@ static int wp_chattr_tree(struct wp_data *wpd, const char *src,
 				size_t fqn_len = strlen(cur_fqn) + 1;
 				if(stk_push(rec_stk, cur_fqn, fqn_len) ||
 					stk_push(rem_stk, cur_fqn, fqn_len)) errv = ENOMEM;
-			} else {
+			/* or proceed normally, ignoring symbolic links */
+			} else if(!S_ISLNK(st.st_mode)) {
 				wp_post_message(wpd, FBT_NONE, cur_fqn, NULL, NULL, NULL);
 				wp_chattr(wpd, cur_fqn, uid, gid, fmode, fmode_mask, flags);
 			}
