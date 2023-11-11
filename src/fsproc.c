@@ -60,6 +60,10 @@
 #define FB_NOPTIONS 4
 #define FB_VALID_ID(id) ((id) >= 0 && (id) <= 3)
 
+#define RPERM (S_IRUSR|S_IRGRP|S_IROTH)
+#define WPERM (S_IWUSR|S_IWGRP|S_IWOTH)
+#define XPERM (S_IXUSR|S_IXGRP|S_IXOTH)
+
 /* Work process data */
 enum wp_action {
 	WP_COPY,
@@ -1633,12 +1637,11 @@ static int wp_chattr_tree(struct wp_data *wpd, const char *src,
 
 		retry_dir: /* see FB_RETRY_CONTINUE case below */
 		if( stat(cur_path, &cd_st) || !(dir = opendir(cur_path))) {
-			/* we set directory permissions at last, but if IX... is
-			 * wanted anyway, we tweak it here to be able to recurse */
-			if( (errno == EACCES) && !eacces_once && 
-				((dmode & dmode_mask) & (S_IXUSR|S_IXGRP|S_IXOTH)) ) {
+			/* if read permission is requested, but not set,
+			 * tweak it here to be able to recurse */
+			if( (errno == EACCES) && !eacces_once &&
+				((dmode & dmode_mask) & (RPERM)) ) {
 				wp_chattr(wpd, cur_path, uid, gid, dmode, dmode_mask, flags);
-
 				eacces_once = True;
 				goto retry_dir;
 			}
@@ -1666,6 +1669,13 @@ static int wp_chattr_tree(struct wp_data *wpd, const char *src,
 				continue;
 			}
 			return errno;
+		}
+
+		/* we set directory permissions at last, but tweak them here
+		 * if necessary to be able to recurse */
+		if( !(cd_st.st_mode & WPERM) || !(cd_st.st_mode & XPERM) ) {
+			wp_chattr(wpd, cur_path, uid, gid,
+				WPERM|XPERM, WPERM|XPERM, flags);
 		}
 		
 		while( (ent = readdir(dir)) && !errv) {
@@ -1757,11 +1767,12 @@ static int wp_chattr(struct wp_data *wpd, const char *path,
 	if(!errv && (flags & (ATT_FMODE|ATT_DMODE)) ) {
 		struct stat st;
 		
-		if(!stat(path, &st))
-			mode |= ( ((st.st_mode & 0xfff) & (~mode_mask)) |
+		if(!stat(path, &st)) {
+			mode = ( ((st.st_mode & 0xfff) & (~mode_mask)) |
 				(mode & mode_mask) );
-		else
+		} else {
 			errv = errno;
+		}
 
 		if(!errv) {
 			if(!chmod(path, mode))

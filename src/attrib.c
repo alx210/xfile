@@ -652,7 +652,7 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 
 			n = 0;
 			xms = XmStringCreateLocalized((char*)mode_sz[i]);
-			XtSetArg(args[n], XmNuserData, &mode_bits[i]); n++;
+			XtSetArg(args[n], XmNuserData, &mask_bits[i]); n++;
 			XtSetArg(args[n], XmNvalueChangedCallback, toggle_cbr); n++;
 			XtSetArg(args[n], XmNlabelString, xms); n++;
 			XtSetArg(args[n], XmNspacing, 2); n++;
