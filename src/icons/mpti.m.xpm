@@ -7,7 +7,7 @@ static char * mpti_m_xpm[] = {
 ".	s Gray8	m black	c #212121212121",
 "X	s Color1	m black	c black",
 "o	s Color2	m white	c white",
-"O	s Color5	m black	c darkgreen",
+"O	s Color8	m white	c blue",
 "+	s Gray4	m white	c #949494949494",
 "@	s Color11	m black	c darkkhaki",
 "#	s Color12	m white	c yellow",

@@ -470,8 +470,7 @@ static void cancel_cb(Widget w, XtPointer client, XtPointer call)
 	
 	kill(d->wp_pid, SIGSTOP);
 
-	res = message_box(d->wshell, MB_QUESTION, APP_TITLE,
-		"Really cancel? Any changes made so far won't be undone.");
+	res = message_box(d->wshell, MB_QUESTION, APP_TITLE, "Really cancel?");
 
 	kill(d->wp_pid, SIGCONT);
 	if(res == MBR_CONFIRM)
@@ -893,6 +892,7 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 				char dest_fqn[strlen(cdest) + strlen(src_title) + 2];
 				
 				build_path(dest_fqn, cdest, src_title, NULL);
+				wp_post_message(wpd, FBT_NONE, csrc, dest_fqn, NULL, NULL);
 				rv = wp_copy_file(wpd, csrc, dest_fqn, move);
 			} else if(S_ISLNK(st_src.st_mode)){
 				char *src_title = get_path_tail(csrc);
@@ -900,6 +900,7 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 				char *link_tgt;
 
 				build_path(dest_fqn, cdest, src_title, NULL);
+				wp_post_message(wpd, FBT_NONE, csrc, dest_fqn, NULL, NULL);
 				if( (rv = get_link_target(cdest, &link_tgt)) ) break;
 
 				rv = wp_sym_link(wpd, link_tgt, dest_fqn);

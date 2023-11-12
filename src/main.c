@@ -1195,5 +1195,3 @@ sigfunc_t rsignal(int sig, sigfunc_t handler, int flags)
 	
 	return ret.sa_handler;
 }
-
-	

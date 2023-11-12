@@ -115,6 +115,7 @@ static void read_proc_sigterm(int sig);
 static void read_proc_sigalrm(int sig);
 static Boolean filter(const char*, mode_t);
 static void status_timeout_cb(XtPointer, XtIntervalId*);
+static void reset_context_data(void);
 
 /* Local variables */
 static struct read_proc_data rp_data = {0};
@@ -403,8 +404,14 @@ static void xt_read_proc_sig_handler(XtPointer p, XtSignalId *id)
 		read_error_msg(app_inst.location,
 			"Process terminated unexpectedly", False);
 	}
+	reset_context_data();
+}
 	
-	/* reset global context data */
+/*
+ * Resets global context data 
+ */
+static void reset_context_data(void)
+{
 	memset(&app_inst.cur_sel, 0, sizeof(struct file_list_sel));
 	app_inst.nfiles_read = 0;
 	app_inst.nfiles_shown = 0;
@@ -480,10 +487,11 @@ void stop_read_proc(void)
 
 	if(rp_data.pid){
 		dbg_printf("waiting for %d to exit\n", rp_data.pid);
-		kill(rp_data.pid, SIGTERM);
-		rp_data.pid = 0;
+		kill(rp_data.pid, SIGKILL);
 		waitpid(rp_data.pid, (int*)&rp_data.status, 0);
+		rp_data.pid = 0;
 	}
+	reset_context_data();
 }
 
 
@@ -1031,7 +1039,8 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 
 static void read_proc_sigalrm(int sig)
 {
-	/* we use this to wake up the watcher process */
+	sleep(1);
+	/* we use SIGALRM to force refresh */
 }
 
 static void read_proc_sigterm(int sig)
