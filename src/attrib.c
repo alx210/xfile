@@ -424,6 +424,7 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 		XtSetArg(args[n], XmNcursorPositionVisible, False); n++;
 		XtSetArg(args[n], XmNeditable, False); n++;
 		XtSetArg(args[n], XmNbackground, frame_bg); n++;
+		XtSetArg(args[n], XmNresizeWidth, True); n++;
 		dlg_data->wattrib[i] = XmCreateTextField(
 			wdata_rc, "attribute", args, n);
 	}
