@@ -486,10 +486,11 @@ void stop_read_proc(void)
 	}
 
 	if(rp_data.pid){
+		pid_t pid = rp_data.pid;
 		dbg_printf("waiting for %d to exit\n", rp_data.pid);
-		kill(rp_data.pid, SIGKILL);
-		waitpid(rp_data.pid, (int*)&rp_data.status, 0);
 		rp_data.pid = 0;
+		kill(pid, SIGKILL);
+		waitpid(pid, (int*)&rp_data.status, 0);
 	}
 	reset_context_data();
 }
