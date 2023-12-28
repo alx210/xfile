@@ -521,6 +521,11 @@ void copy_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	if(!dest) return;
 	
+	if(!app_inst.cur_sel.count) {
+		free(dest);
+		return;
+	}
+	
 	dest = strip_path(dest);
 	if(last_dest) free(last_dest);
 	last_dest = dest;
@@ -557,6 +562,11 @@ void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		"Moving - Select Destination Directory", last_dest);
 	
 	if(!dest) return;
+
+	if(!app_inst.cur_sel.count) {
+		free(dest);
+		return;
+	}
 	
 	dest = strip_path(dest);	
 	if(last_dest) free(last_dest);
@@ -581,14 +591,18 @@ void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 void rename_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
+	char *cursel = strdup(app_inst.cur_sel.names[0]);
 	char *target;
 	
 	target = input_string_dlg(app_inst.wshell, 
 		"Rename", "Specify new file name",
-		app_inst.cur_sel.names[0], ISF_NOSLASH | ISF_PRESELECT | ISF_FILENAME);
-	if(!target) return;
+		cursel, ISF_NOSLASH | ISF_PRESELECT | ISF_FILENAME);
+	if(!target) {
+		free(cursel);
+		return;
+	}
 	
-	if(rename(app_inst.cur_sel.names[0], target) == -1) {
+	if(rename(cursel, target) == -1) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Could not complete requested action.\n%s.",
 			strerror(errno), NULL);
@@ -596,6 +610,7 @@ void rename_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		force_update();
 	}
 	free(target);
+	free(cursel);
 }
 
 void delete_cb(Widget w, XtPointer pclient, XtPointer pcall)
@@ -618,7 +633,7 @@ void delete_cb(Widget w, XtPointer pclient, XtPointer pcall)
 			"Deleting %d %s%s.\nProceed?", app_inst.cur_sel.count,
 			((app_inst.cur_sel.count > 1) ? "items" : "item"),
 			(have_subdirs ? ", recursing into sub-directories" : ""), NULL);
-		if(rv != MBR_CONFIRM) return;
+		if(rv != MBR_CONFIRM || !app_inst.cur_sel.count) return;
 	}
 	rv = delete_files(app_inst.cur_sel.names, app_inst.cur_sel.count);
 	
@@ -633,16 +648,20 @@ void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	char *link;
 	char *target;
+	char *cursel = strdup(app_inst.cur_sel.names[0]);
 	
 	link = input_string_dlg(app_inst.wshell, "Link To",
 		"Specify a name for the symbolic link.\n"
 		"It may contain either absolute or relative path.", NULL, 0);
-	if(!link) return;
+	if(!link) {
+		free(cursel);
+		return;
+	}		
 	
 	if(strchr(link, '/'))
-		target = realpath(app_inst.cur_sel.names[0], NULL);
+		target = realpath(cursel, NULL);
 	else
-		target = strdup(app_inst.cur_sel.names[0]);
+		target = cursel;
 	
 	if(!target || (symlink(target, link) == -1) ) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
@@ -651,8 +670,10 @@ void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	} else {
 		force_update();
 	}
+
+	if(target != cursel) free(target);
+	free(cursel);
 	free(link);
-	free(target);
 }
 
 void attributes_cb(Widget w, XtPointer pclient, XtPointer pcall)
