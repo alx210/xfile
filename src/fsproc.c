@@ -1073,7 +1073,7 @@ static int wp_copy_tree(struct wp_data *wpd,
 			}
 			
 			retry_sub_dir: /* see FB_RETRY_CONTINUE case below */
-			if(stat(cur_fqn, &st) == -1) {
+			if(lstat(cur_fqn, &st) == -1) {
 				if(wpd->ignore_read_err) {
 					free(cur_fqn);
 					continue;
