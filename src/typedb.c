@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 alx@fastestcode.org
+ * Copyright (C) 2022-2024 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -665,19 +665,19 @@ static int match_content_pat(const char *file_name, struct file_type_rec *rec)
  */
 int db_match(const char *name, struct file_type_db *db)
 {
-	int i, n;
+	int i, n, p;
 	int c = DB_UNKNOWN;
 	int nlast = 0;
+	int plast = 0;
 	
-	for(i = 0, n = 0; i < db->count; i++, n = 0) {
+	for(i = 0, n = 0, p = 0; i < db->count; i++, n = 0) {
 		n += match_name_pat(name, &db->recs[i]);
 		n += match_content_pat(name, &db->recs[i]);
+		p = db->recs[i].priority;
 
-		if(n > nlast) {
+		if(n > nlast || (n && p >= plast)) {
+			plast = p;
 			nlast = n;
-			c = i;
-		} else if(n && c >= 0 &&
-			db->recs[i].priority > db->recs[c].priority) {
 			c = i;
 		}
 	}
