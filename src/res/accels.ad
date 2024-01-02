@@ -42,3 +42,7 @@
 *windowMenu.new.accelerator: <Key>F11
 *windowMenu.duplicate.acceleratorText: F12
 *windowMenu.duplicate.accelerator: <Key>F12
+
+! These are handled through FileList's default translations
+*fileMenu*contextAction1.acceleratorText: Enter
+*viewMenu.goUp.acceleratorText: Bksp

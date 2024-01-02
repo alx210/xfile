@@ -289,7 +289,7 @@ void modify_context_menu(struct ctx_menu_data *ctx,
 		ctx->witems = new_list;
 
 		for(i = ctx->nitems; i < nitems; i++) {
-			snprintf(tmp_name, WIDGET_NAME_MAX, "%s%d\n", sz_action, i + 1);
+			snprintf(tmp_name, WIDGET_NAME_MAX, "%s%d", sz_action, i + 1);
 
 			XtSetArg(args[0], XmNpositionIndex, i);
 			ctx->witems[i] = XmCreatePushButtonGadget(
