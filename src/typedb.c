@@ -192,7 +192,7 @@ static int parse_buffer(struct parser_state *ps)
 			}else if(!strncmp(KW_EXEC, line, strlen(KW_EXEC))){
 				rec = RID_EXEC;
 			}else{
-				set_parse_error(ps,"Record name expected");
+				set_parse_error(ps,"Record field type expected");
 				status = DB_SYNTAX;
 				break;
 			}				
