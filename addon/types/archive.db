@@ -1,0 +1,30 @@
+# Not unix native compressed archive file types and programs handling these
+
+ZIP Archive {
+	icon arch
+	match_name {
+		*.zip
+		*.ZIP
+	}
+	&List: %terminal unzip -l %n
+	&Extract: %terminal unzip %n
+}
+
+RAR Archive {
+	icon arch
+	match_name {
+		*.rar
+		*.RAR
+	}
+	&List: %terminal unrar l %n
+	&Extract: %terminal unrar e %n
+}
+
+7ZIP Archive {
+	icon arch
+	match_name {
+		*.7z
+		*.7Z
+	}
+	&Extract: %terminal p7zip -d %n
+}

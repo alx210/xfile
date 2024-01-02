@@ -1,3 +1,5 @@
+# Graphics file formats and applications that handle these
+
 GIMP Image {
 	icon xcf
 	match_name {

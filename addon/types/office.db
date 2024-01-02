@@ -1,3 +1,5 @@
+# Office file types and associated Star/Open/LibreOffice applications
+
 Office Writer {
 	icon ofwp
 	match_name {

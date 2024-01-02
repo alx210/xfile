@@ -1,0 +1,30 @@
+/* XPM */
+static char * arch_t_xpm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"16 16 8 1 0 0",
+/* colors */
+" 	s Gray8	m black	c #212121212121",
+".	s none	m none	c none",
+"X	s Color2	m white	c white",
+"o	s Color1	m black	c black",
+"O	s Gray1	m white	c #dededededede",
+"+	s Gray6	m black	c #636363636363",
+"@	s Color11	m black	c darkkhaki",
+"#	s Color12	m white	c yellow",
+/* pixels */
+"          ......",
+" XXXXXXXoO .....",
+" XXXXXXXoXO ....",
+" XXXXXXXoooo....",
+" XXXXXXXX+++o...",
+" XXoooXXXX++o...",
+" Xo@@@ooXXX+o...",
+" Xo#####oXX+o...",
+" Xo#ooo#oXX+o...",
+" Xoo@@@ooXX+o...",
+" XXo#####oX+o...",
+" XXo#####oX+o...",
+" XXoooooooX+o...",
+" XXXXXXXXXX+o...",
+" +++++++++++o...",
+"..ooooooooooo..."};
