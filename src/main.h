@@ -107,8 +107,9 @@ void set_status_text(const char *fmt, ...);
 /* Updates shell title according to path specified */
 void update_shell_title(const char *path);
 
-/* Creates a new instance of xfile at 'path' */
-void fork_xfile(const char *path);
+/* Forks off a new xfile instance.
+ * Inherits UI state if inherit_ui is True, uses app-defaults otherwise. */
+void fork_xfile(const char *path, Boolean inherit_ui);
 
 /* Sets GUI sensitivity according to UIF* flags */
 void set_ui_sensitivity(short);

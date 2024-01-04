@@ -3,6 +3,7 @@ INTRODUCTION
 XFile makes use of four symbolic icon sizes: tiny, small, medium and large,
 distinguishable by the file name suffix (t, s, m, l). Icon images may be of
 arbitrary pixel size, but by convention are 16x16, 24x24, 32x32 and 48x48.
+
 XFile will choose an icon size that closely matches the font height used to
 display labels in the file list.
 
@@ -11,29 +12,31 @@ icon will be used instead.
 
 ICONS USED IN THE DEFAULT CONFIGURATION
 ---------------------------------------
-audio		Audio Files
-bin		Generic Binary Files
-cinc		C Header
-comp		Compressed Files (.Z, .bz, .zip, etc.)
-csrc		C Source
-cxxinc		C++ Header
-cxxsrc		C++ Source
-dir		Directory (readable and executable)
-dlink		Broken Symlink
-file		Generic File
-http		Hypertext
-info		Manpage, README etc.
-isocd		ISO CD image
-makefile	Makefile
-mpti		Inactive mount point
-mpt		Active mount point
-nxdir		Non executable directory
-pdf		PDF document
-pixmap		Raster image
-script		Script (any other than shell)
-sh		Shell script
-tar		Tarball
-text		Plain text
-typeset		Formatted text (document, troff, etc.)
-video		Video
-
+audio    Audio files (wav, mp3, flac, etc.)
+bin      Generic binary files
+cinc     C Header
+comp     Compressed Files (.Z, .bz, .gz, etc.)
+csrc     C Source
+cxxinc   C++ Header
+cxxsrc   C++ Source
+dir      Directory (readable and executable)
+dlink    Dangling symlink
+exec     Executable binary (ELF)
+file     Generic file (used if specified icon is missing)
+http     Hypertext (anything web related)
+info     Manpage, README etc.
+isocd    ISO CD image
+makefile Makefile
+mpti     Inactive mount point (variation of dir)
+mpt      Active mount point (variation of dir)
+nxdir    Non executable directory (variation of dir)
+pdf      PDF files
+pixmap   Raster image (png, jpeg, etc.)
+script   Script (any other than shell)
+sh       Shell script
+tar      Tarball (also compressed e.g: .tar.xz)
+text     Plain text
+typeset  Formatted text (document, troff, etc.)
+video    Video files
+xbm      X Bitmap
+xpm      X Pixmap

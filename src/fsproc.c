@@ -425,7 +425,7 @@ static int create_progress_ui(struct fsproc_data *d, enum wp_action action)
 
 /*
  * Destroys progress UI and feedback dialog widgets.
- * NOTE: associated fsproc data will be freed trough shell's destroy callback.
+ * NOTE: associated fsproc data will be freed through shell's destroy callback.
  */
 static void destroy_progress_ui(struct fsproc_data *d)
 {

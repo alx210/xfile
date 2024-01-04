@@ -586,7 +586,7 @@ static void reader_callback_proc(XtPointer cd, int *pfd, XtInputId *iid)
 		} break;
 		
 		case MSG_UPDATE:
-		update = True; /* ...and fall trough */
+		update = True; /* ...and fall through */
 		case MSG_ADD:
 
 		if(DB_DEFINED(msg.db_index)) {

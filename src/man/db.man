@@ -17,7 +17,7 @@ Comments may be specified following the # character\.
 Specifies icon name to be displayed for this file type\.
 .TP
 \fBmime\fP \fI<string>\fP
-Specifies MIME type\. This is not used internally, but is accessible trough a
+Specifies MIME type\. This is not used internally, but is accessible through a
 context dependent variable %m\.
 .TP
 \fBmatch_name\fP \fI<glob pattern>\fP

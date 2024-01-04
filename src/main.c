@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 alx@fastestcode.org
+ * Copyright (C) 2023-2024 alx@fastestcode.org
  * This software is distributed under the terms of the MIT/X license.
  * See the included COPYING file for further information.
  */
@@ -1132,43 +1132,104 @@ void stderr_msg(const char *fmt, ...)
 
 /*
  * Forks off a new xfile instance
+ * Inherits UI state if inherit_ui is True, uses app-defaults otherwise
  */
-void fork_xfile(const char *path)
+void fork_xfile(const char *path, Boolean inherit_ui)
 {
-	char *argv[10];
-	int n = 0;
+	char *argv[20];
+	int argc = 0;
 	int errval = 0;
+	int n = 0;
+	char xrm_sz[] = "-xrm";
 	
-	if(app_res.show_all) {
-		argv[n] = "-a";
-		n++;
+	if(inherit_ui) {
+		Arg warg[10];
+		int view_mode;
+		int sort_order;
+		int sort_dir;
+		char *order_sz = "name";
+
+		XtSetArg(warg[n], XfNviewMode, &view_mode); n++;
+		XtSetArg(warg[n], XfNsortOrder, &sort_order); n++;
+		XtSetArg(warg[n], XfNsortDirection, &sort_dir); n++;
+		XtGetValues(app_inst.wlist, warg, n);
+		
+		/* view mode */
+		argv[argc] = xrm_sz; argc++;
+		argv[argc] = (view_mode == XfCOMPACT) ?
+			"*main*fileList.viewMode: compact" :
+			"*main*fileList.viewMode: detailed";
+		argc++;
+		
+		/* sorting direction */
+		argv[argc] = xrm_sz; argc++;
+		argv[argc] = (sort_dir == XfASCEND) ?
+			"*main*fileList.sortDirection: ascend" :
+			"*main*fileList.sortDirection: descend";
+		argc++;
+		
+		/* sorting order */
+		switch(sort_order) {
+			case XfNAME:
+			order_sz = "main*fileList.sortOrder: name";
+			break;
+			case XfTIME:
+			order_sz = "main*fileList.sortOrder: time";
+			break;
+			case XfSUFFIX:
+			order_sz = "main*fileList.sortOrder: suffix";
+			break;
+			case XfTYPE:
+			order_sz = "main*fileList.sortOrder: type";
+			break;
+			case XfSIZE:
+			order_sz = "main*fileList.sortOrder: size";
+			break;
+		}
+		argv[argc] = xrm_sz; argc++;
+		argv[argc] = order_sz; argc++;
+		
+		/* path and status fields */
+		argv[argc] = xrm_sz; argc++;
+		if(XmToggleButtonGetState(
+			get_menu_item(app_inst.wmenu, "*viewMenu.showPathField"))) {
+			argv[argc] = APP_CLASS ".pathField: True";
+		} else {
+			argv[argc] = APP_CLASS ".pathField: False";
+		}
+		argc++;
+		
+		argv[argc] = xrm_sz; argc++;
+		if(XmToggleButtonGetState(
+			get_menu_item(app_inst.wmenu, "*viewMenu.showStatusField"))) {
+			argv[argc] = APP_CLASS ".statusField: True";
+		} else {
+			argv[argc] = APP_CLASS ".statusField: False";
+		}
+		argc++;
+		
+		/* show dot direcotries ? */
+		argv[argc] = xrm_sz; argc++;
+		if(XmToggleButtonGetState(
+			get_menu_item(app_inst.wmenu, "*viewMenu.showAll"))) {
+			argv[argc] = APP_CLASS ".showAll: True"; argc++;
+		} else {
+			argv[argc] = APP_CLASS ".showAll: False"; argc++;
+		}
+		
+		/* filter */
+		if(app_inst.filter) {
+			argv[argc] = "-f";
+			argc++;
+			argv[argc] = app_inst.filter;
+			argc++;
+		}
 	}
 	
-	if(app_res.toggle_view) {
-		argv[n] = "-l";
-		n++;
-	}
+	argv[argc] = (char*)path;
+	argc++;
 	
-	if(app_res.sort_by) {
-		static char arg_buf[5];
-		sprintf(arg_buf, "-s%c", app_res.sort_by[0]);
-		argv[n] = arg_buf;
-		n++;
-	}
-	
-	#ifdef INHERIT_FILTER
-	if(app_res.filter) {
-		argv[n] = "-f";
-		n++;
-		argv[n] = app_res.filter;
-		n++;
-	}
-	#endif /* INHERIT_FILTER */
-	
-	argv[n] = (char*)path;
-	n++;
-	
-	errval = spawn_command_args(app_inst.bin_name, argv, n);
+	errval = spawn_command_args(app_inst.bin_name, argv, argc);
 	if(errval) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Failed to create new %s instance.\n%s",

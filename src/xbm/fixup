@@ -1,9 +1,12 @@
 #!/bin/sh
 
-for n in *.xbm; do
+INFILES=$(grep -l '\.xbm' *.xbm)
+
+for n in $INFILES; do
+	echo "$n"
 	if [ -f $n.bak ]; then rm $n.bak; fi
 	mv $n $n.bak
 	sed 's/.xbm//g' $n.bak > $n
 done
 
-rm *.bak
+if [ -n "$INFILES" ]; then rm *.bak; fi

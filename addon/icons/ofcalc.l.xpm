@@ -32,7 +32,7 @@ static char * ofcalc_l_xpm[] = {
 " XXX#XXXXX#XXXXXX#XXXXXX#XXXXXX#XXXXX@o.........",
 " XXX#XXXXX#XXXXXX#XXXXXX#XXXXXX#XXXXX@o.........",
 " XXX############################XXXXX@o.........",
-" XXX#XXXXX#XX%%%%%%%%%%%%%%%%%%%%%.XX@o.........",
+" XXX#XXXXX#XX%%%%%%%%%%%%%%%%%%%%%XXX@o.........",
 " XXX#XXXXX#XX%XXXXXXXXXXXXXXXXXXXoXXX@o.........",
 " XXX#########%XOOOOOOOOOOOOOOOOOOoXXX@o.........",
 " XXX#XXXXX#XX%XO&&&&&&&&&&&&&&&&Oo%XX@o.........",

@@ -475,7 +475,7 @@ static void update_location_data(Widget w, const char *path)
 		wp->wcomp = (Widget*)XtRealloc((char*)wp->wcomp, sizeof(Widget) * nc);
 		wp->sz_comp = (char**)XtRealloc((char*)wp->sz_comp, sizeof(char*) * nc);
 		wp->comp_ids = (unsigned int*)
-			XtRealloc((char*)wp->comp_ids, sizeof(unsigned int*) * nc);
+			XtRealloc((char*)wp->comp_ids, sizeof(unsigned int) * nc);
 
 		/* since comp_ids address was probably relocated,
 		 * update it for existing widgets. */

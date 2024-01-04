@@ -64,7 +64,7 @@ static void new_window_proc(Widget w, XtPointer pclient, XtPointer pcall)
 
 	dbg_assert(app_inst.location);
 	sprintf(buffer, "%s/%s", app_inst.location, name);
-	fork_xfile(buffer);
+	fork_xfile(buffer, True);
 	free(buffer);
 }
 
@@ -914,7 +914,7 @@ void new_window_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	}
 
 	if(!access(path, X_OK)) {
-		fork_xfile(path);
+		fork_xfile(path, False);
 	} else {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Error accessing \'%s\'\n%s.", path, strerror(errno));
@@ -927,7 +927,7 @@ void new_window_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 void dup_window_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
-	fork_xfile(app_inst.location);
+	fork_xfile(app_inst.location, True);
 }
 
 void about_cb(Widget w, XtPointer pclient, XtPointer pcall)
