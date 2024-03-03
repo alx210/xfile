@@ -2622,7 +2622,17 @@ static void focus_out(Widget w, XEvent *evt, String *params, Cardinal *nparams)
 	struct file_list_part *fl = FL_PART(w);
 
 	fl->has_focus = False;
-		
+
+	if(fl->autoscrl_timeout) {
+		XtRemoveTimeOut(fl->autoscrl_timeout);
+		fl->autoscrl_timeout = None;
+	}
+
+	if(fl->dblclk_timeout) {
+		XtRemoveTimeOut(fl->dblclk_timeout);
+		fl->dblclk_timeout = None;
+	}
+
 	if(fl->dragging) {
 		fl->dragging = False;
 		redraw_all(w);
