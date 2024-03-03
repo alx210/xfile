@@ -13,6 +13,8 @@ CFLAGS += -O2 -Wall
 SHELL = sh
 
 .include "common.mf"
+
+# Set to APPDEFS_CORE for core fonts
 APPDEFS = $(APPDEFS_XFT)
 
 install: common_install
