@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 alx@fastestcode.org
+ * Copyright (C) 2022-2024 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -354,19 +354,9 @@ static void resize(Widget w)
 static XtGeometryResult query_geometry(Widget w,
 	XtWidgetGeometry *ig, XtWidgetGeometry *pg)
 {
-	XtGeometryResult result = XtGeometryYes;
-	Dimension wanted_height = compute_height(w);
-
-	if(ig->request_mode & (CWWidth | CWHeight)) {
-		pg->request_mode = ig->request_mode;
-		
-		if(ig->height != wanted_height) {
-			pg->height = wanted_height;
-			pg->width = ig->width;
-			result = XtGeometryAlmost;
-		}
-	}
-	return result;
+	pg->request_mode = CWHeight;
+	pg->height = compute_height(w);
+	return XtGeometryAlmost;
 }
 
 static Boolean set_values(Widget wcur, Widget wreq,
