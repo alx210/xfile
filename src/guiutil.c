@@ -244,3 +244,17 @@ void create_masked_pixmap(Display *dpy,
 	*mask = XCreatePixmapFromBitmapData(dpy, root,
 		(char*)mask_bits, width, height, 1, 0, 1);
 }
+
+/*
+ * Convenience function for setting XmLabel text.
+ * psz may be null, in which case empty string is assumed.
+ */
+void set_label_string(Widget wlabel, const char *psz)
+{
+	Arg arg[1];
+	
+	XmString cs = XmStringCreateLocalized(psz ? (char*)psz : "");
+	XtSetArg(arg[0], XmNlabelString, cs);
+	XtSetValues(wlabel, arg, 1);
+	XmStringFree(cs);
+}

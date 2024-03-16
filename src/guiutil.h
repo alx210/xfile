@@ -39,4 +39,10 @@ void create_masked_pixmap(Display *dpy,
 	Pixel fg_color, Pixel bg_color,
 	Pixmap *image, Pixmap *mask);
 
+/*
+ * Convenience function for setting XmLabel text.
+ * psz may be null, in which case empty string is assumed.
+ */
+void set_label_string(Widget wlabel, const char *psz);
+
 #endif /* GUIUTIL_H */

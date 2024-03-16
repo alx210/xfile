@@ -227,26 +227,26 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 		
 		psz = gronk_ctrl_chars(link_name ? link_name : file_name);
 		if(link_name) free(link_name);
-		XmTextFieldSetString(dlg_data->wattrib[GID_NAME], psz);
+		set_label_string(dlg_data->wattrib[GID_NAME], psz);
 		free(psz);
 
-		XmTextFieldSetString(dlg_data->wattrib[GID_SIZE],
+		set_label_string(dlg_data->wattrib[GID_SIZE],
 			get_size_string(st.st_size, sz_size));
 				
-		XmTextFieldSetString(dlg_data->wattrib[GID_TYPE],
+		set_label_string(dlg_data->wattrib[GID_TYPE],
 			get_unix_type_string( (is_symlink ? lst.st_mode : st.st_mode) ) );
 		
 		localtime_r(&st.st_ctime, &tm_file);
 		strftime(sz_time, TIME_BUFSIZ, DEF_TIME_FMT, &tm_file);
-		XmTextFieldSetString(dlg_data->wattrib[GID_CTIME], sz_time);
+		set_label_string(dlg_data->wattrib[GID_CTIME], sz_time);
 
 		localtime_r(&st.st_mtime, &tm_file);
 		strftime(sz_time, TIME_BUFSIZ, DEF_TIME_FMT, &tm_file);
-		XmTextFieldSetString(dlg_data->wattrib[GID_MTIME], sz_time);
+		set_label_string(dlg_data->wattrib[GID_MTIME], sz_time);
 
 		localtime_r(&st.st_atime, &tm_file);
 		strftime(sz_time, TIME_BUFSIZ, DEF_TIME_FMT, &tm_file);
-		XmTextFieldSetString(dlg_data->wattrib[GID_ATIME], sz_time);
+		set_label_string(dlg_data->wattrib[GID_ATIME], sz_time);
 		
 		/* mode toggle gadgets */
 		for(i = 0; i < 3; i++) {
@@ -362,7 +362,6 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 	Widget wlabel[NUM_ATT_GAD];
 	Widget wtop;
 	XmString xms;
-	Pixel frame_bg;
 	XtCallbackRec cbr[2] = { NULL };
 
 	n = 0;
@@ -383,10 +382,6 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 	XmStringFree(xms);
 	XtSetArg(args[0], XmNmwmFunctions, MWM_FUNC_MOVE | MWM_FUNC_CLOSE);
 	XtSetValues(XtParent(wdlg), args, 1);
-	
-	/* Get background color for non-editable text fields */
-	XtSetArg(args[0], XmNbackground, &frame_bg);
-	XtGetValues(wdlg, args, 1);
 	
 	/* general properties */
 	n = 0;
@@ -418,14 +413,8 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 		XmStringFree(xms);
 		
 		n = 0;
-		XtSetArg(args[n], XmNmarginHeight, 1); n++;
-		XtSetArg(args[n], XmNhighlightThickness, 1); n++;
-		XtSetArg(args[n], XmNshadowThickness, 0); n++;
-		XtSetArg(args[n], XmNcursorPositionVisible, False); n++;
-		XtSetArg(args[n], XmNeditable, False); n++;
-		XtSetArg(args[n], XmNbackground, frame_bg); n++;
-		XtSetArg(args[n], XmNresizeWidth, True); n++;
-		dlg_data->wattrib[i] = XmCreateTextField(
+		XtSetArg(args[n], XmNmarginHeight, 2); n++;
+		dlg_data->wattrib[i] = XmCreateLabelGadget(
 			wdata_rc, "attribute", args, n);
 	}
 	if(dlg_data->nfiles > 1) {
@@ -436,7 +425,7 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 		XtManageChildren(wlabel, NUM_ATT_GAD);
 	}
 	
-	XmTextFieldSetString(dlg_data->wattrib[GID_SIZE], "(computing)");
+	set_label_string(dlg_data->wattrib[GID_SIZE], "(computing)");
 
 	/* owner */
 	n = 0;
@@ -495,8 +484,9 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 	XtSetArg(args[n], XmNframeChildType, XmFRAME_WORKAREA_CHILD); n++;
 	XtSetArg(args[n], XmNorientation, XmHORIZONTAL); n++;
 	XtSetArg(args[n], XmNpacking, XmPACK_COLUMN); n++;
-	XtSetArg(args[n], XmNmarginHeight, 0); n++;
-	XtSetArg(args[n], XmNmarginWidth, 0); n++;
+	XtSetArg(args[n], XmNmarginHeight, 2); n++;
+	XtSetArg(args[n], XmNmarginWidth, 2); n++;
+	XtSetArg(args[n], XmNspacing, 0); n++;
 	XtSetArg(args[n], XmNnumColumns, 4); n++;
 	wmode_rc = XmCreateRowColumn(wmode_frm, "modeRowColumn", args, n);
 	
@@ -523,7 +513,6 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 			XtSetArg(args[n], XmNuserData, &mode_bits[i + (j * 3)]); n++;
 			XtSetArg(args[n], XmNvalueChangedCallback, toggle_cbr); n++;
 			XtSetArg(args[n], XmNlabelString, xms); n++;
-			XtSetArg(args[n], XmNspacing, 2); n++;
 			XtSetArg(args[n], XmNsensitive,
 				((dlg_data->nfiles > 1) ? False : True)); n++;
 			dlg_data->wmode[i + (j * 3)] = 
@@ -551,7 +540,6 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 		XtSetArg(args[n], XmNuserData, &mode_bits[9 + i]); n++;
 		XtSetArg(args[n], XmNvalueChangedCallback, toggle_cbr); n++;
 		XtSetArg(args[n], XmNlabelString, xms); n++;
-		XtSetArg(args[n], XmNspacing, 2); n++;
 		XtSetArg(args[n], XmNsensitive,
 			((dlg_data->nfiles > 1) ? False : True)); n++;
 		dlg_data->wmode[9 + i] = 
@@ -923,7 +911,7 @@ static void totals_update_cb(XtPointer cbd, XtIntervalId *iid)
 		char content_sz[strlen(size_sz) + strlen(items_sz) + 4];
 
 		sprintf(content_sz, "%s (%s)", size_sz, items_sz);
-		XmTextFieldSetString(dlg_data->wattrib[GID_SIZE], content_sz);
+		set_label_string(dlg_data->wattrib[GID_SIZE], content_sz);
 	}
 	
 	if(items_sz) free(items_sz);
