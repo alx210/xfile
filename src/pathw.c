@@ -230,8 +230,14 @@ static void input_unfocus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	struct path_field_part *wp = PART(pclient);
 	Cardinal i;
 	
-	if(wp->tmp_path)
-		XmTextFieldSetString(w, wp->tmp_path);
+	if(wp->tmp_path) {
+		char *cur_path = XmTextFieldGetString(w);
+
+		if(strcmp(wp->tmp_path, cur_path))
+			XmTextFieldSetString(w, wp->tmp_path);
+
+		XtFree(cur_path);
+	}
 
 	wp->editing = False;
 
