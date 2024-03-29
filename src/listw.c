@@ -64,8 +64,6 @@ static void sort_list(Widget);
 static int compare_names(const char*, const char*);
 static int sort_by_name(const void*, const void*);
 static int sort_by_name_des(const void*, const void*);
-static int num_sort_by_name(const void*, const void*);
-static int num_sort_by_name_des(const void*, const void*);
 static int sort_by_time(const void*, const void*);
 static int sort_by_time_des(const void*, const void*);
 static int sort_by_type(const void*, const void*);
@@ -112,6 +110,7 @@ static void pg_scroll(Widget, XEvent*, String*, Cardinal*);
 static void secondary_button(Widget, XEvent*, String*, Cardinal*);
 static void dir_up(Widget, XEvent*, String*, Cardinal*);
 static void delete(Widget, XEvent*, String*, Cardinal*);
+static char* mbs_tolower(const char *src);
 
 #define WARNING(w,s) XtAppWarning(XtWidgetToApplicationContext(w), s)
 
@@ -361,6 +360,15 @@ static XtResource resources[] = {
 		XtRImmediate,
 		(void*)True
 	},
+	{
+		XfNcaseSensitive,
+		XfCCaseSensitive,
+		XtRBoolean,
+		sizeof(Boolean),
+		RFO(file_list.case_sensitive),
+		XtRImmediate,
+		(void*)False
+	}
 };
 #undef RFO
 
@@ -506,6 +514,9 @@ WidgetClass fileListWidgetClass = (WidgetClass) &fileListWidgetClassRec;
 #define FL_REC(w) (struct file_list_rec*)w
 #define CORE_WIDTH(w) (((struct file_list_rec*)w)->core.width)
 #define CORE_HEIGHT(w) (((struct file_list_rec*)w)->core.height)
+
+/* Though most unixen have qsort_r now, there are discrepancies */
+static int (*qsort_strcmp_fp)(const char*, const char*) = strcmp;
 
 /*
  * Draws an item. If erase is True, clears the area first.
@@ -656,18 +667,14 @@ static void sort_list(Widget w)
 	Boolean asc = (fl->sort_direction == XfASCEND) ? True : False;
 
 	if(fl->num_items < 2) return;
+	
+	qsort_strcmp_fp = (fl->numbered_sort) ? compare_names : strcmp;
 
 	switch(fl->sort_order) {
 		case XfNAME:
-		if(fl->numbered_sort) {
-			qsort(fl->items, fl->num_items,
-				sizeof(struct item_rec),
-				asc ? num_sort_by_name : num_sort_by_name_des);
-		} else {
-			qsort(fl->items, fl->num_items,
-				sizeof(struct item_rec),
-				asc ? sort_by_name : sort_by_name_des);
-		}
+		qsort(fl->items, fl->num_items,
+			sizeof(struct item_rec),
+			asc ? sort_by_name : sort_by_name_des);
 		break;
 		
 		case XfTIME:
@@ -697,7 +704,7 @@ static void sort_list(Widget w)
 }
 
 /*
- * This is like strcasecmp, except it will compare
+ * This is like strcmp, except it will compare
  * coinciding strings of digits numerically
  */
 static int compare_names(const char *a, const char *b)
@@ -739,7 +746,7 @@ static int compare_names(const char *a, const char *b)
 			res = (ai - bi);
 			if(res) return res;
 		} else {
-			res = tolower(*a) - tolower(*b);
+			res = *a - *b;
 			if(res) return res;
 		}
 	}
@@ -758,7 +765,7 @@ static int sort_by_name_des(const void *aptr, const void *bptr)
 	const struct item_rec *a = (struct item_rec*)aptr;
 	const struct item_rec *b = (struct item_rec*)bptr;
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
-	return r ? r : strcasecmp(a->name, b->name);
+	return r ? r : qsort_strcmp_fp(a->tr_name, b->tr_name);
 }
 
 static int sort_by_name(const void *aptr, const void *bptr)
@@ -767,26 +774,7 @@ static int sort_by_name(const void *aptr, const void *bptr)
 	const struct item_rec *a = (struct item_rec*)aptr;
 	const struct item_rec *b = (struct item_rec*)bptr;
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
-	return r ? r : strcasecmp(b->name, a->name);
-}
-
-
-static int num_sort_by_name_des(const void *aptr, const void *bptr)
-{
-	int r;
-	const struct item_rec *a = (struct item_rec*)aptr;
-	const struct item_rec *b = (struct item_rec*)bptr;
-	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
-	return r ? r : compare_names(a->name, b->name);
-}
-
-static int num_sort_by_name(const void *aptr, const void *bptr)
-{
-	int r;
-	const struct item_rec *a = (struct item_rec*)aptr;
-	const struct item_rec *b = (struct item_rec*)bptr;
-	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
-	return r ? r : compare_names(b->name, a->name);
+	return r ? r : qsort_strcmp_fp(b->tr_name, a->tr_name);
 }
 
 static int sort_by_time_des(const void *aptr, const void *bptr)
@@ -847,12 +835,12 @@ static int sort_by_suffix_des(const void *aptr, const void *bptr)
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
 
 	if(!r) {
-		char *sa = strrchr(a->name, '.');
-		char *sb = strrchr(b->name, '.');
+		char *sa = strrchr(a->tr_name, '.');
+		char *sb = strrchr(b->tr_name, '.');
 		if(sa && sb) {
-			r = strcasecmp(sa + 1, sb + 1);
+			r = qsort_strcmp_fp(sa + 1, sb + 1);
 		} else if(sa || sb) {
-			r = (sa) ? -1 : 1;
+			r = (sa) ? 1 : -1;
 		} else r = 0;
 	}
 
@@ -868,12 +856,12 @@ static int sort_by_suffix(const void *aptr, const void *bptr)
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
 
 	if(!r) {
-		char *sa = strrchr(a->name, '.');
-		char *sb = strrchr(b->name, '.');
+		char *sa = strrchr(a->tr_name, '.');
+		char *sb = strrchr(b->tr_name, '.');
 		if(sa && sb) {
-			r = strcasecmp(sa + 1, sb + 1);
+			r = qsort_strcmp_fp(sa + 1, sb + 1);
 		} else if(sa || sb) {
-			r = (sa) ? 1 : -1;
+			r = (sa) ? -1 : 1;
 		} else r = 0;
 	}
 
@@ -912,6 +900,7 @@ static void free_item(struct item_rec *in)
 	int i;
 	
 	free(in->name);
+	if(in->tr_name && (in->tr_name != in->name)) free(in->tr_name);
 	if(in->title) free(in->title);
 	
 	for(i = 0; i < NFIELDS; i++)
@@ -1380,7 +1369,7 @@ static char* shorten_mb_string(const char *sz, size_t max_chrs, Boolean ltor)
 	
 	while(sz[i]) {
 		int n = mblen(sz + i, nbytes - i);
-		if(n <= 0) break;
+		if(n == -1) n = 1; else if(n == 0) break;
 		nchrs++;
 		i += n;
 	}
@@ -1430,11 +1419,50 @@ static size_t mb_strlen(const char *sz)
 	
 	while(sz[i]) {
 		int n = mblen(sz + i, nbytes - i);
-		if(n <= 0) break;
+		if(n == -1) n = 1; else if(n == 0) break;
 		nchrs++;
 		i += n;
 	}
 	return nchrs;
+}
+
+/* Converts a multibyte string to lowercase */
+static char* mbs_tolower(const char *src)
+{
+	size_t nbytes = strlen(src);
+	size_t is = 0;
+	size_t id = 0;
+	wchar_t wc;
+	int ns, nd;
+	char *dest;
+
+	dest = malloc(nbytes + 3);
+	if(!dest) return NULL;
+
+
+	mbtowc(NULL, 0, 0);
+	wctomb(NULL, 0);
+
+	while(src[is]) {
+		ns = mbtowc(&wc, src + is, nbytes - is);
+		if(ns == -1) {
+			dest[id] = '?';
+			id++;
+			is++;
+			continue;
+		}
+
+		nd = wctomb(dest + id, towlower(wc));
+		if( (nd == -1) || (nd > ns)) {
+			dest[id] = '?';
+			nd = 1;
+		}
+
+		is += ns;
+		id += nd;
+	}
+	dest[id] = '\0';
+	return dest;
 }
 
 
@@ -2877,6 +2905,16 @@ int file_list_add(Widget w,
 
 	tmp.name = strdup(its->name);
 	if(!tmp.name) return errno;
+	
+	if(fl->case_sensitive) {
+		tmp.tr_name = tmp.name;
+	} else {
+		tmp.tr_name = mbs_tolower(its->name);
+		if(!tmp.tr_name) {
+			free(tmp.name);
+			return ENOMEM;
+		}
+	}
 		
 	if(fl->shorten){
 		char *title = its->title ? its->title : its->name;

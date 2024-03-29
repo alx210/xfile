@@ -71,8 +71,9 @@ enum {
 
 /* List item record */
 struct item_rec {
-	char *name;
-	char *title;
+	char *name;    /* actual file name */
+	char *title;   /* displayed name (possibly shortened) */
+	char *tr_name; /* transformed name (for sorting), may point to 'name' */
 	XmString label[NFIELDS];
 	
 	int db_type;
@@ -198,6 +199,7 @@ struct file_list_part {
 	Boolean grab_prim_sel;
 	Boolean silent;
 	Boolean numbered_sort;
+	Boolean case_sensitive;
 	XmRenderTable label_rt;
 	XtCallbackList default_action_cb;
 	XtCallbackList sel_change_cb;

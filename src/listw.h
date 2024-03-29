@@ -99,6 +99,8 @@ enum { XfCOMPACT, XfDETAILED };
 #define XfCLookupTimeOut "LookupTimeout"
 #define XfNnumberedSort "numberedSort"
 #define XfCNumberedSort "NumberedSort"
+#define XfNcaseSensitive "caseSensitive"
+#define XfCCaseSensitive "CaseSensitive"
 
 
 #define CreateFileList(parent, name, args, nargs) \

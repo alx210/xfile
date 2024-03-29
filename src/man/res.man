@@ -100,6 +100,11 @@ Specifies auto-scroll speed (when performing rectangular selection and the
 mouse pointer is moved beyond an edge of the view)\. Must be an \fIInteger\fP
 between 1 and 10\. Default is 3\.
 .TP
+\fBcaseSensitive\fP \fIBoolean\fP
+If \fBTrue\fP, character case will be taken into account when sorting files,
+which results in uppercase file names to be grouped separately.
+Default is \fBFalse\fP.
+.TP
 \fBdoubleClickInterval\fP \fIInteger\fP
 Specifies the double-click interval in milliseconds\.
 .TP
@@ -158,7 +163,7 @@ Default is \fBTrue\fP\.
 \fBnumberedSort\fP \fIBoolean\fP
 Specifies whether coinciding strings of digits in file names should be
 compared numerically, so that numbered files will be listed in the order
-expected\. Default is \fBTrue\fP\.
+expected\. Default is \fBTrue\fP\. See also \fBcaseSensitive\fP.
 .TP
 \fBviewMode\fP compact|detailed
 Specifies the view mode. Default is compact\.
