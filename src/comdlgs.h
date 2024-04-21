@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2022 alx@fastestcode.org
+ * Copyright (C) 2012-2024 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -55,6 +55,9 @@ char* dir_select_dlg(Widget parent, const char *title,
  */
 char* input_string_dlg(Widget parent, const char *title,
 	const char *msg_str, const char *init_str, int flags);
+
+/* Displays attribute editor dialog for files */
+void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles);
 
 /* input_string_dlg flags */
 #define ISF_PRESELECT 0x01	/* preselect the text (title for file names) */

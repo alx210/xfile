@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 alx@fastestcode.org
+ * Copyright (C) 2023-2024 alx@fastestcode.org
  * This software is distributed under the terms of the MIT license.
  * See the included COPYING file for further information.
  */

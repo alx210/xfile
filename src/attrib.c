@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 alx@fastestcode.org
+ * Copyright (C) 2023-2024 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -39,7 +39,6 @@
 #include "main.h"
 #include "comdlgs.h"
 #include "const.h"
-#include "attrib.h"
 #include "stack.h"
 #include "path.h"
 #include "fsproc.h"

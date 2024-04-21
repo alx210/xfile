@@ -1,5 +1,8 @@
 #!/bin/awk -f
-# $Id: adtoc.awk,v 1.1 2022/11/15 16:51:51 alx Exp $
+
+# Copyright (C) 2022-2024 alx@fastestcode.org
+# This software is distributed under the terms of the X/MIT license.
+# See the included COPYING file for further information.
 
 BEGIN {
 	print "/* Generated from " ARGV[1] " */"
