@@ -46,3 +46,4 @@
 ! These are handled through FileList's default translations
 *fileMenu*contextAction1.acceleratorText: Enter
 *viewMenu.goUp.acceleratorText: Bksp
+

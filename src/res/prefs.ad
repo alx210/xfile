@@ -58,3 +58,4 @@ XFile.variable.webBrowser: links -g
 *FileList.lookupTimeout: 3
 *FileList.shortenLabels: 0
 *FileList.caseSensitive: False
+
