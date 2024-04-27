@@ -1141,13 +1141,16 @@ void fork_xfile(const char *path, Boolean inherit_ui)
 	int errval = 0;
 	int n = 0;
 	char xrm_sz[] = "-xrm";
+	char geom_sz[12];
 	
 	if(inherit_ui) {
 		Arg warg[10];
 		int view_mode;
 		int sort_order;
 		int sort_dir;
-		char *order_sz = "name";
+		char *order_sz;
+		Dimension width;
+		Dimension height;
 
 		XtSetArg(warg[n], XfNviewMode, &view_mode); n++;
 		XtSetArg(warg[n], XfNsortOrder, &sort_order); n++;
@@ -1170,6 +1173,7 @@ void fork_xfile(const char *path, Boolean inherit_ui)
 		
 		/* sorting order */
 		switch(sort_order) {
+			default:
 			case XfNAME:
 			order_sz = "main*fileList.sortOrder: name";
 			break;
@@ -1224,11 +1228,22 @@ void fork_xfile(const char *path, Boolean inherit_ui)
 			argv[argc] = app_inst.filter;
 			argc++;
 		}
+		
+		/* window size */
+		n = 0;
+		XtSetArg(warg[n], XmNwidth, &width); n++;
+		XtSetArg(warg[n], XmNheight, &height); n++;
+		XtGetValues(app_inst.wshell, warg, n);
+		snprintf(geom_sz, 12, "%ux%u", width, height);
+		argv[argc] = "-geometry";
+		argc++;
+		argv[argc] = geom_sz;
+		argc++;
 	}
 	
 	argv[argc] = (char*)path;
 	argc++;
-	
+
 	errval = spawn_command_args(app_inst.bin_name, argv, argc);
 	if(errval) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
