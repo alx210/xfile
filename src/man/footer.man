@@ -16,4 +16,7 @@ which can be safely deleted.
 XFile was written and is maintained by alx@fastestcode.org
 .SH CAVEATS
 .PP
-There is no xattr handling as of now.
+1\. There is no xattr handling as of now.
+.PP
+2\. The FileList widget ignores LC_COLLATE locale setting if
+\fBcaseSensitive\fP and/or \fBnumberedSort\fP are \fBTrue\fP. 

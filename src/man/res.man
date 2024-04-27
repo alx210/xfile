@@ -103,7 +103,7 @@ between 1 and 10\. Default is 3\.
 \fBcaseSensitive\fP \fIBoolean\fP
 If \fBTrue\fP, character case will be taken into account when sorting files,
 which results in uppercase file names to be grouped separately.
-Default is \fBFalse\fP.
+Default is \fBFalse\fP. See also \fBCAVEATS\fB.
 .TP
 \fBdoubleClickInterval\fP \fIInteger\fP
 Specifies the double-click interval in milliseconds\.
@@ -158,12 +158,13 @@ Specifies the sorting order of displayed items. Default is \fIname\fP\.
 .TP
 \fBsilent\fP \fIBoolean\fP
 Specifies whether audible feedback is enabled for item look\-up\.
-Default is \fBTrue\fP\.
+Default is \fBFalse\fP\.
 .TP
 \fBnumberedSort\fP \fIBoolean\fP
 Specifies whether coinciding strings of digits in file names should be
 compared numerically, so that numbered files will be listed in the order
-expected\. Default is \fBTrue\fP\. See also \fBcaseSensitive\fP.
+expected\. Default is \fBTrue\fP\. See also \fBcaseSensitive\fP and
+\fBCAVEATS\fP.
 .TP
 \fBviewMode\fP compact|detailed
 Specifies the view mode. Default is compact\.
