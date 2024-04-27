@@ -211,8 +211,12 @@ static void input_focus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	Cardinal i;
 	char *cur_path = XmTextFieldGetString(w);
 
-	for(i = 0; i < wp->ncomp; i++)
+	for(i = 0; i < wp->ncomp; i++) {
+		/* avoid armed buttons getting stuck in armed state when
+		 * remapped, by making them insensitive first */
+		XtSetSensitive(wp->wcomp[i], False);
 		XtUnmapWidget(wp->wcomp[i]);
+	}
 
 	wp->editing = True;
 
@@ -241,8 +245,10 @@ static void input_unfocus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 	wp->editing = False;
 
-	for(i = 0; i < wp->ncomp; i++)
+	for(i = 0; i < wp->ncomp; i++) {
 		XtMapWidget(wp->wcomp[i]);
+		XtSetSensitive(wp->wcomp[i], True);
+	}
 	
 	draw_outline((Widget)pclient);
 	
