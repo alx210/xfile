@@ -117,7 +117,7 @@ struct attrib_dlg_data {
 	DIR *dir;
 	char *cur_path;
 	unsigned int ifile;
-	size_t size_total;
+	struct fsize size_total;
 	unsigned int files_total;
 	unsigned int dirs_total;
 };
@@ -209,7 +209,7 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 			free_dlg_data(dlg_data);
 			if(is_symlink) {
 				va_message_box(wp, MB_ERROR_NB, APP_TITLE,
-					"Cannot stat the target of symbolic link: "
+					"Cannot stat the target of symbolic link:\n"
 					"%s.\n%s.", link_name, strerror(errno));
 			} else {
 				va_message_box(wp, MB_ERROR_NB, APP_TITLE,
@@ -222,7 +222,7 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 		dlg_data->set_mode = True;
 
 		/* attributes */
-		dlg_data->size_total = st.st_size;
+		add_fsize(&dlg_data->size_total, st.st_size);
 		
 		psz = gronk_ctrl_chars(link_name ? link_name : file_name);
 		if(link_name) free(link_name);
@@ -878,9 +878,9 @@ static void totals_update_cb(XtPointer cbd, XtIntervalId *iid)
 	if(dlg_data->wp_running) {
 		/* hopefully this signifies clearly enough that we're still counting */	
 		size_sz[0] = '~';
-		get_size_string(dlg_data->size_total, &size_sz[1]);
+		get_fsize_string(&dlg_data->size_total, &size_sz[1]);
 	} else {
-		get_size_string(dlg_data->size_total, size_sz);
+		get_fsize_string(&dlg_data->size_total, size_sz);
 	}
 
 	if(dlg_data->nfiles > 1 || dlg_data->have_dirs) {
@@ -939,9 +939,9 @@ static Boolean calc_size_wp(XtPointer client_data)
 		dlg_data->ifile = 0;
 		dlg_data->dir_stk = stk_alloc();
 		dlg_data->dir = NULL;
-		dlg_data->size_total = 0;
 		dlg_data->cur_path = NULL;
 		dlg_data->wp_running = True;
+		dlg_data->size_total = (struct fsize) { 0 };
 	}
 
 	if(dlg_data->dir) {
@@ -965,7 +965,7 @@ static Boolean calc_size_wp(XtPointer client_data)
 			fqn = build_path(NULL, dlg_data->cur_path, ent->d_name, NULL);
 
 			if(!stat(fqn, &st)) {
-				dlg_data->size_total += st.st_size;
+				add_fsize(&dlg_data->size_total, st.st_size);
 			
 				if(S_ISDIR(st.st_mode)) {
 					stk_push(dlg_data->dir_stk, fqn, strlen(fqn) + 1);
@@ -986,7 +986,7 @@ static Boolean calc_size_wp(XtPointer client_data)
 
 	} else if(dlg_data->ifile < dlg_data->nfiles){
 		if(!stat(dlg_data->files[dlg_data->ifile], &st)) {
-			dlg_data->size_total += st.st_size;
+			add_fsize(&dlg_data->size_total, st.st_size);
 
 			if(S_ISDIR(st.st_mode)) {
 				dlg_data->dir = opendir(dlg_data->files[dlg_data->ifile]);

@@ -79,7 +79,7 @@ struct app_inst_data {
 	unsigned int nfiles_read;
 	unsigned int nfiles_shown;
 	unsigned int nfiles_hidden;
-	unsigned long size_shown;
+	struct fsize size_shown;
 	
 	/* options */
 	int icon_size_id;

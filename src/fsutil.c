@@ -18,6 +18,9 @@
 #include "debug.h"
 #include "memdb.h" /* must be the last header */
 
+#define FS_FACTOR_MAX 6
+#define FS_KILO 1024
+
 /* Same as readlink, but allocates a buffer */
 int get_link_target(const char *path, char **ptr)
 {
@@ -96,45 +99,57 @@ char* get_unix_type_string(mode_t st_mode)
 /*
  * Returns size string in units J. Random Hacker can grok easily
  */
-char* get_size_string(unsigned long size, char buffer[SIZE_CS_MAX])
+char* get_fsize_string(const struct fsize *fs, char buffer[SIZE_CS_MAX])
 {
 	/* What unit names are we using today? */
-	char CS_BYTES[] = "B";
-	char CS_KILO[] = "K";
-	char CS_MEGA[] = "M";
-	char CS_GIGA[] = "G";
-	char CS_TERRA[] = "T";
-
-	const double kilo = 1024;
-	double fsize = size;
-	char *sz_units = CS_BYTES;
-	double dp;
+	char *sz_names[] = {
+		"B", "K", "M", "G", "T", "P", "E"
+	};
+	char *sz_units;
+	long double dp;
 	char *fmt;
 
+	sz_units = sz_names[(int)fs->factor];
 	
-	if(size >= pow(kilo, 4)) {
-		fsize /= pow(kilo, 4);
-		sz_units = CS_TERRA;		
-	}else if(size >= pow(kilo, 3)) {
-		fsize /=  pow(kilo, 3);
-		sz_units = CS_GIGA;
-	}else if(size >=  pow(kilo, 2)) {
-		fsize /= pow(kilo, 2);
-		sz_units = CS_MEGA;
-	} else if(size >= kilo) {
-		fsize /= kilo;
-		sz_units = CS_KILO;
-	}
-
 	/* don't show decimal part if it's near .0 */
-	dp = fsize - trunc(fsize);
+	dp = fs->size - truncl(fs->size);
 	if(dp > 0.1 && dp < 0.9)
-		fmt = "%.1f%s";
+		fmt = "%.1Lf%s";
 	else
-		fmt = "%.0f%s";
+		fmt = "%.0Lf%s";
 
-	snprintf(buffer, SIZE_CS_MAX, fmt, fsize, sz_units);
+	snprintf(buffer, SIZE_CS_MAX, fmt, fs->size, sz_units);
 	return buffer;
+}
+
+/* Adds size to fs */
+void add_fsize(struct fsize *fs, unsigned long size)
+{
+	unsigned int nfac = 0;
+	long double rsize = size;
+	
+	while( ((rsize / powl(FS_KILO, nfac)) >= FS_KILO)
+	 	&& (nfac < FS_FACTOR_MAX) ) nfac++;
+
+	if(nfac > fs->factor) {
+		fs->size /= powl(FS_KILO, nfac - fs->factor);
+		fs->factor = nfac;
+	}
+	fs->size += rsize / powl(FS_KILO, fs->factor);
+
+	if( (fs->size > FS_KILO) && (fs->factor < FS_FACTOR_MAX) ) {
+		 fs->size /= FS_KILO;
+		 fs->factor += 1;
+	}
+}
+
+char* get_size_string(unsigned long size, char buffer[SIZE_CS_MAX])
+{
+	struct fsize fs = { 0 };
+
+	add_fsize(&fs, size);
+	
+	return get_fsize_string(&fs, buffer);
 }
 
 /*

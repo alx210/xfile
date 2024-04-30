@@ -70,7 +70,7 @@ struct msg_data {
 	size_t name_len;
 	unsigned int files_total;
 	unsigned int files_skipped;
-	unsigned long size_total;
+	struct fsize size_total;
 };
 
 struct watch_rec {
@@ -257,77 +257,44 @@ void set_default_status_text(void)
 	char sz_size[SIZE_CS_MAX];
 	char *item_noun = (app_inst.nfiles_shown > 1) ? "items" : "item";
 	
-	if(!(app_inst.nfiles_shown + app_inst.nfiles_hidden)) {
-		set_status_text("No items to display");
-		return;
-	}
-	
-	if(app_inst.size_shown) {
-		if(app_inst.nfiles_hidden)
-			set_status_text("%s in %u %s (%u %s)",
-				get_size_string(app_inst.size_shown, sz_size),
-				app_inst.nfiles_shown, item_noun,
-				app_inst.nfiles_hidden, "not shown");
-		else
-			set_status_text("%s in %u %s",
-				get_size_string(app_inst.size_shown, sz_size),
-				app_inst.nfiles_shown, item_noun);
-	} else {
-		if(app_inst.nfiles_hidden)
-			set_status_text("%u %s (%u %s)",
-				app_inst.nfiles_shown, item_noun,
-				app_inst.nfiles_hidden, "not shown");
-		else
-			set_status_text("%u %s", app_inst.nfiles_shown, item_noun);
+	if(app_inst.nfiles_shown && app_inst.nfiles_hidden) {
+		set_status_text("%s in %u %s (%u %s)",
+			get_fsize_string(&app_inst.size_shown, sz_size),
+			app_inst.nfiles_shown, item_noun,
+			app_inst.nfiles_hidden, "not shown");
+	} else if(app_inst.nfiles_shown) {
+		set_status_text("%s in %u %s",
+			get_fsize_string(&app_inst.size_shown, sz_size),
+			app_inst.nfiles_shown, item_noun);
+	} else if(app_inst.nfiles_hidden) {
+		item_noun = (app_inst.nfiles_hidden > 1) ? "items" : "item";
+		set_status_text("Nothing to display (%u %s not shown)",
+			item_noun, app_inst.nfiles_hidden);
+	} else if(!app_inst.nfiles_shown && !app_inst.nfiles_hidden) {
+		set_status_text("Nothing to display");
 	}
 }
 
 void set_sel_status_text(void)
 {
-	struct stat st;
 	char sz_size[SIZE_CS_MAX];
 	char sz_mode[MODE_CS_MAX];
 			
 	if(app_inst.cur_sel.count > 1) {
-
-		Boolean enoent = False;
-		size_t size_total = 0;
-		unsigned int i;
-		unsigned int n;
-		
-		for(i = 0, n = 0; i < app_inst.cur_sel.count; i++) {
-			if(!stat(app_inst.cur_sel.names[i], &st)) {
-				size_total += st.st_size;
-				n++;
-			} else if(errno == ENOENT) {
-				enoent = True;
-			}
-		}
 		set_status_text("%s in %u items selected",
-			get_size_string(size_total, sz_size), n);
-
-		if(enoent) force_update();
-
+			get_fsize_string(&app_inst.cur_sel.size_total, sz_size),
+			app_inst.cur_sel.count);
 	} else if(app_inst.cur_sel.count == 1) {
 		char *sz_owner;
 		char *disp_name;
 		struct passwd *pw;
 		struct group *gr;
+		const struct file_list_item *fli = &app_inst.cur_sel.item;
 
-		disp_name = gronk_ctrl_chars(app_inst.cur_sel.names[0]);
-		
-		if(stat(app_inst.cur_sel.names[0], &st)) {
-			if(errno == ENOENT) {
-		 		force_update();
-			} else {
-				set_status_text("Cannot stat '\%s\': %s",
-					disp_name, strerror(errno));
-			}
-			return;
-		}
+		disp_name = gronk_ctrl_chars(fli->name);
 
-		gr = getgrgid(st.st_gid);
-		pw = getpwuid(st.st_uid);
+		gr = getgrgid(fli->gid);
+		pw = getpwuid(fli->uid);
 
 		if(gr && pw) {
 			size_t len = strlen(gr->gr_name) + strlen(pw->pw_name);
@@ -335,11 +302,12 @@ void set_sel_status_text(void)
 			sprintf(sz_owner, "%s:%s", pw->pw_name, gr->gr_name);
 		} else {
 			sz_owner = malloc(32);
-			snprintf(sz_owner, 32, "%d:%d", st.st_uid, st.st_gid);
+			snprintf(sz_owner, 32, "%d:%d", fli->uid, fli->gid);
 		}
 		
-		get_mode_string(st.st_mode, sz_mode);
-		get_size_string(st.st_size, sz_size);
+		get_mode_string(fli->mode, sz_mode);
+		
+		get_size_string(fli->size, sz_size);
 		
 		set_status_text("%s  %s  %s  %s",
 			disp_name, sz_mode, sz_owner, sz_size);
@@ -413,11 +381,11 @@ static void xt_read_proc_sig_handler(XtPointer p, XtSignalId *id)
 static void reset_context_data(void)
 {
 	memset(&app_inst.cur_sel, 0, sizeof(struct file_list_sel));
+	memset(&app_inst.size_shown, 0, sizeof(struct fsize));
 	app_inst.nfiles_read = 0;
 	app_inst.nfiles_shown = 0;
 	app_inst.nfiles_hidden = 0;
-	app_inst.size_shown = 0;
-	
+		
 	file_list_remove_all(app_inst.wlist);
 	file_list_show_contents(app_inst.wlist, False);
 	
@@ -443,10 +411,10 @@ static int read_directory(void)
 
 	/* reset global context data */
 	memset(&app_inst.cur_sel, 0, sizeof(struct file_list_sel));
+	memset(&app_inst.size_shown, 0, sizeof(struct fsize));
 	app_inst.nfiles_read = 0;
 	app_inst.nfiles_shown = 0;
 	app_inst.nfiles_hidden = 0;
-	app_inst.size_shown = 0;
 	
 	file_list_remove_all(app_inst.wlist);
 	file_list_show_contents(app_inst.wlist, False);
@@ -558,7 +526,10 @@ static void reader_callback_proc(XtPointer cd, int *pfd, XtInputId *iid)
 			Boolean changed = 
 				(app_inst.nfiles_hidden != msg.files_skipped ||
 				app_inst.nfiles_shown != msg.files_total ||
-				app_inst.size_shown != msg.size_total) ? True : False;
+				app_inst.size_shown.size != msg.size_total.size ||
+				app_inst.size_shown.factor != msg.size_total.factor)
+				
+				? True : False;
 
 			app_inst.nfiles_hidden = msg.files_skipped;
 			app_inst.nfiles_shown = msg.files_total;
@@ -727,7 +698,7 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 	size_t nfiles = 0;
 	unsigned int files_total = 0;
 	unsigned int files_skipped = 0;
-	unsigned int size_total = 0;
+	struct fsize size_total = { 0 };
 	Boolean has_mpts;
 	ssize_t out;
 	
@@ -763,7 +734,6 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 			msg.is_symlink = True;
 			if(stat(ent->d_name, &st) == -1) {
 				msg.stat_errno = errno;
-				memset(&st, 0, sizeof(struct stat));
 			}
 		} else {
 			msg.is_symlink = False;
@@ -775,7 +745,7 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 		}
 
 		files_total++;
-		size_total += st.st_size;
+		add_fsize(&size_total, st.st_size);
 	
 		/* file list for the watch routine */
 		if(list_size < (nfiles + 1)) {
@@ -870,7 +840,7 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 	while(getppid() == parent_pid) {
 		unsigned int files_total = 0;
 		unsigned int files_skipped = 0;
-		unsigned int size_total = 0;
+		struct fsize size_total = { 0 };
 	
 		dir = opendir(path);
 		if(!dir) return RP_ENOACC;
@@ -896,7 +866,6 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 				msg.is_symlink = True;
 				if(stat(ent->d_name, &st) == -1) {
 					msg.stat_errno = errno;
-					memset(&st, 0, sizeof(struct stat));
 				}
 			} else {
 				msg.is_symlink = False;
@@ -908,7 +877,7 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 			}
 
 			files_total++;
-			size_total += st.st_size;
+			add_fsize(&size_total, st.st_size);
 			
 			/* new file */
 			if(i == nfiles) {

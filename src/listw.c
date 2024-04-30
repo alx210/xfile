@@ -26,7 +26,6 @@
 #include <wchar.h>
 #include <wctype.h>
 #include "listwp.h"
-#include "fsutil.h"
 #include "debug.h"
 #include "memdb.h" /* must be the last header */
 
@@ -2682,13 +2681,26 @@ static void default_action_handler(Widget w, unsigned int mod_mask)
 	unsigned int i = get_cursor(w);
 
 	if(fl->num_items && fl->default_action_cb) {
-		char *tmp[] = { fl->items[i].name };
-		
+
 	 	struct file_list_sel cbd = {
-			.names = tmp,
 			.count = 1,
+			.names = fl->sel_names,
+			.item.name = fl->items[i].name,
+			.item.title = fl->items[i].title,
+			.item.db_type = fl->items[i].db_type,
+			.item.size = fl->items[i].size,
+			.item.mode = fl->items[i].mode,
+			.item.uid = fl->items[i].uid,
+			.item.gid = fl->items[i].gid,
+			.item.ctime = fl->items[i].ctime,
+			.item.mtime = fl->items[i].mtime,
+			.item.is_symlink = fl->items[i].is_symlink,
+			.item.icon = fl->items[i].icon_image,
+			.item.icon_mask = fl->items[i].icon_mask,
+			.item.user_flags = fl->items[i].user_flags
 		};
-		
+		add_fsize(&cbd.size_total, fl->items[i].size);
+				
 		XtCallCallbackList(w, fl->default_action_cb, (XtPointer)&cbd);
 	}
 }
@@ -2719,15 +2731,11 @@ static void delete(Widget w, XEvent *evt, String *params, Cardinal *nparams)
 static void sel_change_handler(Widget w)
 {
 	struct file_list_part *fl = FL_PART(w);
-	struct file_list_sel cbd;
+	struct file_list_sel cbd = { 0 };
 	unsigned int i, count = 0;
-	unsigned int cur_sel;
 	
 	for(i = 0; i < fl->num_items; i++) {
-		if(fl->items[i].selected) {
-			count++;
-			cur_sel = i;
-		}
+		if(fl->items[i].selected) count++;
 	}
 	
 	if(count) {
@@ -2757,19 +2765,13 @@ static void sel_change_handler(Widget w)
 			}
 		}
 	
-		cbd.count = count;
-		cbd.names = fl->sel_names;
-		cbd.db_type = (count == 1) ? fl->items[cur_sel].db_type : -1;
-		cbd.user_flags = (count == 1) ? fl->items[cur_sel].user_flags : 0;
+		fl->sel_count = count;
+		file_list_get_selection(w, &cbd);
 	} else {
-		cbd.count = 0;
-		cbd.names = NULL;
-		cbd.db_type = -1;
-		cbd.user_flags = 0;
 		ungrab_primary_selection(w, False);
+		fl->sel_count = 0;
 	}
-	dbg_trace("selection: %d files\n", cbd.count);
-	fl->sel_count = count;
+
 	if(fl->sel_change_cb)
 		XtCallCallbackList(w, fl->sel_change_cb, &cbd);
 }
@@ -3214,25 +3216,46 @@ void file_list_remove_all(Widget w)
 Boolean file_list_get_selection(Widget w, struct file_list_sel *sel)
 {
 	struct file_list_part *fl = FL_PART(w);
-		
-	if(sel && fl->sel_count) {
-		unsigned int i, cur_sel = 0;
-		
-		if(fl->sel_count == 1) {
-			for(i = 0; i < fl->num_items; i++) {
-				if(fl->items[i].selected) {
-					cur_sel = i;
-					break;
-				}
-			}
-			sel->db_type = fl->items[cur_sel].db_type;
-			sel->user_flags = fl->items[cur_sel].user_flags;
+	struct fsize fs = { 0 };
+	unsigned int i = 0;
+			
+	if(fl->sel_count > 1) {
+		for(i = 0; i < fl->num_items; i++) {
+			if(fl->items[i].selected)
+				add_fsize(&fs, fl->items[i].size);
 		}
 
-		sel->names = (fl->sel_count) ? fl->sel_names : NULL;
 		sel->count = fl->sel_count;
-	}
-	return (fl->sel_count > 0) ? True : False;
+		sel->size_total = fs;
+		sel->names = (fl->sel_count) ? fl->sel_names : NULL;
+
+		i = get_cursor(w);
+
+	} else if(fl->sel_count == 1) {
+		for(i = 0; i < fl->num_items; i++) {
+			if(fl->items[i].selected) break;
+		}
+
+		sel->count = 1;
+		sel->names = fl->sel_names;
+		add_fsize(&sel->size_total, fl->items[i].size);
+	} else return False;
+
+	sel->item.name = fl->items[i].name;
+	sel->item.title = fl->items[i].title;
+	sel->item.db_type = fl->items[i].db_type;
+	sel->item.size = fl->items[i].size;
+	sel->item.mode = fl->items[i].mode;
+	sel->item.uid = fl->items[i].uid;
+	sel->item.gid = fl->items[i].gid;
+	sel->item.ctime = fl->items[i].ctime;
+	sel->item.mtime = fl->items[i].mtime;
+	sel->item.is_symlink = fl->items[i].is_symlink;
+	sel->item.icon = fl->items[i].icon_image;
+	sel->item.icon_mask = fl->items[i].icon_mask;
+	sel->item.user_flags = fl->items[i].user_flags;	
+
+	return True;
 }
 
 unsigned int file_list_count(Widget w)

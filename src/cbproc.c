@@ -81,6 +81,8 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	int rv;
 	static char *last_input = NULL;
 	
+	dbg_assert(app_inst.cur_sel.count == 1);
+	
 	input = input_string_dlg(app_inst.wshell, "Pass To",
 		"Specify a command to run on the file.",
 		last_input, ISF_PRESELECT);
@@ -91,9 +93,10 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	path = realpath(app_inst.location, NULL);
 	cmd_len = strlen(input) + strlen(path) +
-		strlen(app_inst.cur_sel.names[0]) + 3;
+		strlen(app_inst.cur_sel.item.name) + 3;
 	cmd = malloc(cmd_len);
-	snprintf(cmd, cmd_len, "%s %s/%s", input, path, app_inst.cur_sel.names[0]);
+	snprintf(cmd, cmd_len, "%s %s/%s", input, path,
+		app_inst.cur_sel.item.name);
 	free(path);
 	free(input);
 
@@ -122,7 +125,7 @@ static void exec_string_proc(Widget w, XtPointer pclient, XtPointer pcall)
 
 	dbg_assert(app_inst.cur_sel.count == 1);
 	
-	name = strdup(app_inst.cur_sel.names[0]);
+	name = strdup(app_inst.cur_sel.item.name);
 	path = get_working_dir();
 	if(!name || !path) {
 		message_box(app_inst.wshell, MB_ERROR, APP_TITLE, strerror(errno));
@@ -157,9 +160,9 @@ static void exec_string_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	vars[0].value = name;
 	vars[1].name = ENV_FPATH;
 	vars[1].value = path;
-	if(DB_DEFINED(app_inst.cur_sel.db_type)) {
+	if(DB_DEFINED(app_inst.cur_sel.item.db_type)) {
 		struct file_type_rec *ft;
-		ft = db_get_record(&app_inst.type_db, app_inst.cur_sel.db_type);
+		ft = db_get_record(&app_inst.type_db, app_inst.cur_sel.item.db_type);
 		vars[2].name = ENV_FMIME;
 		vars[2].value = ft->mime;
 	}
@@ -244,9 +247,9 @@ static void run_exec_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	dbg_assert(app_inst.cur_sel.count == 1);
 	
 	path = realpath(app_inst.location, NULL);
-	fqn_len = strlen(path) + strlen(app_inst.cur_sel.names[0]) + 2;
+	fqn_len = strlen(path) + strlen(app_inst.cur_sel.item.name) + 2;
 	fqn = malloc(fqn_len);
-	snprintf(fqn, fqn_len, "%s/%s", path, app_inst.cur_sel.names[0]);
+	snprintf(fqn, fqn_len, "%s/%s", path, app_inst.cur_sel.item.name);
 
 	set_action_status_text("Executing", fqn);
 	rv = spawn_exe(fqn);
@@ -257,7 +260,7 @@ static void run_exec_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Error executing \'%s\'\n%s.",
-			app_inst.cur_sel.names[0], strerror(rv));
+			app_inst.cur_sel.item.name, strerror(rv));
 	}
 }
 
@@ -289,26 +292,20 @@ static void set_action_status_text(const char *action, const char *cmd)
  */
 void activate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
-	struct stat st;
 	struct file_list_sel *cbd = (struct file_list_sel*)pcall;
-	char *name = cbd->names[0];
 	
-	if(stat(name, &st) == -1) {
-		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
-			"Cannot stat %s.\n%s", name, strerror(errno), NULL);
-		return;
-	}
+	app_inst.cur_sel = *cbd;
 	
-	if(S_ISDIR(st.st_mode)) {
-		set_location(name, False);
-	} else if(S_ISREG(st.st_mode)) {
+	if(S_ISDIR(cbd->item.mode)) {
+		set_location(cbd->item.name, False);
+	} else if(S_ISREG(cbd->item.mode)) {
 		struct file_type_rec *rec;
 
-		rec = db_get_record(&app_inst.type_db, app_inst.cur_sel.db_type);
+		rec = db_get_record(&app_inst.type_db, cbd->item.db_type);
 		if(rec && rec->nactions) {
 			exec_string_proc(w, rec->actions[0].command, NULL);
 		} else {
-			if(DB_ISTEXT(app_inst.cur_sel.db_type))
+			if(DB_ISTEXT(cbd->item.db_type))
 				exec_string_proc(w, ENV_DEF_TEXT_CMD, NULL);
 			else
 				pass_to_proc(w, NULL, NULL);
@@ -333,12 +330,12 @@ void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	if(cbd->count == 1) {
 		struct file_type_rec *ft = NULL;
-		char *file_name = cbd->names[0];
+		char *file_name = cbd->item.name;
 		Boolean is_exec = (access(file_name, X_OK) ? False : True);
 		
 		ui_flags |= (UIF_SEL | UIF_SINGLE);
 		
-		ft = db_get_record(&app_inst.type_db, app_inst.cur_sel.db_type);
+		ft = db_get_record(&app_inst.type_db, cbd->item.db_type);
 
 		if(ft && ft->nactions) {
 			unsigned int i;
@@ -365,7 +362,6 @@ void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 			free(cmi);
 		} else {
 			/* not a regular file, no matching type, or no actions defined */
-			struct stat st;
 			unsigned int ncmi = 0;
 			
 			struct ctx_menu_item def_text_act[] = {
@@ -417,29 +413,28 @@ void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 				}
 			};
 
-			if(!stat(file_name, &st)) {
-				if(S_ISDIR(st.st_mode)) {
-					ncmi = 2;
-					
-					if((cbd->user_flags & FLI_MNTPOINT)
-						&& app_res.user_mounts)	ncmi++;
+			if(S_ISDIR(cbd->item.mode)) {
+				ncmi = 2;
 
-					if(cbd->user_flags & FLI_MOUNTED) {
-						def_dir_act[2].label = "&Unmount";
-						def_dir_act[2].callback = umount_proc;
-					}
-					cmi = def_dir_act;
+				if((cbd->item.user_flags & FLI_MNTPOINT)
+					&& app_res.user_mounts)	ncmi++;
 
-				} else if(S_ISREG(st.st_mode)) {
-					if(DB_ISTEXT(app_inst.cur_sel.db_type)) {
-						cmi = def_text_act;
-						ncmi = (is_exec ? 3 : 2);
-					} else {
-						cmi = def_reg_act;
-						ncmi = (is_exec ? 2 : 1);
-					}
-				} /* nothing otherwise */
-			}
+				if(cbd->item.user_flags & FLI_MOUNTED) {
+					def_dir_act[2].label = "&Unmount";
+					def_dir_act[2].callback = umount_proc;
+				}
+				cmi = def_dir_act;
+
+			} else if(S_ISREG(cbd->item.mode)) {
+				if(DB_ISTEXT(cbd->item.db_type)) {
+					cmi = def_text_act;
+					ncmi = (is_exec ? 3 : 2);
+				} else {
+					cmi = def_reg_act;
+					ncmi = (is_exec ? 2 : 1);
+				}
+			} /* nothing otherwise */
+
 			update_context_menus(cmi, ncmi, 0);
 		}
 	} else if(cbd->count > 1) {
@@ -590,8 +585,12 @@ void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 void rename_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
-	char *cursel = strdup(app_inst.cur_sel.names[0]);
+	char *cursel;
 	char *target;
+	
+	dbg_assert(app_inst.cur_sel.count == 1);
+	
+	cursel = strdup(app_inst.cur_sel.item.name);
 	
 	target = input_string_dlg(app_inst.wshell, 
 		"Rename", "Specify new file name",
@@ -647,7 +646,11 @@ void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	char *link;
 	char *target;
-	char *cursel = strdup(app_inst.cur_sel.names[0]);
+	char *cursel;
+	
+	dbg_assert(app_inst.cur_sel.count == 1);
+	
+	cursel = strdup(app_inst.cur_sel.item.name);
 	
 	link = input_string_dlg(app_inst.wshell, "Link To",
 		"Specify a name for the symbolic link.\n"
@@ -677,8 +680,10 @@ void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 void attributes_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
-	attrib_dlg(app_inst.wshell,
-		app_inst.cur_sel.names, app_inst.cur_sel.count);
+	dbg_assert(app_inst.cur_sel.count);
+
+	attrib_dlg(app_inst.wshell, app_inst.cur_sel.names,
+		app_inst.cur_sel.count);
 }
 
 void select_all_cb(Widget w, XtPointer pclient, XtPointer pcall)

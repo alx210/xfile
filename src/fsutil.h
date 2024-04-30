@@ -10,7 +10,16 @@
 #define SIZE_CS_MAX 32
 #define MODE_CS_MAX 12
 
+struct fsize {
+	long double size;
+	unsigned int factor;
+};
+
+/* Adds size to fs */
+void add_fsize(struct fsize *fs, unsigned long size);
+
 /* Returns size string in units J. Random Hacker can grok easily */
+char* get_fsize_string(const struct fsize*, char buffer[SIZE_CS_MAX]);
 char* get_size_string(unsigned long size, char buffer[SIZE_CS_MAX]);
 
 /* Returns ls(1) style mode string for the mode specified */

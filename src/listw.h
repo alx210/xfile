@@ -10,16 +10,9 @@
 #define LISTW_H
 
 #include <Xm/Primitive.h>
+#include "fsutil.h"
 
 extern WidgetClass fileListWidgetClass;
-
-struct file_list_sel {
-	unsigned int count;
-	char **names;
-	/* only valid for single item selection */
-	int db_type;
-	unsigned int user_flags;
-};
 
 struct file_list_item {
 	char *name;
@@ -35,6 +28,13 @@ struct file_list_item {
 	Pixmap icon;
 	Pixmap icon_mask;
 	unsigned int user_flags;	
+};
+
+struct file_list_sel {
+	unsigned int count;
+	char **names;
+	struct fsize size_total;
+	struct file_list_item item; /* active item */
 };
 
 /* Enumerated resources */
@@ -169,6 +169,14 @@ Boolean file_list_get_selection(Widget, struct file_list_sel *sel);
  * deferred until items are shown.
  */
 void file_list_show_contents(Widget, Boolean show);
+
+
+/*
+ * Retrieves file_list_item struct for the item name specified.
+ * Returns True on success.
+ */
+Boolean file_list_get_item(Widget, const char *name,
+	struct file_list_item *ret);
 
 /*
  * Deletes all items
