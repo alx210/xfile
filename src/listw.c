@@ -1480,11 +1480,10 @@ static void select_at_xy(Widget w, int x, int y, Boolean add)
 		{
 			if(add && (fl->items[i].selected)) {
 				fl->items[i].selected = False;
-				changed++;
 			} else if(!(fl->items[i].selected)){
 				fl->items[i].selected = True;
-				changed++;
 			}
+			changed++;
 			
 			set_cursor(w, i);
 			draw_item(w, i, True, True);
