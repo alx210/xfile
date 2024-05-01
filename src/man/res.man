@@ -157,7 +157,7 @@ Specifies the file name sorting direction of displayed items. Default is ascend\
 Specifies the sorting order of displayed items. Default is \fIname\fP\.
 .TP
 \fBsilent\fP \fIBoolean\fP
-Specifies whether audible feedback is enabled for item look\-up\.
+Specifies whether audible feedback is disabled for item look\-up\.
 Default is \fBFalse\fP\.
 .TP
 \fBnumberedSort\fP \fIBoolean\fP
