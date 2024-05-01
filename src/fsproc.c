@@ -32,6 +32,7 @@
 #include "guiutil.h"
 #include "stack.h"
 #include "path.h"
+#include "mbstr.h"
 #include "fsutil.h"
 #include "debug.h"
 #include "memdb.h" /* must be the last header */
@@ -59,6 +60,10 @@
 #define FB_CANCEL			3
 #define FB_NOPTIONS 4
 #define FB_VALID_ID(id) ((id) >= 0 && (id) <= 3)
+
+/* Initial progress dialog source/destination label width in
+ * characters, also controls when path/file names get abbreviated */
+#define PROG_FNAME_MAX	50
 
 #define RPERM (S_IRUSR|S_IRGRP|S_IROTH)
 #define WPERM (S_IWUSR|S_IWGRP|S_IWOTH)
@@ -338,7 +343,7 @@ static int create_progress_ui(struct fsproc_data *d, enum wp_action action)
 	XtSetArg(args[n], XmNmarginHeight, 1); n++;
 	XtSetArg(args[n], XmNmarginWidth, 1); n++;
 	XtSetArg(args[n], XmNtraversalOn, False); n++;
-	XtSetArg(args[n], XmNcolumns, 50); n++;
+	XtSetArg(args[n], XmNcolumns, PROG_FNAME_MAX); n++;
 	XtSetArg(args[n], XmNbackground, frm_bg); n++;
 	d->wsrc = XmCreateTextField(d->wcol, "source", args, n);
 	XtUninstallTranslations(d->wsrc);
@@ -358,7 +363,7 @@ static int create_progress_ui(struct fsproc_data *d, enum wp_action action)
 		XtSetArg(args[n], XmNmarginHeight, 1); n++;
 		XtSetArg(args[n], XmNmarginWidth, 1); n++;
 		XtSetArg(args[n], XmNtraversalOn, False); n++;
-		XtSetArg(args[n], XmNcolumns, 50); n++;
+		XtSetArg(args[n], XmNcolumns, PROG_FNAME_MAX); n++;
 		XtSetArg(args[n], XmNbackground, frm_bg); n++;
 		d->wdest = XmCreateTextField(d->wcol, "destination", args, n);
 		XtUninstallTranslations(d->wdest);
@@ -378,7 +383,7 @@ static int create_progress_ui(struct fsproc_data *d, enum wp_action action)
 	XtSetArg(args[n], XmNmarginHeight, 1); n++;
 	XtSetArg(args[n], XmNmarginWidth, 1); n++;
 	XtSetArg(args[n], XmNtraversalOn, False); n++;
-	XtSetArg(args[n], XmNcolumns, 50); n++;
+	XtSetArg(args[n], XmNcolumns, PROG_FNAME_MAX); n++;
 	XtSetArg(args[n], XmNbackground, frm_bg); n++;
 	d->witem = XmCreateTextField(d->wcol, "item", args, n);
 	XtUninstallTranslations(d->witem);
@@ -710,14 +715,36 @@ static void progress_cb(XtPointer cd, int *pfd, XtInputId *iid)
 		emsg[emsg_len] = '\0';
 	}
 
-	if(src) XmTextFieldSetString(d->wsrc, src);
-	if(dest) XmTextFieldSetString(d->wdest, dest);
+	if(src) {
+		char *tmp = NULL;
+		if(src_len > PROG_FNAME_MAX) {
+			tmp = shorten_mb_string(src, PROG_FNAME_MAX, True);
+			if(tmp) src = tmp;
+		}
+		XmTextFieldSetString(d->wsrc, src);
+		if(tmp) free(tmp);
+	}
+	if(dest) {
+		char *tmp = NULL;
+		if(dest_len > PROG_FNAME_MAX) {
+			tmp = shorten_mb_string(dest, PROG_FNAME_MAX, True);
+			if(tmp) dest = tmp;
+		}
+		XmTextFieldSetString(d->wdest, dest);
+		if(tmp) free(tmp);
+	}
 	if(item) {
+		char *tmp = NULL;
+		if(item_len > PROG_FNAME_MAX) {
+			tmp = shorten_mb_string(item, PROG_FNAME_MAX, True);
+			if(tmp) item = tmp;
+		}
 		/* these are created unmanaged, since only required if
 		 * recursive copy/move is being done */
 		XtManageChild(d->witem_label);
 		XtManageChild(d->witem);
 		XmTextFieldSetString(d->witem, item);
+		if(tmp) free(tmp);
 	} else {
 		XmTextFieldSetString(d->witem, "");
 	}
