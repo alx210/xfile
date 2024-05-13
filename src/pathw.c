@@ -263,7 +263,7 @@ static Dimension compute_height(Widget w)
 	struct path_field_part *wp = PART(w);
 	Dimension wanted_height;
 
-	wanted_height = wp->font_height + 2 + wp->btn_height +
+	wanted_height = wp->font_height + wp->btn_height +
 		wp->margin_height * 2  + wp->shadow_thickness * 2 +
 		wp->highlight_thickness * 2;
 	return wanted_height;
