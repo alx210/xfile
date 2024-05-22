@@ -411,6 +411,8 @@ static int create_progress_ui(struct fsproc_data *d, enum wp_action action)
 	if(action == WP_COPY || action == WP_MOVE) {
 		XtManageChild(d->wdest_label);
 		XtManageChild(d->wdest);
+		XtManageChild(d->witem_label);
+		XtManageChild(d->witem);
 	}
 	XtManageChild(d->wsrc_label);
 	XtManageChild(d->wsrc);
@@ -739,10 +741,6 @@ static void progress_cb(XtPointer cd, int *pfd, XtInputId *iid)
 			tmp = shorten_mb_string(item, PROG_FNAME_MAX, True);
 			if(tmp) item = tmp;
 		}
-		/* these are created unmanaged, since only required if
-		 * recursive copy/move is being done */
-		XtManageChild(d->witem_label);
-		XtManageChild(d->witem);
 		XmTextFieldSetString(d->witem, item);
 		if(tmp) free(tmp);
 	} else {
@@ -917,17 +915,26 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 			} else if(S_ISREG(st_src.st_mode)){
 				char *src_title = get_path_tail(csrc);
 				char dest_fqn[strlen(cdest) + strlen(src_title) + 2];
-				
+				char src_path[strlen(csrc) + 1];
+
+				strcpy(src_path, csrc);
+				trim_path(src_path, 1);
 				build_path(dest_fqn, cdest, src_title, NULL);
-				wp_post_message(wpd, FBT_NONE, csrc, dest_fqn, NULL, NULL);
+				wp_post_message(wpd, FBT_NONE, src_path,
+					cdest, src_title, NULL);
 				rv = wp_copy_file(wpd, csrc, dest_fqn, move);
 			} else if(S_ISLNK(st_src.st_mode)){
 				char *src_title = get_path_tail(csrc);
 				char dest_fqn[strlen(cdest) + strlen(src_title) + 2];
+				char src_path[strlen(csrc) + 1];
 				char *link_tgt;
 
+				strcpy(src_path, csrc);
+				trim_path(src_path, 1);
+
 				build_path(dest_fqn, cdest, src_title, NULL);
-				wp_post_message(wpd, FBT_NONE, csrc, dest_fqn, NULL, NULL);
+				wp_post_message(wpd, FBT_NONE, src_path,
+					cdest, src_title, NULL);
 				if( (rv = get_link_target(cdest, &link_tgt)) ) break;
 
 				rv = wp_sym_link(wpd, link_tgt, dest_fqn);
