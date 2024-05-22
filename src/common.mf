@@ -6,9 +6,10 @@ SYS_LIBS = -lm -lc
 
 CFLAGS += -DPREFIX='"$(PREFIX)"' $(INCDIRS)
 
-XFILE_OBJS = main.o menu.o defaults.o comdlgs.o guiutil.o typedb.o path.o \
-	listw.o pathw.o filemgr.o graphics.o cbproc.o exec.o stack.o fsutil.o \
-	mbstr.o attrib.o mount.o fsproc.o fstab.o usrtool.o info.o debug.o
+XFILE_OBJS = main.o menu.o defaults.o comdlgs.o guiutil.o typedb.o \
+	path.o listw.o pathw.o filemgr.o graphics.o cbproc.o exec.o \
+	stack.o fsutil.o mbstr.o attrib.o mount.o fsproc.o fstab.o \
+	usrtool.o info.o debug.o $(EXTRA_OBJS)
 
 .PHONY: clean install uninstall
 

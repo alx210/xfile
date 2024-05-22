@@ -42,7 +42,8 @@ static void input_focus_cb(Widget, XtPointer, XtPointer);
 static void input_unfocus_cb(Widget, XtPointer, XtPointer);
 static void set_path_from_component(Widget, unsigned int);
 static Boolean notify_client(Widget, const char*);
-static void update_location_data(Widget, const char*);
+static void update_visuals(Widget, const char*);
+static void set_display_string(Widget, const char*, Boolean);
 
 /* Widget resources */
 #define RFO(fld) XtOffsetOf(struct path_field_rec, fld)
@@ -440,9 +441,55 @@ static void destroy(Widget w)
 }
 
 /*
+ * Sets winput's text, and updates component widgets if 'update' is True.
+ */
+static void set_display_string(Widget w, const char *path, Boolean update)
+{
+	struct path_field_part *wp = PART(w);
+	size_t nbytes = strlen(path);
+	size_t i = 0;
+	int n;
+	char *buf;
+	Boolean bad_chars = False;
+
+	/* XXX in case the path string contains invalid multibyte sequences, we
+	 *     fix them here so that component button navigation remains usable,
+	 *     though the displayed string becomes an approximation */
+	buf = XtMalloc(nbytes + 1);
+	if(!buf) {
+		WARNING(w, "Memory allocation error");
+		return;
+	}
+
+	mblen(NULL, 0);
+
+	while(path[i]) {
+		n = mblen(path + i, nbytes - i);
+		if(n == -1) {
+			buf[i] = '?';
+			n = 1;
+			bad_chars = True;
+		} else {
+			memcpy(buf + i, path + i, n);
+		}
+		i += n;
+	}
+	buf[i] = '\0';
+	if(bad_chars) WARNING(w, "Invalid multibyte character string");
+	XmTextFieldSetString(wp->winput, buf);
+	
+	if(update) update_visuals(w, buf);
+	
+	if(wp->tmp_path)
+		XtFree(wp->tmp_path);
+
+	wp->tmp_path = buf;
+}
+
+/*
  * Updates component button data and their positions.
  */
-static void update_location_data(Widget w, const char *path)
+static void update_visuals(Widget w, const char *path)
 {
 	struct path_field_part *wp = PART(w);
 	Position tx, ty;
@@ -522,8 +569,7 @@ static void update_location_data(Widget w, const char *path)
 			/* mind multibyte; we need position in characters for XmTextField */
 			int bytes = mblen(p + i, path_len - i);
 			if(bytes == -1) {
-				/* shouldn't happen, but if, we disable them buttons */
-				WARNING(w, "Invalid character string");
+				/* shouldn't happen, since we check in set_display_string */
 				wp->ncomp = 0;
 				return;
 			}
@@ -557,11 +603,6 @@ static void update_location_data(Widget w, const char *path)
 	wp->comp_width = bx;
 	wp->ncomp = nc;
 	draw_outline(w);
-	
-	if(wp->tmp_path)
-		XtFree(wp->tmp_path);
-
-	wp->tmp_path = strdup(path);
 }
 
 /*
@@ -603,7 +644,7 @@ static void set_path_from_component(Widget w, unsigned int id)
 	} else {
 		wp->comp_width = 0;
 	}
-	XmTextFieldSetString(wp->winput, path);
+	set_display_string(w, path, False);
 
 	/* remove discarded data */
 	for(i = id; i < wp->ncomp; i++) {
@@ -614,8 +655,7 @@ static void set_path_from_component(Widget w, unsigned int id)
 	draw_outline(w);
 
 	if(!notify_client(w, path)) {
-		XmTextFieldSetString(wp->winput, prev_path);
-		update_location_data(w, prev_path);
+		set_display_string(w, prev_path, True);
 		XtFree(prev_path);
 	}
 	XtFree(path);
@@ -709,30 +749,12 @@ int path_field_set_location(Widget w, const char *location, Boolean notify)
 			XtFree(path);
 			return EINVAL;
 		}
-		XmTextFieldSetString(wp->winput, path);
-		update_location_data(w, path);
+		set_display_string(w, path, True);
 		XtFree(path);
 	} else {
 		if(notify && !notify_client(w, location)) return EINVAL;
-		XmTextFieldSetString(wp->winput, (char*)location);
-		update_location_data(w, location);
+		set_display_string(w, (char*)location, True);
 	}
 	return 0;
 }
 
-char* path_field_get_location(Widget w)
-{
-	struct path_field_part *wp = PART(w);
-	char *path = XmTextFieldGetString(w);
-	char *ret_path = path;
-
-	if(wp->compact_path && (path[0] == '~') ) {
-		size_t len = strlen(wp->home) + strlen(path) + 1;
-		/* replace ~ with $HOME */
-		ret_path = XtMalloc(len + 1);
-		sprintf(ret_path, "%s/%s", wp->home, &path[1]);
-		XtFree(path);
-	}
-	
-	return ret_path;
-}

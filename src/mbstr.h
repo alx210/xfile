@@ -19,4 +19,9 @@ char* mbs_tolower(const char *src);
 /* Returns number of characters in a multibyte string */
 size_t mb_strlen(const char*);
 
+/* Makes the pointed string suitable for GUI display by replacing control
+ * characters with whitespace, and discarding any invalid multibyte sequences.
+ * Returns new string allocated from heap, or NULL on malloc error. */
+char* mbs_make_displayable(const char *src);
+
 #endif /* MBSTR_H */

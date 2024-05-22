@@ -1252,7 +1252,7 @@ static Boolean make_labels(Widget w, struct item_rec *irec)
 	rend_tag = get_rendition_tag(irec);
 	
 	/* Label part */
-	psz_tmp = gronk_ctrl_chars(irec->title ? irec->title : irec->name);
+	psz_tmp = mbs_make_displayable(irec->title ? irec->title : irec->name);
 	if(psz_tmp) {
 		xms = XmStringGenerate(psz_tmp, NULL, XmCHARSET_TEXT, rend_tag);
 		free(psz_tmp);

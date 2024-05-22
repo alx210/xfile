@@ -28,9 +28,6 @@ char* get_mode_string(mode_t, char buffer[MODE_CS_MAX]);
 /* Returns descriptive string for unix file type */
 char* get_unix_type_string(mode_t);
 
-/* Duplicates str, and replaces any control characters with whitespace */
-char* gronk_ctrl_chars(const char *str);
-
 /* Same as readlink, but allocates a buffer */
 int get_link_target(const char *path, char **target);
 

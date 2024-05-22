@@ -187,23 +187,6 @@ char* get_mode_string(mode_t mode, char buf[MODE_CS_MAX])
 }
 
 /*
- * Duplicates str, and replaces any control characters with whitespace.
- */
-char* gronk_ctrl_chars(const char *str)
-{
-	char *p, *s = strdup(str);
-	
-	if(!s) return NULL;
-	
-	p = s;
-	while(*p != '\0') {
-    	   if(iscntrl(*p)) *p = ' ';
-    	   p++;
-	}
-	return s;
-}
-
-/*
  * Returns 1 if path (must be fqn) appears to be mounted
  */
 int path_mounted(const char *path)

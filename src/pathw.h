@@ -31,7 +31,4 @@ extern WidgetClass pathFieldWidgetClass;
 
 int path_field_set_location(Widget w, const char *location, Boolean notify);
 
-/* The returned string must be freed with XtFree */
-char* path_field_get_location(Widget w);
-
 #endif /* PATHW_H */

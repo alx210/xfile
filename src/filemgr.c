@@ -31,6 +31,7 @@
 #include "path.h"
 #include "fstab.h"
 #include "fsutil.h"
+#include "mbstr.h"
 #include "debug.h"
 #include "memdb.h" /* must be the last header */
 
@@ -291,7 +292,7 @@ void set_sel_status_text(void)
 		struct group *gr;
 		const struct file_list_item *fli = &app_inst.cur_sel.item;
 
-		disp_name = gronk_ctrl_chars(fli->name);
+		disp_name = mbs_make_displayable(fli->name);
 
 		gr = getgrgid(fli->gid);
 		pw = getpwuid(fli->uid);

@@ -43,6 +43,7 @@
 #include "path.h"
 #include "fsproc.h"
 #include "fsutil.h"
+#include "mbstr.h"
 #include "debug.h"
 #include "memdb.h" /* must be the last header */
 
@@ -224,7 +225,7 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 		/* attributes */
 		add_fsize(&dlg_data->size_total, st.st_size);
 		
-		psz = gronk_ctrl_chars(link_name ? link_name : file_name);
+		psz = mbs_make_displayable(link_name ? link_name : file_name);
 		if(link_name) free(link_name);
 		set_label_string(dlg_data->wattrib[GID_NAME], psz);
 		free(psz);

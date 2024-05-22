@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include <wchar.h>
 #include <wctype.h>
+#include <ctype.h>
 #include "debug.h"
+#include "memdb.h" /* must be the last header */
 
 /* Multibyte string utility routines */
 
@@ -28,7 +30,7 @@ char* shorten_mb_string(const char *sz, size_t max_chrs, int ltor)
 	
 	while(sz[i]) {
 		int n = mblen(sz + i, nbytes - i);
-		if(n == -1) n = 1; else if(n == 0) break;
+		if(n <= 0) break;
 		nchrs++;
 		i += n;
 	}
@@ -119,6 +121,43 @@ char* mbs_tolower(const char *src)
 
 		is += ns;
 		id += nd;
+	}
+	dest[id] = '\0';
+	return dest;
+}
+
+/* 
+ * Makes the pointed string suitable for GUI display by replacing control
+ * characters with whitespace, and discarding any invalid multibyte sequences.
+ * Returns new string allocated from heap, or NULL on error.
+ */
+char* mbs_make_displayable(const char *src)
+{
+	size_t nbytes = strlen(src);
+	size_t is = 0;
+	size_t id = 0;
+	int ns;
+	char *dest;
+
+	dest = malloc(nbytes + 3);
+	if(!dest) return NULL;
+
+	mblen(NULL, 0);
+
+	while(src[is]) {
+		ns = mblen(src + is, nbytes - is);
+		if(ns == -1) {
+			dest[id] = '?';
+			id++;
+			is++;
+			continue;
+		} else if(ns == 1 && iscntrl(src[is])) {
+			dest[id] = ' ';
+		} else {
+			memcpy(dest + id, src + is, ns);
+		}
+		id += ns;
+		is += ns;
 	}
 	dest[id] = '\0';
 	return dest;
