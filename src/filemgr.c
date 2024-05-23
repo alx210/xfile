@@ -270,7 +270,7 @@ void set_default_status_text(void)
 	} else if(app_inst.nfiles_hidden) {
 		item_noun = (app_inst.nfiles_hidden > 1) ? "items" : "item";
 		set_status_text("Nothing to display (%u %s not shown)",
-			item_noun, app_inst.nfiles_hidden);
+			app_inst.nfiles_hidden, item_noun);
 	} else if(!app_inst.nfiles_shown && !app_inst.nfiles_hidden) {
 		set_status_text("Nothing to display");
 	}
