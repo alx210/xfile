@@ -60,6 +60,9 @@
 #define RT_SYMLINK	"symlink"
 #define RT_SPECIAL	"special"
 
+/* Background magnitude at which text turns white */
+#define DEF_FG_THRESHOLD 56000
+
 enum {
 	FL_FLABEL,
 	FL_FMODE,
@@ -131,11 +134,12 @@ struct file_list_part {
 	GC xor_gc;
 	GC label_gc;
 	GC icon_gc;
-	
-	Pixel sfg_pixel;
-	Pixel fg_pixel;
+
+	Pixel fg_pixel;	
+	Pixel sfg_pixel;  
+	Pixel nfbg_pixel; /* dynamically allocated */
 	Pixmap stipple;
-	
+
 	/* data */
 	struct item_rec *items;
 	unsigned int items_size; /* items array size in item_rec units */
@@ -210,8 +214,8 @@ struct file_list_part {
 	short sort_order;
 	short sort_direction;
 	short view_mode;
-	Pixel highlight_fg;
-	Pixel highlight_bg;
+	Pixel select_pixel;
+	unsigned int fg_threshold;
 };
 
 struct file_list_rec {

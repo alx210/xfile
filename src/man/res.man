@@ -112,11 +112,8 @@ Specifies the double-click interval in milliseconds\.
 Specifies the number of pixels the cursor must move while the primary button
 is pressed to engage "drag" action (e.g. rectangular selection)\. Default is 4\.
 .TP
-\fBhighlightBackground\fP \fIColor\fP
+\fBselectColor\fP \fIColor\fP
 Color to be used to draw the background of selected items\.
-.TP
-\fBhighlightForeground\fP \fIColor\fP
-Color to be used to draw labels of selected items\.
 .TP
 \fBhorizontalSpacing\fP \fIDimension\fP
 Specifies horizontal spacing between list items. Default is 2\.

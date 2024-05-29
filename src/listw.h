@@ -87,10 +87,8 @@ enum { XfCOMPACT, XfDETAILED };
 #define XfCAutoScrollSpeed "AutoScrollSpeed"
 #define XfNownPrimarySelection "ownPrimarySelection"
 #define XfCOwnPrimarySelection "OwnPrimarySelection"
-#define XfNhighlightBackground "highlightBackground"
-#define XfCHighlightBackground "HighlightBackground"
-#define XfNhighlightForeground "highlightForeground"
-#define XfCHighlightForeground "HighlightForeground"
+#define XfNselectColor "selectColor"
+#define XfCSelectColor "SelectColor"
 #define XfNshortenLabels "shortenLabels"
 #define XfCShortenLabels "ShortenLabels"
 #define XfNsilent "silent"
@@ -101,6 +99,8 @@ enum { XfCOMPACT, XfDETAILED };
 #define XfCNumberedSort "NumberedSort"
 #define XfNcaseSensitive "caseSensitive"
 #define XfCCaseSensitive "CaseSensitive"
+#define XfNforegroundThreshold "foregroundThreshold"
+#define XfCForegroundThreshold "ForegroundThreshold"
 
 
 #define CreateFileList(parent, name, args, nargs) \

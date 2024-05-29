@@ -48,8 +48,7 @@ static XtGeometryResult query_geometry(Widget,
 	XtWidgetGeometry*, XtWidgetGeometry*);
 static void default_render_table(Widget, int, XrmValue*);
 static void default_hspacing(Widget, int, XrmValue*);
-static void default_highlight_fg(Widget, int, XrmValue*);
-static void default_highlight_bg(Widget, int, XrmValue*);
+static void default_select_color(Widget, int, XrmValue*);
 static void free_item(struct item_rec*);
 static Boolean find_item(const struct file_list_part *fl,
 	const char *name, unsigned int *pindex);
@@ -304,22 +303,13 @@ static XtResource resources[] = {
 		(void*)True
 	},
 	{
-		XfNhighlightBackground,
-		XfCHighlightBackground,
+		XfNselectColor,
+		XfCSelectColor,
 		XtRPixel,
 		sizeof(Pixel),
-		RFO(file_list.highlight_bg),
+		RFO(file_list.select_pixel),
 		XtRCallProc,
-		(void*)default_highlight_bg
-	},
-	{
-		XfNhighlightForeground,
-		XfCHighlightForeground,
-		XtRPixel,
-		sizeof(Pixel),
-		RFO(file_list.highlight_fg),
-		XtRCallProc,
-		(void*)default_highlight_fg
+		(void*)default_select_color
 	},
 	{
 		XfNshortenLabels,
@@ -1772,7 +1762,7 @@ static void realize(Widget w, XtValueMask *mask, XSetWindowAttributes *att)
 
 	XSetStipple(dpy, fl->icon_gc, fl->stipple);
 	XSetFillStyle(dpy, fl->icon_gc, FillStippled);
-	XSetForeground(dpy, fl->icon_gc, fl->highlight_bg);
+	XSetForeground(dpy, fl->icon_gc, fl->select_pixel);
 }
 
 static void initialize(Widget wreq, Widget wnew,
@@ -1859,7 +1849,7 @@ static void init_gcs(Widget w)
 	struct file_list_rec *fl = (struct file_list_rec*) w;
 	XGCValues gcv;
 	XtGCMask gc_mask;
-	XrmValue xrmv;
+	XColor xc = { 0 };
 
 	/* Label GC */
 	gcv.function = GXcopy;
@@ -1873,21 +1863,37 @@ static void init_gcs(Widget w)
 	/* stipple is used to shade selected icons and is inited in realize()
 	 * since we need a window handle to create the bitmap */
 	fl->file_list.icon_gc = XtAllocateGC(w, 0, gc_mask, &gcv, 0, 0);
-	
 	fl->file_list.fg_pixel = fl->primitive.foreground;
-	fl->file_list.sfg_pixel = fl->file_list.highlight_fg;
 
 	/* Generic fg/bg shareable GCs */
 	gcv.foreground = fl->core.background_pixel;
-	fl->file_list.bg_gc = XtGetGC(w, GCForeground | GCFunction, &gcv);
+	fl->file_list.bg_gc = XtGetGC(w, GCForeground, &gcv);
+	
+	/* selected background */
+	gcv.foreground = fl->file_list.select_pixel;
+	fl->file_list.sbg_gc = XtGetGC(w, GCForeground, &gcv);
 
-	XmeGetDefaultPixel(XtParent(w), XmBOTTOM_SHADOW, 0, &xrmv);
-	memcpy(&gcv.foreground, xrmv.addr, xrmv.size);
-	fl->file_list.nfbg_gc = XtGetGC(w, GCForeground | GCFunction, &gcv);
+	xc.pixel = fl->file_list.select_pixel;
+	XQueryColor(XtDisplay(w), fl->core.colormap, &xc);
+	
+	/* unfocused (grayed) selection background */
+	xc.red = xc.green = xc.blue =
+		((unsigned int)xc.red + xc.green + xc.blue) / 3;
+	XAllocColor(XtDisplay(w), fl->core.colormap, &xc);
+	gcv.foreground = fl->file_list.nfbg_pixel = xc.pixel;
+	fl->file_list.nfbg_gc = XtGetGC(w, GCForeground, &gcv);
+	
+	/* selection foreground color */
+	xc.red /= 256;
+	xc.green /= 256;
+	xc.blue /= 256;
 
-	gcv.foreground = fl->file_list.highlight_bg;
-	fl->file_list.sbg_gc = XtGetGC(w, GCForeground | GCFunction, &gcv);
-
+	fl->file_list.sfg_pixel =
+		(((unsigned int)xc.red * xc.red + xc.green * xc.green +
+			xc.blue * xc.blue) > DEF_FG_THRESHOLD) ?
+		BlackPixelOfScreen(fl->core.screen) :
+		WhitePixelOfScreen(fl->core.screen);
+	
 	/* Rubber bands shareable GC */
 	gcv.function = GXinvert;
 	gcv.foreground = fl->primitive.foreground;
@@ -1920,6 +1926,8 @@ static Boolean set_values(Widget wcur, Widget wreq,
 		XtReleaseGC(wcur, set->file_list.nfbg_gc);
 		XtReleaseGC(wcur, set->file_list.sbg_gc);
 		XtReleaseGC(wcur, set->file_list.xor_gc);
+		XFreeColors(XtDisplay(wcur), cur->core.colormap,
+			&cur->file_list.nfbg_pixel, 1, 0);
 		
 		init_gcs(wset);
 	}
@@ -1982,7 +1990,10 @@ static void destroy(Widget w)
 	XtReleaseGC(w, fl->nfbg_gc);
 	XtReleaseGC(w, fl->sbg_gc);
 	XtReleaseGC(w, fl->xor_gc);
-	
+
+	XFreeColors(XtDisplay(w), ((struct file_list_rec*) w)->core.colormap,
+		&fl->nfbg_pixel, 1, 0);
+
 	memdb_lstat(1);
 }
 
@@ -1999,19 +2010,9 @@ static void default_render_table(Widget w, int offset, XrmValue *pv)
 	pv->size = sizeof(XmRenderTable);
 }
 
-static void default_highlight_fg(Widget w, int offset, XrmValue *pv)
+static void default_select_color(Widget w, int offset, XrmValue *pv)
 {
-	struct file_list_rec *fl = (struct file_list_rec*) w;
-	pv->addr = (XPointer) &fl->core.background_pixel;
-	pv->size = sizeof(Pixel);
-}
-
-
-static void default_highlight_bg(Widget w, int offset, XrmValue *pv)
-{
-	struct file_list_rec *fl = (struct file_list_rec*) w;
-	pv->addr = (XPointer) &fl->primitive.foreground;
-	pv->size = sizeof(Pixel);
+	XmeGetDefaultPixel(w, XmSELECT, offset, pv);
 }
 
 static void default_hspacing(Widget w, int offset, XrmValue *pv)
