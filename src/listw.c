@@ -1794,6 +1794,7 @@ static void initialize(Widget wreq, Widget wnew,
 	fl->file_list.sz_lookup[0] = '\0';
 	fl->file_list.dragging = False;
 	fl->file_list.in_sb_update = False;
+	fl->file_list.ptr_last_valid = False;
 
 	if(fl->file_list.shorten && (fl->file_list.shorten < SHORTEN_LEN_MIN)) {
 		WARNING(wnew, "shortenLabels length too short, using default!");
@@ -2193,6 +2194,7 @@ static void primary_button(Widget w, XEvent *evt,
 		XmProcessTraversal(w, XmTRAVERSE_CURRENT);
 		fl->ptr_last_x = evt->xbutton.x;
 		fl->ptr_last_y = evt->xbutton.y;
+		fl->ptr_last_valid = True;
 		fl->dblclk_lock = False;
 		
 		if(extend) {
@@ -2227,7 +2229,9 @@ static void primary_button(Widget w, XEvent *evt,
 		}
 
 	} else if(!strcasecmp(params[0], "UP")) {
-
+		
+		fl->ptr_last_valid = False;
+		
 		if(fl->autoscrl_timeout != None) {
 			XtRemoveTimeOut(fl->autoscrl_timeout);
 			fl->autoscrl_timeout = None;
@@ -2310,6 +2314,8 @@ static void button_motion(Widget w, XEvent *evt,
 		WARNING(w, "Wrong event type for the action PrimaryButtonMotion()");
 		return;
 	}
+	
+	if(!fl->ptr_last_valid) return;
 
 	delx = evt->xbutton.x - fl->ptr_last_x;
 	dely = evt->xbutton.y - fl->ptr_last_y;
@@ -2525,6 +2531,7 @@ static void focus_in(Widget w, XEvent *evt, String *params, Cardinal *nparams)
 	struct file_list_part *fl = FL_PART(w);
 	
 	fl->has_focus = True;
+	fl->ptr_last_valid = False;
 	if(fl->num_items && fl->show_contents &&
 		((struct file_list_rec*)w)->core.visible) {
 			draw_item(w, get_cursor(w), True,

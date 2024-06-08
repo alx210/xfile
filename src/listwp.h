@@ -176,6 +176,7 @@ struct file_list_part {
 	/* pointer state */
 	int ptr_last_x;
 	int ptr_last_y;
+	Boolean ptr_last_valid;
 	XtIntervalId dblclk_timeout;
 	Boolean dblclk_lock;
 	unsigned int last_clicked;
