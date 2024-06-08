@@ -53,7 +53,7 @@ Manual {
 }
 
 ELF Binary {
-	icon exec
+	icon elf
 	match_content 0 \7F\45\4C\46
 }
 

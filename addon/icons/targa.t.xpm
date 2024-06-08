@@ -1,7 +1,7 @@
 /* XPM */
-static char * exec_t_xpm[] = {
+static char * tga_t_xpm[] = {
 /* width height ncolors cpp [x_hot y_hot] */
-"16 16 10 1 0 0",
+"16 16 8 1 0 0",
 /* colors */
 " 	s Gray8	m black	c #212121212121",
 ".	s none	m none	c none",
@@ -9,24 +9,22 @@ static char * exec_t_xpm[] = {
 "o	s Color1	m black	c black",
 "O	s Gray1	m white	c #dededededede",
 "+	s Gray6	m black	c #636363636363",
-"@	s Gray5	m black	c #737373737373",
-"#	s Color12	m white	c yellow",
-"$	s Color11	m black	c darkkhaki",
-"%	s Gray3	m white	c #adadadadadad",
+"@	s Color9	m black	c darkcyan",
+"#	s Gray2	m white	c #bdbdbdbdbdbd",
 /* pixels */
 "          ......",
 " XXXXXXXoO .....",
 " XXXXXXXoXO ....",
 " XXXXXXXoooo....",
 " XXXXXXXX+++o...",
-" XX@@XXXXX++o...",
-" X@##@XXXXX+o...",
-" X@#$@@@XXX+o...",
-" XX@@@##@XX+o...",
-" XXX@#++#+X+o...",
-" XXX@#+%$+X+o...",
-" XXXX@##+XX+o...",
-" XXXXX++XXX+o...",
+" XXXXXXXXX++o...",
+" XXO@@@OXXX+o...",
+" X#@@@@@#XX+o...",
+" X@@@@@@@XX+o...",
+" XX@X@X@@XX+o...",
+" X@X@X@X@XX+o...",
+" X#X@X@X#XX+o...",
+" XX#@X@#XXX+o...",
 " XXXXXXXXXX+o...",
 " +++++++++++o...",
 "..ooooooooooo..."};

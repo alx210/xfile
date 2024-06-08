@@ -1,0 +1,31 @@
+/* XPM */
+static char * elf_t_xpm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"16 16 9 1 0 0",
+/* colors */
+" 	s Gray8	m black	c #212121212121",
+".	s none	m none	c none",
+"X	s Color2	m white	c white",
+"o	s Color1	m black	c black",
+"O	s Gray1	m white	c #dededededede",
+"+	s Gray6	m black	c #636363636363",
+"@	s Gray2	m white	c #bdbdbdbdbdbd",
+"#	s Color11	m black	c darkkhaki",
+"$	s Color12	m white	c yellow",
+/* pixels */
+"          ......",
+" XXXXXXXoO .....",
+" XXXXXXXoXO ....",
+" XXXXXoX+ooo....",
+" XXXXoX@XX++o...",
+" XXXXoX@XX++o...",
+" XXoooXooXX+o...",
+" Xo##o###oX+o...",
+" XXoX##XoXX+o...",
+" Xo$#XX#$oX+o...",
+" XXoo$#ooXX+o...",
+" XXXXoo@XXX+o...",
+" XXXXoX@XXX+o...",
+" XXXXXoXXXX+o...",
+" +++++++++++o...",
+"..ooooooooooo..."};

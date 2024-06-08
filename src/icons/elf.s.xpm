@@ -1,0 +1,38 @@
+/* XPM */
+static char * elf_s_xpm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"24 24 8 1 0 0",
+/* colors */
+" 	s Gray8	m black	c #212121212121",
+".	s none	m none	c none",
+"X	s Color2	m white	c white",
+"o	s Gray6	m black	c #636363636363",
+"O	s Color1	m black	c black",
+"+	s Gray2	m white	c #bdbdbdbdbdbd",
+"@	s Color11	m black	c darkkhaki",
+"#	s Color12	m white	c yellow",
+/* pixels */
+"               .........",
+" XXXXXXXXXXXX X ........",
+" XXXXXXXXXXXX XX .......",
+" XXXXXXXXXXXX XXX ......",
+" XXXXXXXXXXXX     ......",
+" XXXXXXXXXXXXXooooO.....",
+" XXXXXXXXXXXXXXoooO.....",
+" XXXXXOXXXXXXXXXXoO.....",
+" XXXXOX+XXXXXXXXXoO.....",
+" XXXXOX+XXXXXXXXXoO.....",
+" XXOOOXOOXXXOXXXXoO.....",
+" XO@@O@@@OXOX+XXXoO.....",
+" XXOX@@XOXXOX+XXXoO.....",
+" XO#@XX@#OOOXOOXXoO.....",
+" XXOO#@OO@@O@@@OXoO.....",
+" XXXXOO+XOX@@XOXXoO.....",
+" XXXXOX+O#@XX@#OXoO.....",
+" XXXXXOXXOO#@OOXXoO.....",
+" XXXXXXXXXXOO+XXXoO.....",
+" XXXXXXXXXXOX+XXXoO.....",
+" XXXXXXXXXXXOXXXXoO.....",
+" XXXXXXXXXXXXXXXXoO.....",
+"  ooooooooooooooooO.....",
+"..OOOOOOOOOOOOOOOOO....."};
