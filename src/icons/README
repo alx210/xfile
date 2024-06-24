@@ -21,7 +21,8 @@ cxxinc   C++ Header
 cxxsrc   C++ Source
 dir      Directory (readable and executable)
 dlink    Dangling symlink
-exec     Executable binary (ELF)
+elf      ELF Binary
+exec     Executable file
 file     Generic file (used if specified icon is missing)
 http     Hypertext (anything web related)
 info     Manpage, README etc.
