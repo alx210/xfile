@@ -1145,9 +1145,9 @@ void fork_xfile(const char *path, Boolean inherit_ui)
 	
 	if(inherit_ui) {
 		Arg warg[10];
-		int view_mode;
-		int sort_order;
-		int sort_dir;
+		short view_mode;
+		short sort_order;
+		short sort_dir;
 		char *order_sz;
 		Dimension width;
 		Dimension height;
