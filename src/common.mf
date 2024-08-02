@@ -52,19 +52,19 @@ clean:
 
 # Install
 common_install: xfile xfile.ad xfile.1
-	install -o 0 -g 0 -m775 -d $(PREFIX)
-	install -o 0 -g 0 -m775 xfile $(PREFIX)/bin/xfile
+	install -o 0 -g 0 -m755 -d $(PREFIX)
+	install -o 0 -g 0 -m755 xfile $(PREFIX)/bin/xfile
 	-ln -s $(PREFIX)/bin/xfile $(PREFIX)/bin/xfile-open
-	install -o 0 -g 0 -m 775 -d $(MANDIR)/man1
-	install -o 0 -g 0 -m 664 xfile.1 $(MANDIR)/man1/xfile.1
-	install -o 0 -g 0 -m 775 -d $(APPLRESDIR)
-	install -o 0 -g 0 -m 664 xfile.ad $(APPLRESDIR)/XFile
-	install -o 0 -g 0 -m 775 -d $(SHAREDIR)/types
-	install -o 0 -g 0 -m 664 default.db $(SHAREDIR)/types/system.db
-	install -o 0 -g 0 -m 775 -d $(SHAREDIR)/icons
+	install -o 0 -g 0 -m 755 -d $(MANDIR)/man1
+	install -o 0 -g 0 -m 644 xfile.1 $(MANDIR)/man1/xfile.1
+	install -o 0 -g 0 -m 755 -d $(APPLRESDIR)
+	install -o 0 -g 0 -m 644 xfile.ad $(APPLRESDIR)/XFile
+	install -o 0 -g 0 -m 755 -d $(SHAREDIR)/types
+	install -o 0 -g 0 -m 644 default.db $(SHAREDIR)/types/system.db
+	install -o 0 -g 0 -m 755 -d $(SHAREDIR)/icons
 	for n in icons/*.xpm; do install -o 0 -g 0 -m 664 $$n $(SHAREDIR)/$$n; done
-	install -o 0 -g 0 -m 664 icons/README $(SHAREDIR)/README.icons
-	install -o 0 -g 0 -m 664 xbm/cabinet.xpm $(PREFIX)/share/pixmaps/xfile_48x48.xpm
+	install -o 0 -g 0 -m 644 icons/README $(SHAREDIR)/README.icons
+	install -o 0 -g 0 -m 644 xbm/cabinet.xpm $(PREFIX)/share/pixmaps/xfile_48x48.xpm
 
 # Removal
 uninstall:
