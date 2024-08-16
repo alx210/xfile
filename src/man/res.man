@@ -73,7 +73,9 @@ Show all files (including ones starting with dot) by default\. This option
 may be inverted using command line parameters. Default is false\.
 .TP
 \fBterminal\fP \fIString\fP
-Specifies the command to run a terminal emulator\.
+Specifies the command to run a terminal emulator\. Note that this differs from
+the \fBXFile\.variables\.terminal\fP (see \fBFILE TYPE DATABASE\fP) resource,
+in that it specifies a command to run an interactive shell session.
 .TP
 \fBuserDatabaseOnly\fP \fIBoolean\fP
 If True, only user ($HOME/\.xfile/*\.db) file type database is parsed, default
