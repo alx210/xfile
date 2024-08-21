@@ -763,14 +763,19 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 		/* is it a mount point ? */
 		if(S_ISDIR(st.st_mode)) {
 			char cur_fqn[strlen(cur_path) + strlen(ent->d_name) + 2];
-			sprintf(cur_fqn, "%s/%s", cur_path, ent->d_name);
+			char *link_target = NULL;
 			
-			if(path_mounted(cur_fqn)) {
+			sprintf(cur_fqn, "%s/%s", cur_path, ent->d_name);
+			if(msg.is_symlink) get_link_target(cur_fqn, &link_target);
+
+			if(path_mounted(link_target ? link_target : cur_fqn)) {
 				is_mpoint = True;
 				is_mounted = True;
-			} if(has_mpts) {
-				is_mpoint = (is_in_fstab(cur_fqn) ? True : False);
+			} else if(link_target || has_mpts) {
+				is_mpoint = (is_in_fstab(link_target ?
+					link_target : cur_fqn) ? True : False);
 			}
+			if(link_target) free(link_target);
 		}
 		file_list[nfiles].is_mpoint = is_mpoint;
 
@@ -896,14 +901,19 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 				/* is it a mount point ? */
 				if(S_ISDIR(st.st_mode)) {
 					char cur_fqn[strlen(path) + strlen(ent->d_name)+2];
-					sprintf(cur_fqn, "%s/%s", path, ent->d_name);
+					char *link_target = NULL;
 					
-					if(path_mounted(cur_fqn)) {
+					sprintf(cur_fqn, "%s/%s", path, ent->d_name);
+					if(msg.is_symlink) get_link_target(cur_fqn, &link_target);
+					
+					if(path_mounted(link_target ? link_target : cur_fqn)) {
 						is_mpoint = True;
 						is_mounted = True;
-					} else if(has_mpts) {
-						is_mpoint = (is_in_fstab(cur_fqn) ? True : False);
+					} else if(link_target || has_mpts) {
+						is_mpoint = (is_in_fstab(link_target ?
+							link_target : cur_fqn) ? True : False);
 					}
+					if(link_target) free(link_target);
 				}
 				file_list[nfiles].is_mpoint = is_mpoint;
 
