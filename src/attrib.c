@@ -986,7 +986,7 @@ static Boolean calc_size_wp(XtPointer client_data)
 		return False;
 
 	} else if(dlg_data->ifile < dlg_data->nfiles){
-		if(!stat(dlg_data->files[dlg_data->ifile], &st)) {
+		if(!lstat(dlg_data->files[dlg_data->ifile], &st)) {
 			add_fsize(&dlg_data->size_total, st.st_size);
 
 			if(S_ISDIR(st.st_mode)) {

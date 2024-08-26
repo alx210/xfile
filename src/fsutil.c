@@ -200,6 +200,8 @@ int path_mounted(const char *path)
 	if(!lstat(path, &st_dir) && S_ISLNK(st_dir.st_mode)) {
 		dir = realpath(path, NULL);
 	}
+	
+	if(!strcmp(dir, "/")) return 1;
 
 	sub = strdup(dir);
 	trim_path(sub, 1);
