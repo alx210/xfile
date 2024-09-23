@@ -716,6 +716,8 @@ static int probe_contents(const char *fname)
 		return DB_UNKNOWN;
 	
 	if(nc % 4) nc -= (nc % 4);
+	
+	mblen(NULL, 0);
 		
 	for(n = 0; n < nc; ) {
 		int cl = mblen(buf + n, nc - n);
