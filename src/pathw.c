@@ -85,8 +85,8 @@ static XtResource resources[] = {
 		(XtPointer)DEF_MARGIN
 	},
 	{
-		XmNmarginWidth,
-		XmCMarginWidth,
+		XmNmarginHeight,
+		XmCMarginHeight,
 		XmRDimension,
 		sizeof(Dimension),
 		RFO(path_field.margin_height),
@@ -266,7 +266,7 @@ static Dimension compute_height(Widget w)
 
 	wanted_height = wp->font_height + wp->btn_height +
 		wp->margin_height * 2  + wp->shadow_thickness * 2 +
-		wp->highlight_thickness * 2;
+		wp->highlight_thickness * 2 + 2;
 	return wanted_height;
 }
 
