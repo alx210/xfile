@@ -743,7 +743,7 @@ static void progress_cb(XtPointer cd, int *pfd, XtInputId *iid)
 		}
 		XmTextFieldSetString(d->witem, item);
 		if(tmp) free(tmp);
-	} else {
+	} else if(feedback == FBT_NONE) {
 		XmTextFieldSetString(d->witem, "");
 	}
 	
