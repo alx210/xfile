@@ -13,7 +13,7 @@
 #include <errno.h>
 #include <Xm/DisplayP.h>
 #include <Xm/TextF.h>
-#include <Xm/DrawnB.h>
+#include <Xm/DrawnBP.h>
 #include <Xm/XmP.h>
 #include <Xm/DrawP.h>
 #include <Xm/ManagerP.h>
@@ -213,9 +213,8 @@ static void input_focus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	char *cur_path = XmTextFieldGetString(w);
 
 	for(i = 0; i < wp->ncomp; i++) {
-		/* avoid armed buttons getting stuck in armed state when
-		 * remapped, by making them insensitive first */
-		XtSetSensitive(wp->wcomp[i], False);
+		/* avoid armed buttons getting stuck in armed state when remapped */
+		((XmDrawnButtonRec*)wp->wcomp[i])->drawnbutton.armed = False;
 		XtUnmapWidget(wp->wcomp[i]);
 	}
 
@@ -246,10 +245,8 @@ static void input_unfocus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 	wp->editing = False;
 
-	for(i = 0; i < wp->ncomp; i++) {
+	for(i = 0; i < wp->ncomp; i++)
 		XtMapWidget(wp->wcomp[i]);
-		XtSetSensitive(wp->wcomp[i], True);
-	}
 	
 	draw_outline((Widget)pclient);
 	
@@ -508,6 +505,8 @@ static void update_visuals(Widget w, const char *path)
 	}
 
 	for(i = 0; i < wp->ncomp; i++) {
+		/* avoid armed buttons getting stuck in armed state when remapped */
+		((XmDrawnButtonRec*)wp->wcomp[i])->drawnbutton.armed = False;
 		XtUnmanageChild(wp->wcomp[i]);
 		XtFree(wp->sz_comp[i]);
 	}
