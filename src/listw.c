@@ -2574,10 +2574,10 @@ static void focus_out(Widget w, XEvent *evt, String *params, Cardinal *nparams)
 static void default_action_handler(Widget w, unsigned int mod_mask)
 {
 	struct file_list_part *fl = FL_PART(w);
-	unsigned int i = get_cursor(w);
 
 	if(fl->num_items && fl->default_action_cb) {
-
+		unsigned int i = get_cursor(w);
+	
 	 	struct file_list_sel cbd = {
 			.count = 1,
 			.names = fl->sel_names,
