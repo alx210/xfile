@@ -488,7 +488,7 @@ int exec_umount(const char *mpt_path)
 		}
 	}
 
-	mp = init_mount_proc(mpt_path, cmd, True);
+	mp = init_mount_proc(mpt_path, cmd, False);
 	if(!mp)	return ENOMEM;
 
 	res = spawn_proc(mp, cmd, mpt_path);
