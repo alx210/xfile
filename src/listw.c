@@ -1071,6 +1071,7 @@ void update_sbar_visibility(Widget w,
 	if(view_width < vsb_size || view_height < hsb_size) {
 		XtUnmanageChild(fl->whscrl);
 		XtUnmanageChild(fl->wvscrl);
+		fl->in_sb_update = False;
 		return;
 	}
 	
