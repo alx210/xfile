@@ -92,6 +92,11 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	last_input = strdup(input);
 	
 	path = realpath(app_inst.location, NULL);
+	if(!path) {
+		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+			"Error accessing working directory.\n%s", strerror(errno));
+		return;
+	}
 	cmd_len = strlen(input) + strlen(path) +
 		strlen(app_inst.cur_sel.item.name) + 3;
 	cmd = malloc(cmd_len);
@@ -247,6 +252,12 @@ static void run_exec_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	dbg_assert(app_inst.cur_sel.count == 1);
 	
 	path = realpath(app_inst.location, NULL);
+	if(!path) {
+		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+			"Error accessing working directory.\n%s", strerror(errno));
+		return;
+	}
+
 	fqn_len = strlen(path) + strlen(app_inst.cur_sel.item.name) + 2;
 	fqn = malloc(fqn_len);
 	snprintf(fqn, fqn_len, "%s/%s", path, app_inst.cur_sel.item.name);
@@ -660,10 +671,16 @@ void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		return;
 	}		
 	
-	if(strchr(link, '/'))
+	if(strchr(link, '/')) {
 		target = realpath(cursel, NULL);
-	else
+		if(!target) {
+			va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+				"Error accessing '\%s\'.\n%s", cursel, strerror(errno));
+			return;
+		}
+	} else {
 		target = cursel;
+	}
 	
 	if(!target || (symlink(target, link) == -1) ) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,

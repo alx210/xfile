@@ -272,8 +272,14 @@ int main(int argc, char **argv)
 	}
 	
 	if(!open_spec) {
-		open_spec = realpath(app_res.def_path ?
-			app_res.def_path : ".", NULL);
+		char *def_path = app_res.def_path ?	app_res.def_path : ".";
+
+		open_spec = realpath(def_path, NULL);
+		if(!open_spec) {
+			stderr_msg("Error opening directory \'%s\' %s\n",
+				def_path, strerror(errno));
+			return EXIT_FAILURE;
+		}
 	}
 	
 	/* Media directory may contain envvars... */
