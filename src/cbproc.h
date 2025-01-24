@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 alx@fastestcode.org
+ * Copyright (C) 2022-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -25,6 +25,8 @@ void select_all_cb(Widget, XtPointer, XtPointer);
 void deselect_cb(Widget, XtPointer, XtPointer);
 void invert_selection_cb(Widget, XtPointer, XtPointer);
 void select_pattern_cb(Widget, XtPointer, XtPointer);
+void copy_here_cb(Widget, XtPointer, XtPointer);
+void move_here_cb(Widget, XtPointer, XtPointer);
 void toggle_detailed_cb(Widget, XtPointer, XtPointer);
 void toggle_show_all_cb(Widget, XtPointer, XtPointer);
 void sort_by_name_cb(Widget, XtPointer, XtPointer);

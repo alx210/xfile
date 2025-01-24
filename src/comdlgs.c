@@ -61,14 +61,9 @@ enum mb_result message_box(Widget parent, enum mb_type type,
 
 	dbg_assert(parent);
 	
-	if(!msg_title){
-		char *sz=NULL;
-		XtSetArg(args[0],XmNtitle,&sz);
-		XtGetValues(parent,args,1);
-		title = XmStringCreateLocalized(sz);
-	}else{
-		title = XmStringCreateLocalized((char*)msg_title);
-	}
+	if(!msg_title) msg_title = APP_TITLE;
+
+	title = XmStringCreateLocalized((char*)msg_title);
 	msg_text = XmStringCreateLocalized((char*)msg_str);
 	
 	wbox = XmCreateMessageDialog(parent, class, NULL, 0);
@@ -110,6 +105,16 @@ enum mb_result message_box(Widget parent, enum mb_type type,
 		case MB_NOTIFY_NB:
 		ok_text = XmStringCreateLocalized("OK");
 		XtSetArg(args[i], XmNdialogType, XmDIALOG_INFORMATION); i++;
+		XtSetArg(args[i], XmNokLabelString, ok_text); i++;
+		XtUnmanageChild(XmMessageBoxGetChild(wbox, XmDIALOG_CANCEL_BUTTON));
+		XtUnmanageChild(XmMessageBoxGetChild(wbox, XmDIALOG_HELP_BUTTON));
+		break;
+
+		case MB_WARN:
+		blocking = True;
+		case MB_WARN_NB:
+		ok_text = XmStringCreateLocalized("OK");
+		XtSetArg(args[i], XmNdialogType, XmDIALOG_WARNING); i++;
 		XtSetArg(args[i], XmNokLabelString, ok_text); i++;
 		XtUnmanageChild(XmMessageBoxGetChild(wbox, XmDIALOG_CANCEL_BUTTON));
 		XtUnmanageChild(XmMessageBoxGetChild(wbox, XmDIALOG_HELP_BUTTON));

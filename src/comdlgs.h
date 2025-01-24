@@ -15,8 +15,10 @@ enum mb_type {
 	MB_CQUESTION,	/* Yes/No/Cancel */
 	MB_CONFIRM,		/* Ok/Cancel */
 	MB_NOTIFY,
+	MB_WARN,
 	MB_ERROR,
 	MB_NOTIFY_NB,	/* non blocking */
+	MB_WARN_NB,
 	MB_ERROR_NB
 };
 

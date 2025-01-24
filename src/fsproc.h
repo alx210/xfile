@@ -7,20 +7,27 @@
 #ifndef FSPROC_H 
 #define FSPROC_H
 
+/* The wd parameter specifies the working directory for the forked
+ * work process, and may be NULL, in which case it's inherited. */
+
 /* Recursively copies files and directories from srcs[] to dest */
-int copy_files(char* const *srcs, size_t num_srcs, const char *dest);
+int copy_files(const char *wd, char* const *srcs,
+	size_t num_srcs, const char *dest);
 
 /* Recursively moves files and directories in srcs to dest directory */
-int move_files(char* const *srcs, size_t num_srcs, const char *dest);
+int move_files(const char *wd, char* const *srcs,
+	size_t num_srcs, const char *dest);
 
 /* Recursively deletes files and directories in srcs */
-int delete_files(char* const *srcs, size_t num_srcs);
+int delete_files(const char *wd,
+	char* const *srcs, size_t num_srcs);
 
 /* Recursively sets attributes for files and directories in srcs.
  * att_flags (see ATT constants below) specifies which attributes to set */
-int set_attributes(char* const *srcs, size_t num_srcs,
-	gid_t gid, uid_t uid, mode_t file_mode, mode_t file_mode_mask,
-	mode_t dir_mode, mode_t dir_mode_mask, int att_flags);
+int set_attributes(const char *wd, char* const *srcs,
+	size_t num_srcs, gid_t gid, uid_t uid, mode_t file_mode,
+	mode_t file_mode_mask, mode_t dir_mode, mode_t dir_mode_mask,
+	int att_flags);
 
 #define ATT_OWNER	0x001 /* gid/uid are specified */
 #define ATT_FMODE	0x002 /* file_mode is specified */

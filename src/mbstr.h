@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 alx@fastestcode.org
+ * Copyright (C) 2023-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -23,5 +23,12 @@ size_t mb_strlen(const char*);
  * characters with whitespace, and discarding any invalid multibyte sequences.
  * Returns new string allocated from heap, or NULL on malloc error. */
 char* mbs_make_displayable(const char *src);
+
+/*
+ * Converts a multibyte string to iso8859-1, substituting out of
+ * code page characters with a question mark. The resulting string
+ * is placed in dest, which may point to the same buffer as src.
+ */
+void mbs_to_latin1(const char *src, char *dest);
 
 #endif /* MBSTR_H */

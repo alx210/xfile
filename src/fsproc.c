@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 alx@fastestcode.org
+ * Copyright (C) 2023-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -79,6 +79,7 @@ enum wp_action {
 
 struct wp_data {
 	enum wp_action action;
+	const char *wdir;
 	char * const *srcs;
 	size_t num_srcs;
 	const char *dest;
@@ -459,7 +460,7 @@ static void shell_map_cb(Widget w, XtPointer p, XEvent *evt, Boolean *cont)
 static void map_timeout_cb(XtPointer p, XtIntervalId *iid)
 {
 	struct fsproc_data *d = (struct fsproc_data*) p;
-	XtMapWidget(d->wshell);
+	if(d->wp_pid) XtMapWidget(d->wshell);
 }
 
 /* 
@@ -768,7 +769,7 @@ static void xt_prog_sigchld_handler(XtPointer p, XtSignalId *id)
 		message_box(d->wshell, MB_ERROR,
 			APP_TITLE, "Background process terminated unexpectedly.");
 	} else if(WIFEXITED(d->wp_status)) {
-		/* NOTE: eventually WP should return meaningful error codes */
+		/* TBD: eventually WP should return meaningful error codes */
 		if(WEXITSTATUS(d->wp_status)) {
 			message_box(d->wshell, MB_ERROR, APP_TITLE,
 			"The requested action could not be completed due to an error.");
@@ -786,9 +787,21 @@ static void quit_with_error(struct fsproc_data *d, const char *error)
 		XtRemoveInput(d->msg_input_iid);
 		d->msg_input_iid = None;
 	}
-
-	message_box(d->wshell, MB_ERROR,
-		APP_TITLE, error ? error : "Unexpected internal error.");
+	XtMapWidget(d->wshell);
+	
+	if(error) {
+		char *msg;
+		char *fatal_msg = "Unrecoverable error.";
+		
+		msg = malloc(strlen(error) + strlen(fatal_msg) + 3);
+		sprintf(msg, "%s\n%s.", fatal_msg, error);
+		message_box(d->wshell, MB_ERROR, APP_TITLE, msg);
+		free(msg);
+		
+	} else {
+		message_box(d->wshell, MB_ERROR,
+			APP_TITLE, "Unexpected internal error.");
+	}
 	
 	destroy_progress_ui(d);
 }
@@ -805,7 +818,7 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 	struct stat st_dest;
 	int reply;
 	char *cdest = NULL;
-	char *cwd;
+	const char *cwd;
 
 	pid = fork();
 	if(pid == -1) return errno;
@@ -828,8 +841,13 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 	close(d->msg_in_fd);
 	close(d->reply_out_fd);
 	
-	cwd = get_working_dir();
-	if(!cwd) exit(EXIT_FAILURE);
+	if(wpd->wdir) {
+		if(chdir(wpd->wdir)) exit(EXIT_FAILURE);
+		cwd = wpd->wdir;
+	} else {
+		cwd = get_working_dir();
+		if(!cwd) exit(EXIT_FAILURE);
+	}
 
 	if(wpd->dest) {
 		if(stat(wpd->dest, &st_dest) == -1) {
@@ -935,7 +953,8 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 				build_path(dest_fqn, cdest, src_title, NULL);
 				wp_post_message(wpd, FBT_NONE, src_path,
 					cdest, src_title, NULL);
-				if( (rv = get_link_target(cdest, &link_tgt)) ) break;
+
+				if( (rv = get_link_target(csrc, &link_tgt)) ) break;
 
 				rv = wp_sym_link(wpd, link_tgt, dest_fqn);
 				free(link_tgt);
@@ -970,8 +989,7 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 		if(rv) {
 			/* since recoverable errors are handled within subroutines,
 			 * mention that something didn't go as planned here */
-			wp_post_message(wpd, FBT_FATAL, csrc,
-				wpd->dest, NULL, strerror(rv));
+			wp_post_message(wpd, FBT_FATAL, NULL, NULL, NULL, strerror(rv));
 			break;
 		}
 	}
@@ -2048,12 +2066,14 @@ Boolean fs_proc_sigchld(pid_t pid, int status)
 	return False;
 }
 
-int copy_files(char * const *srcs, size_t num_srcs, const char *dest)
+int copy_files(const char *wd, char * const *srcs,
+	size_t num_srcs, const char *dest)
 {
 	int res = 0;
 	struct fsproc_data *d;
 	struct wp_data wpd = {
 		.action = WP_COPY,
+		.wdir = wd,
 		.srcs = srcs,
 		.num_srcs = num_srcs,
 		.dest = dest
@@ -2069,12 +2089,14 @@ int copy_files(char * const *srcs, size_t num_srcs, const char *dest)
 	return res;
 }
 
-int move_files(char * const *srcs, size_t num_srcs, const char *dest)
+int move_files(const char *wd, char * const *srcs,
+	size_t num_srcs, const char *dest)
 {
 	int res = 0;
 	struct fsproc_data *d;
 	struct wp_data wpd = {
 		.action = WP_MOVE,
+		.wdir = wd,
 		.srcs = srcs,
 		.num_srcs = num_srcs,
 		.dest = dest
@@ -2091,12 +2113,13 @@ int move_files(char * const *srcs, size_t num_srcs, const char *dest)
 
 }
 
-int delete_files(char * const *srcs, size_t num_srcs)
+int delete_files(const char *wd, char * const *srcs, size_t num_srcs)
 {
 	int res = 0;
 	struct fsproc_data *d;
 	struct wp_data wpd = {
 		.action = WP_DELETE,
+		.wdir = wd,
 		.srcs = srcs,
 		.num_srcs = num_srcs,
 		.dest = NULL
@@ -2112,7 +2135,7 @@ int delete_files(char * const *srcs, size_t num_srcs)
 	return res;
 }
 
-int set_attributes(char * const *srcs, size_t num_srcs,
+int set_attributes(const char *wd, char * const *srcs, size_t num_srcs,
 	gid_t gid, uid_t uid, mode_t file_mode, mode_t dir_mode,
 	mode_t file_mode_mask, mode_t dir_mode_mask,
 	int att_flags)
@@ -2121,6 +2144,7 @@ int set_attributes(char * const *srcs, size_t num_srcs,
 	struct fsproc_data *d;
 	struct wp_data wpd = {
 		.action = WP_CHATTR,
+		.wdir = wd,
 		.srcs = srcs,
 		.num_srcs = num_srcs,
 		.dest = NULL,

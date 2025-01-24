@@ -50,8 +50,8 @@ XFile.variable.webBrowser: links -g
 !-----------------------------------------------------------------------------
 ! File list widget defaults
 !-----------------------------------------------------------------------------
-*FileList.background: LightSteelBlue
-*FileList.selectColor: SteelBlue
+*FileList.background: #C0CCE0
+*FileList.selectColor: #9AB0D5
 *FileList.viewMode: compact
 *FileList.sortOrder: name
 *FileList.sortDirection: descend

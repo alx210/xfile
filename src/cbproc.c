@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 alx@fastestcode.org
+ * Copyright (C) 2022-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -26,6 +26,7 @@
 #include "fsutil.h"
 #include "mount.h"
 #include "info.h"
+#include "select.h"
 #include "debug.h"
 #include "memdb.h" /* must be the last header */
 
@@ -337,6 +338,13 @@ void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	app_inst.cur_sel = *cbd;
 
+	if(cbd->count) {
+		if(cbd->initial)
+			grab_selection();
+	} else {
+		ungrab_selection();
+	}
+
 	set_sel_status_text();
 	
 	if(cbd->count == 1) {
@@ -365,7 +373,7 @@ void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 				cmi[i].cb_data = NULL;
 				i++;
 			}
-			cmi[i].label = "&Pass to...";
+			cmi[i].label = "&Pass To...";
 			cmi[i].callback = pass_to_proc;
 			cmi[i].cb_data = NULL;
 			i++;						
@@ -382,7 +390,7 @@ void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 				.cb_data = ENV_DEF_TEXT_CMD
 				},
 				{
-				.label = "&Pass to...",
+				.label = "&Pass To...",
 				.callback = pass_to_proc,
 				.cb_data = NULL
 				},
@@ -395,7 +403,7 @@ void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 			struct ctx_menu_item def_reg_act[] = {
 				{
-				.label = "&Pass to...",
+				.label = "&Pass To...",
 				.callback = pass_to_proc,
 				.cb_data = NULL
 				},
@@ -535,7 +543,7 @@ void copy_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	if(last_dest) free(last_dest);
 	last_dest = dest;
 	
-	rv = copy_files(app_inst.cur_sel.names, app_inst.cur_sel.count, dest);
+	rv = copy_files(NULL, app_inst.cur_sel.names, app_inst.cur_sel.count, dest);
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Could not complete requested action.\n%s.",
@@ -577,7 +585,7 @@ void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	if(last_dest) free(last_dest);
 	last_dest = dest;
 	
-	rv = move_files(app_inst.cur_sel.names, app_inst.cur_sel.count, dest);
+	rv = move_files(NULL, app_inst.cur_sel.names, app_inst.cur_sel.count, dest);
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Could not complete requested action.\n%s.",
@@ -644,7 +652,7 @@ void delete_cb(Widget w, XtPointer pclient, XtPointer pcall)
 			(have_subdirs ? ", recursing into sub-directories" : ""), NULL);
 		if(rv != MBR_CONFIRM || !app_inst.cur_sel.count) return;
 	}
-	rv = delete_files(app_inst.cur_sel.names, app_inst.cur_sel.count);
+	rv = delete_files(NULL, app_inst.cur_sel.names, app_inst.cur_sel.count);
 	
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
@@ -736,6 +744,16 @@ void select_pattern_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	if(file_list_select_pattern(app_inst.wlist, input, True))
 		set_status_text("No files matched %s", input);
+}
+
+void copy_here_cb(Widget w, XtPointer pclient, XtPointer pcall)
+{
+	paste_selection(False);
+}
+
+void move_here_cb(Widget w, XtPointer pclient, XtPointer pcall)
+{
+	paste_selection(True);
 }
 
 void toggle_detailed_cb(Widget w, XtPointer pclient, XtPointer pcall)

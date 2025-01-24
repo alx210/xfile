@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 alx@fastestcode.org
+ * Copyright (C) 2023-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -163,7 +163,7 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 	
 	for(i = 0; i < nfiles; i++) {
 		struct stat st;
-		if(!stat(files[i], &st) && S_ISDIR(st.st_mode)) {
+		if(!lstat(files[i], &st) && S_ISDIR(st.st_mode)) {
 			dlg_data->have_dirs = True;
 		}
 		dlg_data->files[i] = strdup(files[i]);
@@ -205,17 +205,11 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 			is_symlink = True;
 		}
 
-		if(stat(file_name, &st) == -1) {
+		if(lstat(file_name, &st) == -1) {
 			XtDestroyWidget(dlg_data->wdlg);
 			free_dlg_data(dlg_data);
-			if(is_symlink) {
-				va_message_box(wp, MB_ERROR_NB, APP_TITLE,
-					"Cannot stat the target of symbolic link:\n"
-					"%s.\n%s.", link_name, strerror(errno));
-			} else {
-				va_message_box(wp, MB_ERROR_NB, APP_TITLE,
-					"Cannot stat: %s.\n%s.", file_name, strerror(errno));
-			}
+			va_message_box(wp, MB_ERROR_NB, APP_TITLE,
+				"Cannot stat: %s.\n%s.", file_name, strerror(errno));
 			return;
 		}
 		
@@ -752,7 +746,7 @@ static void apply_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	dbg_trace("dmask: %s\n", get_mode_string(dmode_mask, mode_sz));
 
 	/* forks off a process */
-	set_attributes(dlg_data->files, dlg_data->nfiles, gid, uid,
+	set_attributes(NULL, dlg_data->files, dlg_data->nfiles, gid, uid,
 		dlg_data->mode, dlg_data->mode,	fmode_mask, dmode_mask, att_flags);
 	
 	XtUnmanageChild(dlg_data->wdlg);

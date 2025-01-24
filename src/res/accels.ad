@@ -9,8 +9,8 @@
 *fileMenu.copyTo.accelerator: <Key>F4
 *fileMenu.moveTo.acceleratorText: F3
 *fileMenu.moveTo.accelerator: <Key>F3
-! *fileMenu.linkTo.acceleratorText: Ctrl+L
-! *fileMenu.linkTo.accelerator: Ctrl<Key>l
+! *fileMenu.link.acceleratorText: Ctrl+L
+! *fileMenu.link.accelerator: Ctrl<Key>l
 *fileMenu.rename.acceleratorText: F2
 *fileMenu.rename.accelerator: <Key>F2
 *fileMenu.delete.acceleratorText: Delete
@@ -21,10 +21,14 @@
 
 *editMenu.selectAll.acceleratorText: Ctrl+A
 *editMenu.selectAll.accelerator: Ctrl<Key>a
-*editMenu.deselect.acceleratorText: Ctrl+Shift+A
-*editMenu.deselect.accelerator: Ctrl Shift<Key>a
 *editMenu.selectPattern.acceleratorText: Ctrl+P
 *editMenu.selectPattern.accelerator: Ctrl<Key>p
+*editMenu.deselect.acceleratorText: Ctrl+Shift+A
+*editMenu.deselect.accelerator: Ctrl Shift<Key>a
+*editMenu.copyHere.acceleratorText: Ctrl+Insert
+*editMenu.copyHere.accelerator: Ctrl<Key>Insert
+*editMenu.moveHere.acceleratorText: Ctrl+Shift+Insert
+*editMenu.moveHere.accelerator: Ctrl Shift<Key>Insert
 
 *viewMenu.reread.acceleratorText: F5
 *viewMenu.reread.accelerator: <Key>F5

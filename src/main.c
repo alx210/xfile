@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 alx@fastestcode.org
+ * Copyright (C) 2023-2025 alx@fastestcode.org
  * This software is distributed under the terms of the MIT/X license.
  * See the included COPYING file for further information.
  */
@@ -41,6 +41,7 @@
 #include "fsproc.h"
 #include "usrtool.h"
 #include "fsutil.h"
+#include "select.h"
 #include "debug.h"
 #include "memdb.h" /* must be the last header */
 
@@ -571,9 +572,9 @@ static void create_main_menus(void)
 		{IT_PUSH, "makeDirectory", "&Make Directory...", make_dir_cb, NULL},
 		{IT_PUSH, "makeFile", "M&ake File...", make_file_cb, NULL},
 		{IT_SEPARATOR },
-		{IT_PUSH, "copyTo", "&Copy...", copy_to_cb, NULL},
-		{IT_PUSH, "moveTo", "&Move...", move_to_cb, NULL},
-		{IT_PUSH, "linkTo", "&Link...", link_to_cb, NULL},
+		{IT_PUSH, "copyTo", "&Copy To...", copy_to_cb, NULL},
+		{IT_PUSH, "moveTo", "&Move To...", move_to_cb, NULL},
+		{IT_PUSH, "link", "&Link...", link_to_cb, NULL},
 		{IT_PUSH, "rename", "&Rename", rename_cb, NULL},
 		{IT_PUSH, "delete", "&Delete", delete_cb, NULL},
 		{IT_PUSH, "attributes", "A&ttributes", attributes_cb, NULL},
@@ -583,9 +584,14 @@ static void create_main_menus(void)
 				
 		{IT_CASCADE, "editMenu", "&Edit", NULL, NULL},
 		{IT_PUSH, "selectAll","&Select All", select_all_cb, NULL},
+		{IT_PUSH, "selectPattern","Select &Pattern...",
+			select_pattern_cb, NULL},
 		{IT_PUSH, "deselect", "&Deselect", deselect_cb, NULL},
-		{IT_PUSH, "invertSelection", "&Invert Selection", invert_selection_cb, NULL},
-		{IT_PUSH, "selectPattern","Select &Pattern...", select_pattern_cb, NULL},
+		{IT_PUSH, "invertSelection", "&Invert Selection",
+			invert_selection_cb, NULL},
+		{IT_SEPARATOR },
+		{IT_PUSH, "copyHere","&Copy Here", copy_here_cb, NULL},
+		{IT_PUSH, "moveHere","&Move Here", move_here_cb, NULL},
 		{IT_END },
 		
 		{IT_CASCADE, "viewMenu", "&View", NULL, NULL},
@@ -633,9 +639,9 @@ static void create_main_menus(void)
 	struct menu_item ctx_items[] = {
 		/* context dependent action items will be added here at runtime */
 		{IT_SEPARATOR, "actionsSeparator", NULL, NULL},
-		{IT_PUSH, "copyTo", "&Copy...", copy_to_cb, NULL},
-		{IT_PUSH, "moveTo", "&Move...", move_to_cb, NULL},
-		{IT_PUSH, "linkTo", "&Link...", link_to_cb, NULL},
+		{IT_PUSH, "copyTo", "&Copy To...", copy_to_cb, NULL},
+		{IT_PUSH, "moveTo", "&Move To...", move_to_cb, NULL},
+		{IT_PUSH, "link", "&Link...", link_to_cb, NULL},
 		{IT_PUSH, "rename", "&Rename", rename_cb, NULL},
 		{IT_PUSH, "delete", "&Delete", delete_cb, NULL},
 		{IT_SEPARATOR, NULL },
@@ -646,7 +652,8 @@ static void create_main_menus(void)
 	build_menu_bar(app_inst.wmenu, main_items, XtNumber(main_items));
 	
 	app_inst.wmfile = get_menu_item(app_inst.wmenu, "*fileMenu");
-	dbg_assert(app_inst.wmfile);
+	app_inst.wmedit = get_menu_item(app_inst.wmenu, "*editMenu");
+	dbg_assert(app_inst.wmfile && app_inst.wmedit);
 	app_inst.wmctx = create_popup(app_inst.wlist,
 		"contextMenu", ctx_items, XtNumber(ctx_items));
 	
@@ -1063,7 +1070,7 @@ void set_ui_sensitivity(short flags)
 		"*attributes",
 		"*copyTo",
 		"*moveTo",
-		"*linkTo",
+		"*link",
 		"*delete"
 	};
 	
@@ -1081,7 +1088,7 @@ void set_ui_sensitivity(short flags)
 	
 	char *single_ops[] = {
 		"*rename",
-		"*linkTo"
+		"*link"
 	};
 	
 	for(i = 0; i < XtNumber(sel_ops); i++) {
@@ -1096,6 +1103,14 @@ void set_ui_sensitivity(short flags)
 	for(i = 0; i < XtNumber(single_ops); i++) {
 		enable_menu_item(app_inst.wmfile, single_ops[i], (flags & UIF_SINGLE));
 		enable_menu_item(app_inst.wmctx, single_ops[i], (flags & UIF_SINGLE));
+	}
+	
+	if(is_selection_owner()) {
+		enable_menu_item(app_inst.wmedit, "*copyHere", False);
+		enable_menu_item(app_inst.wmedit, "*moveHere", False);
+	} else {
+		enable_menu_item(app_inst.wmedit, "*copyHere", True);
+		enable_menu_item(app_inst.wmedit, "*moveHere", True);
 	}
 
 }

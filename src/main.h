@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 alx@fastestcode.org
+ * Copyright (C) 2022-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -64,8 +64,9 @@ struct app_inst_data {
 	Widget wpath_frm;
 	Widget wstatus_frm;
 	
-	/* context menu (file fropdown and list popup) widgets */
+	/* context menu (file dropdown and list popup) widgets */
 	Widget wmfile;
+	Widget wmedit;
 	Widget wmctx;
 	
 	/* global file type database */

@@ -77,6 +77,7 @@ int has_fstab_entries(const char *path)
 	update_fstab();
 	
 	real_path = realpath(path, NULL);
+	if(!real_path) return 0;
 	
 	for(i = 0; i < fstab.size; i++) {
 		char *p = strrchr(fstab.recs[i].mpt, '/');
@@ -101,6 +102,7 @@ int get_mount_info(const char *path, char **dev, char **fs, char **opt)
 	update_fstab();
 	
 	real_path = realpath(path, NULL);
+	if(!real_path) return errno;
 	
 	for(i = 0; i < fstab.size; i++) {
 		if(!strcmp(fstab.recs[i].mpt, real_path)) {

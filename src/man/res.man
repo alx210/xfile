@@ -140,10 +140,6 @@ items. Default is 2\.
 \fBoutlineWidth\fP \fIDimension\fP
 Specifies the width of the selection outline\. Default is 1\.
 .TP
-\fBownPrimarySelection\fP \fIBoolean\fP
-If True, selected file names will be placed into X's primary selection, so
-they can be pasted using Shift+Insert or the third mouse button\.
-.TP
 \fBshortenLabels\fP \fIInteger\fP
 Specifies length in characters for file name labels at which these will be
 abbreviated\. The value of zero disables label shortening\. The minimum value

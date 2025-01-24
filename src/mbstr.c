@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 alx@fastestcode.org
+ * Copyright (C) 2023-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -161,4 +161,39 @@ char* mbs_make_displayable(const char *src)
 	}
 	dest[id] = '\0';
 	return dest;
+}
+
+/*
+ * Converts a multibyte string to iso8859-1, substituting out of
+ * code page characters with a question mark. The resulting string
+ * is placed in dest, which may point to the same buffer as src.
+ */
+void mbs_to_latin1(const char *src, char *dest)
+{
+	size_t nbytes = strlen(src);
+	size_t is = 0;
+	size_t id = 0;
+	int ns;
+
+	mblen(NULL, 0);
+
+	while(src[is]) {
+		ns = mblen(src + is, nbytes - is);
+		if(ns == -1) {
+			dest[id] = '?';
+			id++;
+			is++;
+			continue;
+		} else if(ns > 2) {
+			dest[id] = '?';
+		} else if(ns == 2) {
+			dest[id] = (src[is] & 0x1C) ? '?' :
+				((src[is] << 6) | (src[is + 1] & 0x3F));
+		} else {
+			dest[id] = src[is];
+		}
+		id++;
+		is += ns;
+	}
+	dest[id] = '\0';
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2024 alx@fastestcode.org
+ * Copyright (C) 2019-2025 alx@fastestcode.org
  * This software is distributed under the terms of the MIT license.
  * See the included COPYING file for further information.
  */
@@ -31,6 +31,7 @@ struct file_list_item {
 };
 
 struct file_list_sel {
+	Boolean initial; /* False if change is due to update or removal of items */
 	unsigned int count;
 	char **names;
 	struct fsize size_total;
@@ -182,5 +183,11 @@ Boolean file_list_get_item(Widget, const char *name,
  * Deletes all items
  */
 void file_list_remove_all(Widget);
+
+/*
+ * Changes selection highlighting state to convey whether
+ * primary selection is owned (True) or lost (False)
+ */
+void file_list_highlight_selection(Widget, Boolean);
 
 #endif /* LISTW_H */

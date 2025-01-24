@@ -166,7 +166,7 @@ struct file_list_part {
 	struct rectangle sel_rect;
 	Boolean dragging;
 	Boolean sel_add_mode;
-	Boolean owns_prim_sel;
+	Boolean highlight_sel;
 	Boolean has_focus;
 
 	/* shared selection data */
@@ -201,7 +201,6 @@ struct file_list_part {
 	unsigned short shorten;
 	unsigned short lookup_time;
 	Boolean show_contents;
-	Boolean grab_prim_sel;
 	Boolean silent;
 	Boolean numbered_sort;
 	Boolean case_sensitive;
