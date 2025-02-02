@@ -1,7 +1,7 @@
 # Not unix native compressed archive file types and programs handling these
 
 ZIP Archive {
-	icon arch
+	icon package
 	match_name {
 		*.zip
 		*.ZIP
@@ -11,7 +11,7 @@ ZIP Archive {
 }
 
 RAR Archive {
-	icon arch
+	icon package
 	match_name {
 		*.rar
 		*.RAR
@@ -21,7 +21,7 @@ RAR Archive {
 }
 
 7ZIP Archive {
-	icon arch
+	icon package
 	match_name {
 		*.7z
 		*.7Z
