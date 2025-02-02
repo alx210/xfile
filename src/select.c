@@ -80,6 +80,14 @@ static void lose_selection_proc(Widget w, Atom *sel)
 {
 	owns_primary = False;
 	file_list_highlight_selection(app_inst.wlist, False);
+
+	if(app_inst.location) {
+		short flags = UIF_DIR;
+		if(app_inst.cur_sel.count) flags |= UIF_SEL;
+		if(app_inst.cur_sel.count == 1) flags |= UIF_SINGLE;
+		
+		set_ui_sensitivity(flags);
+	}
 }
 
 
