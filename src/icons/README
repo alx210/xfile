@@ -27,6 +27,7 @@ file     Generic file (used if specified icon is missing)
 http     Hypertext (anything web related)
 info     Manpage, README etc.
 isocd    ISO CD image
+lib      Static library
 makefile Makefile
 mpti     Inactive mount point (variation of dir)
 mpt      Active mount point (variation of dir)
