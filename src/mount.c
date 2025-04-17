@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 alx@fastestcode.org
+ * Copyright (C) 2023-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -21,6 +21,7 @@
 #include <Xm/Form.h>
 #include <Xm/LabelG.h>
 #include <Xm/PushB.h>
+#include <Xm/Label.h>
 
 #include "main.h"
 #include "graphics.h"
@@ -36,6 +37,8 @@
 /* Window icon xbm */
 #include "xbm/hrglas.xbm"
 #include "xbm/hrglas_m.xbm"
+#include "xbm/mount.xpm"
+#include "xbm/umount.xpm"
 
 /* Forward declarations */
 static void map_timeout_cb(XtPointer, XtIntervalId*);
@@ -126,19 +129,24 @@ static void destroy_mpdata(struct mount_proc_data *mp)
 	memdb_lstat(1);
 }
 
+
 static struct mount_proc_data* init_mount_proc(
 	const char *mpt_path, const char *cmd, Boolean mount)
 {
 	Arg args[20];
 	Cardinal n;
-	Widget wform;
-	char *title = mount ? "Mount" : "Unmount";
+	Widget wform, wicon;
+	char *title = mount ? "Mounting" : "Unmounting";
 	Pixel frm_bg;
-	static Pixmap icon_pix = None;
-	static Pixmap icon_mask = None;
+	static Pixmap wm_icon_pix = None;
+	static Pixmap wm_icon_mask = None;
+	static Pixmap mount_icon = None;
+	static Pixmap umount_icon = None;
 	XmString xms;
 	struct mount_proc_data *mp;
 	char cmd_info_tmpl[] = "%s %s";
+	char info_tmpl[] = "Waiting for the command to complete...\n%s";
+	char *info_sz;
 	size_t length;
 	XtCallbackRec destroy_cbr[3] = {
 		{ sub_shell_destroy_cb, NULL }, /* all sub-shells must have that */
@@ -156,7 +164,11 @@ static struct mount_proc_data* init_mount_proc(
 	mp->cmd_info = malloc(length);
 	snprintf(mp->cmd_info, length, cmd_info_tmpl, cmd, mpt_path);
 	
-	if(!icon_pix) create_wm_icon(hrglas, &icon_pix, &icon_mask);
+	length = snprintf(NULL, 0, info_tmpl, mp->cmd_info) + 1;
+	info_sz = malloc(length);
+	snprintf(info_sz, length, info_tmpl, mp->cmd_info);
+	
+	if(!wm_icon_pix) create_wm_icon(hrglas, &wm_icon_pix, &wm_icon_mask);
 	
 	n = 0;
 	destroy_cbr[1].closure = (XtPointer) mp;
@@ -166,8 +178,8 @@ static struct mount_proc_data* init_mount_proc(
 	XtSetArg(args[n], XmNallowShellResize, True); n++;
 	XtSetArg(args[n], XmNtitle, title); n++;
 	XtSetArg(args[n], XmNiconName, title); n++;
-	XtSetArg(args[n], XmNiconPixmap, icon_pix); n++;
-	XtSetArg(args[n], XmNiconMask, icon_mask); n++;
+	XtSetArg(args[n], XmNiconPixmap, wm_icon_pix); n++;
+	XtSetArg(args[n], XmNiconMask, wm_icon_mask); n++;
 
 	mp->wfbdlg = XtAppCreateShell(APP_NAME "MountFeedback",
 		APP_CLASS "MountFeedback", applicationShellWidgetClass,
@@ -180,13 +192,28 @@ static struct mount_proc_data* init_mount_proc(
 
 	wform = XmCreateForm(mp->wfbdlg, "form", args, n);
 
+	if(!mount_icon) {
+		if(!create_ui_pixmap(wform, mount_xpm, &mount_icon, NULL) ||
+			!create_ui_pixmap(wform, umount_xpm, &umount_icon, NULL)) {
+				mount_icon = umount_icon = XmUNSPECIFIED_PIXMAP;
+		}
+	}
+	
+	n = 0;
+	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNlabelPixmap, mount ? mount_icon : umount_icon); n++;
+	XtSetArg(args[n], XmNlabelType, XmPIXMAP); n++;
+	wicon = XmCreateLabel(wform, "icon", args, n);
+	
 	n = 0;
 	XtSetArg(args[n], XmNbackground, &frm_bg); n++;
 	XtGetValues(wform, args, n);
 	
 	n = 0;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
-	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNleftAttachment, XmATTACH_WIDGET); n++;
+	XtSetArg(args[n], XmNleftWidget, wicon); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNeditable, False); n++;
 	XtSetArg(args[n], XmNcursorPositionVisible, False); n++;
@@ -194,7 +221,7 @@ static struct mount_proc_data* init_mount_proc(
 	XtSetArg(args[n], XmNmarginHeight, 1); n++;
 	XtSetArg(args[n], XmNmarginWidth, 1); n++;
 	XtSetArg(args[n], XmNtraversalOn, False); n++;
-	XtSetArg(args[n], XmNcolumns, 25); n++;
+	XtSetArg(args[n], XmNcolumns, 20); n++;
 	XtSetArg(args[n], XmNeditMode, XmMULTI_LINE_EDIT); n++;
 	XtSetArg(args[n], XmNrows, 4); n++;
 	XtSetArg(args[n], XmNwordWrap, True); n++;
@@ -202,7 +229,8 @@ static struct mount_proc_data* init_mount_proc(
 	XtSetArg(args[n], XmNbackground, frm_bg); n++;
 	
 	mp->wfbmsg = XmCreateScrolledText(wform, "status", args, n);
-	XmTextSetString(mp->wfbmsg, mp->cmd_info);
+	XmTextSetString(mp->wfbmsg, info_sz);
+	free(info_sz);
 
 	XtUninstallTranslations(mp->wfbmsg);
 	
@@ -225,6 +253,7 @@ static struct mount_proc_data* init_mount_proc(
 	XtSetArg(args[n], XmNcancelButton, mp->wfbcancel); n++;
 	XtSetValues(mp->wfbdlg, args, n);
 	
+	XtManageChild(wicon);
 	XtManageChild(mp->wfbmsg);
 	XtManageChild(mp->wfbcancel);
 	XtManageChild(wform);
