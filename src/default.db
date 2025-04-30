@@ -162,8 +162,6 @@ Image {
 		*.rgb
 		*.xpm
 		*.xbm
-		*.pm
-		*.bm
 		*.bmp
 		*.JPG
 		*.PNG
