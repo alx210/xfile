@@ -249,7 +249,7 @@ static void msgbox_popup_cb(Widget w, XtPointer client, XtPointer call)
 }
 
 /*
- * Displays a blocking file title input dialog.
+ * Displays a blocking string input dialog.
  * Returns a valid string or NULL if cancelled.
  */
 char* input_string_dlg(Widget parent, const char *title,
@@ -386,8 +386,8 @@ static void input_dlg_cb(Widget w, XtPointer client, XtPointer call)
 		idd->done = True;
 	} else if(fscb->reason == XmCR_OK) {
 		char *str;
-		str = XmStringUnparse(fscb->value, NULL, 0,
-			XmCHARSET_TEXT, NULL, 0, XmOUTPUT_ALL);
+		str = XmStringUnparse(fscb->value, NULL, XmMULTIBYTE_TEXT,
+			XmMULTIBYTE_TEXT, NULL, 0, XmOUTPUT_ALL);
 		if(str[0] != '\0' || (idd->flags & ISF_ALLOWEMPTY)) {
 			idd->string = strdup(str);
 			idd->valid = True;
