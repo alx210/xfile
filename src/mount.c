@@ -39,6 +39,7 @@
 #include "xbm/hrglas_m.xbm"
 #include "xbm/mount.xpm"
 #include "xbm/umount.xpm"
+#include "xbm/error.xpm"
 
 /* Forward declarations */
 static void map_timeout_cb(XtPointer, XtIntervalId*);
@@ -69,6 +70,7 @@ struct mount_proc_data {
 	Widget wfbdlg;
 	Widget wfbmsg;
 	Widget wfbcancel;
+	Widget wicon;
 	char *cmd_info;
 	char *cmd_output;
 	size_t cmd_buf_size;
@@ -82,6 +84,7 @@ struct mount_proc_data {
 };
 
 static struct mount_proc_data *mount_procs = NULL;
+static Pixmap error_icon = None;
 
 
 static struct mount_proc_data* alloc_mpdata(void)
@@ -135,7 +138,7 @@ static struct mount_proc_data* init_mount_proc(
 {
 	Arg args[20];
 	Cardinal n;
-	Widget wform, wicon;
+	Widget wform;
 	char *title = mount ? "Mounting" : "Unmounting";
 	Pixel frm_bg;
 	static Pixmap wm_icon_pix = None;
@@ -194,8 +197,9 @@ static struct mount_proc_data* init_mount_proc(
 
 	if(!mount_icon) {
 		if(!create_ui_pixmap(wform, mount_xpm, &mount_icon, NULL) ||
-			!create_ui_pixmap(wform, umount_xpm, &umount_icon, NULL)) {
-				mount_icon = umount_icon = XmUNSPECIFIED_PIXMAP;
+			!create_ui_pixmap(wform, umount_xpm, &umount_icon, NULL) ||
+			!create_ui_pixmap(wform, error_xpm, &error_icon, NULL)) {
+				mount_icon = umount_icon = error_icon = XmUNSPECIFIED_PIXMAP;
 		}
 	}
 	
@@ -204,7 +208,7 @@ static struct mount_proc_data* init_mount_proc(
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNlabelPixmap, mount ? mount_icon : umount_icon); n++;
 	XtSetArg(args[n], XmNlabelType, XmPIXMAP); n++;
-	wicon = XmCreateLabel(wform, "icon", args, n);
+	mp->wicon = XmCreateLabel(wform, "icon", args, n);
 	
 	n = 0;
 	XtSetArg(args[n], XmNbackground, &frm_bg); n++;
@@ -213,7 +217,7 @@ static struct mount_proc_data* init_mount_proc(
 	n = 0;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_WIDGET); n++;
-	XtSetArg(args[n], XmNleftWidget, wicon); n++;
+	XtSetArg(args[n], XmNleftWidget, mp->wicon); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNeditable, False); n++;
 	XtSetArg(args[n], XmNcursorPositionVisible, False); n++;
@@ -253,7 +257,7 @@ static struct mount_proc_data* init_mount_proc(
 	XtSetArg(args[n], XmNcancelButton, mp->wfbcancel); n++;
 	XtSetValues(mp->wfbdlg, args, n);
 	
-	XtManageChild(wicon);
+	XtManageChild(mp->wicon);
 	XtManageChild(mp->wfbmsg);
 	XtManageChild(mp->wfbcancel);
 	XtManageChild(wform);
@@ -361,6 +365,9 @@ static void xt_sigchld_handler(XtPointer data, XtSignalId *id)
 		XtSetArg(arg, XmNlabelString, xms);
 		XtSetValues(mp->wfbcancel, &arg, 1);
 		XmStringFree(xms);
+		
+		XtSetArg(arg, XmNlabelPixmap, error_icon);
+		XtSetValues(mp->wicon, &arg, 1);
 		
 		if(XtAppPending(app_inst.context) & XtIMAlternateInput) {
 			XtAppProcessEvent(app_inst.context, XtIMAlternateInput);
