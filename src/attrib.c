@@ -45,7 +45,7 @@
 #include "fsutil.h"
 #include "mbstr.h"
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
+
 
 enum attrib_gadgets {
 	GID_NAME,
@@ -333,7 +333,6 @@ static void free_dlg_data(struct attrib_dlg_data *data)
 	}
 	
 	free(data);
-	memdb_lstat(0);
 }
 
 /*

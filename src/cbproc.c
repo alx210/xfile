@@ -28,7 +28,7 @@
 #include "info.h"
 #include "select.h"
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
+
 
 #define EXEC_STATUS_TIMEOUT 3000
 
@@ -49,7 +49,6 @@ static void set_action_status_text(const char*, const char*);
 static void open_dir_proc(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	set_location((char*)pclient, False);
-	memdb_gstat(0);
 }
 
 /*

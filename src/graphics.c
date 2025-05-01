@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 alx@fastestcode.org
+ * Copyright (C) 2023-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -16,7 +16,6 @@
 #include "path.h"
 #include "debug.h"
 #include "icons.h"
-#include "memdb.h" /* must be the last header */
 
 #define PIXMAP_SUFFIX ".xpm"
 #define SEARCH_PATHS_MAX 4

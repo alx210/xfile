@@ -43,7 +43,7 @@
 #include "fsutil.h"
 #include "select.h"
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
+
 
 /* Icon bitmaps */
 #include "xbm/cabinet.xbm"
@@ -796,10 +796,8 @@ static Boolean load_db(void)
 			}
 			db_names[ndb_names] = NULL;
 			
-			#ifndef MEMDB
 			for(i = 0; i < nfiles; i++) free(names[i]);
 			free(names);
-			#endif
 		}		
 		free(db_path);
 	}
@@ -855,10 +853,8 @@ static Boolean load_db(void)
 			}
 			db_names[ndb_names] = NULL;
 			
-			#ifndef MEMDB
 			for(i = 0; i < nfiles; i++) free(names[i]);
 			free(names);
-			#endif
 		}		
 		free(db_path);
 	}

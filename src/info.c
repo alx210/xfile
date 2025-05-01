@@ -78,7 +78,7 @@ void display_dbinfo_dialog(Widget wparent)
 	XtSetArg(args[n], XmNtopWidget, wdblabel); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
-	XtSetArg(args[n], XmNvisibleItemCount, 4); n++;
+	XtSetArg(args[n], XmNvisibleItemCount, 3); n++;
 	wdblist = XmCreateScrolledList(wform, "files", args, n);
 
 	n = 0;

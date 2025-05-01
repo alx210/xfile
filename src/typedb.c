@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 alx@fastestcode.org
+ * Copyright (C) 2022-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -17,7 +17,6 @@
 #include <fnmatch.h>
 #include "typedb.h"
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
 
 #define TYPES_GROW_BY	64
 #define FIELD_GROW_BY	6
@@ -747,7 +746,6 @@ int main(int argc, char **argv)
 		printf("Failed to parse %s: %s\n",
 			db_file,db.status_msg?db.status_msg:"");
 		db_free(&db);
-		memdb_lstat(1);
 		return -1;
 	}
 
@@ -760,8 +758,7 @@ int main(int argc, char **argv)
 		db.recs[i].name : "NONE");
 
 	db_free(&db);
-	
-	memdb_lstat(1);
+
 	return 0;
 }
 

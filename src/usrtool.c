@@ -14,7 +14,6 @@
 #include "fsutil.h"
 #include "usrtool.h"
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
 
 /* Forward declarations */
 static Bool xrm_enum_cb(XrmDatabase *rdb, XrmBindingList bindings,

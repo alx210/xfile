@@ -11,7 +11,6 @@
 #include <wctype.h>
 #include <ctype.h>
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
 
 /* Multibyte string utility routines */
 

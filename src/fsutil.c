@@ -16,7 +16,6 @@
 #include "path.h"
 #include "fsutil.h"
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
 
 #define FS_FACTOR_MAX 6
 #define FS_KILO 1024

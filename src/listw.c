@@ -28,7 +28,6 @@
 #include "listwp.h"
 #include "mbstr.h"
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
 
 /* Local routines */
 static void class_initialize(void);
@@ -1978,8 +1977,6 @@ static void destroy(Widget w)
 
 	XFreeColors(XtDisplay(w), ((struct file_list_rec*) w)->core.colormap,
 		&fl->nfbg_pixel, 1, 0);
-
-	memdb_lstat(1);
 }
 
 /*
@@ -3007,7 +3004,6 @@ void file_list_remove_all(Widget w)
 	
 	redraw_all(w);
 	if(selected) sel_change_handler(w, False);
-	memdb_lstat(1);
 }
 
 Boolean file_list_get_selection(Widget w, struct file_list_sel *sel)

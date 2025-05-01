@@ -29,7 +29,7 @@
 #include "version.h"
 #include "guiutil.h"
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
+
 
 /* Local prototypes */
 static void msgbox_btn_cb(Widget w, XtPointer client, XtPointer call);

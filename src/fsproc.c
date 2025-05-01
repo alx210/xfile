@@ -35,7 +35,6 @@
 #include "mbstr.h"
 #include "fsutil.h"
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
 
 /* Icon xbm */
 #include "xbm/copymove.xbm"
@@ -246,8 +245,6 @@ static void destroy_fsproc(struct fsproc_data *d)
 		c->next = d->next;
 	}
 	free(d);
-
-	memdb_lstat(1);
 }
 
 

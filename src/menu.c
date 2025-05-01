@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2024 alx@fastestcode.org
+ * Copyright (C) 2022-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -19,7 +19,6 @@
 #include "main.h"
 #include "menu.h"
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
 
 /* For making up some widget names */
 #define WIDGET_NAME_MAX 64

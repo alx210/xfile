@@ -32,7 +32,6 @@
 #include "fstab.h"
 #include "exec.h"
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
 
 /* Window icon xbm */
 #include "xbm/hrglas.xbm"
@@ -128,8 +127,6 @@ static void destroy_mpdata(struct mount_proc_data *mp)
 	if(mp->cmd_pipe_fd >= 0) close(mp->cmd_pipe_fd);
 	
 	free(mp);
-	
-	memdb_lstat(1);
 }
 
 

@@ -33,7 +33,6 @@
 #include "fsutil.h"
 #include "mbstr.h"
 #include "debug.h"
-#include "memdb.h" /* must be the last header */
 
 
 /* Reader/watcher process data */
