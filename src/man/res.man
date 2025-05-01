@@ -1,6 +1,5 @@
 .SH RESOURCES
 .SS General Resources
-.PP
 In addition to standard X and Motif toolkit resources, following resources
 are used by XFile\.
 .TP
@@ -93,7 +92,6 @@ Defines a local environment variable used by the file type database
 \fBwmIconForeground\fP \fIColor\fP, \fBwmIconBackground\fP \fIColor\fP
 Colors to be used for rendering default window manager icons\.
 .SS File List Widget Resources
-.PP
 The file list widget is the central element of the XFile window.
 It displays directory contents and provides interaction functionality\.
 .PP
@@ -168,7 +166,6 @@ expected\. Default is \fBTrue\fP\. See also \fBcaseSensitive\fP and
 \fBviewMode\fP compact|detailed
 Specifies the view mode. Default is compact\.
 .SS File List Widget Fonts
-.PP
 The file list widget defines four rendition tags to display labels for different
 kinds of Unix file types:
 .PP
@@ -182,7 +179,6 @@ kinds of Unix file types:
 By default, labels of symbolic links are rendered in italic and special
 files in bold\.
 .SS Path Field Resources
-.PP
 The path field widget consists of a text field that displays the current
 working directory with an array of push buttons, each representing an element
 of the path, above\.

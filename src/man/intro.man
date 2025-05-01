@@ -6,7 +6,6 @@ xfile [OPTIONS] [DIRECTORY]
 .PP
 xfile-open FILENAME\.\.\.
 .SH DESCRIPTION
-.PP
 XFile is a file manager for Unix systems running X11\.
 .SS Options
 .TP

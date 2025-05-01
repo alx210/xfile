@@ -1,5 +1,4 @@
 .SH FILE TYPE DATABASE
-.PP
 A file type database is a plain text file comprised of one or more records\.
 See \fBFILES\fP section in this manual for database file locations\.
 .PP
@@ -35,7 +34,6 @@ NOTE: Multiple values may be specified for file name and content
 patterns, \- one per line \- within a scope delimited by an opening bracket {
 on the same or following line, and a closing bracket } on a separate line\.
 .SS Variable Expansion
-.PP
 Unix shell like variable expansion is supported in action command strings\.
 .PP
 XFile local and context dependent variables start with the % character, while
@@ -50,7 +48,6 @@ XFile\.variables.\fI<name>\fP: \fI<value>\fP
 Substitute \fIname\fP with the variable name of choice, and \fIvalue\fP
 with the value desired\.
 .SS Context Dependent Variables
-.PP
 .nf
 .ta .5i
 \fB%n\fP	File name of the selected item.
@@ -58,7 +55,6 @@ with the value desired\.
 \fB%m\fP	MIME string (if specified in the database).
 .fi
 .SS Predefined Variables
-.PP
 The default database makes use of several predefined variables listed below\.
 These may be set in user's \.Xresources (see \fBVariable Expansion\fP above)
 to accommodate the environment, without modifying the database\.
