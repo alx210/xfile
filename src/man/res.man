@@ -148,7 +148,8 @@ abbreviated\. The value of zero disables label shortening\. The minimum value
 allowed is 12\.
 .TP
 \fBsortDirection\fP ascend|descend
-Specifies the file name sorting direction of displayed items. Default is ascend\.
+Specifies the file name sorting direction of displayed items.
+Default is ascend\.
 .TP
 \fBsortOrder\fP name|time|suffix|type|size
 Specifies the sorting order of displayed items. Default is \fIname\fP\.
