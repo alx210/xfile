@@ -86,7 +86,7 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	input = input_string_dlg(app_inst.wshell, "Pass To",
 		"Specify a command to run on the file.",
-		last_input, ISF_PRESELECT);
+		last_input, "command", ISF_PRESELECT);
 	if(!input) return;
 	
 	if(last_input) free(last_input);
@@ -489,7 +489,7 @@ void make_dir_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	mode_t dir_mode = (S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
 	
 	input = input_string_dlg(app_inst.wshell, "New Directory",
-		"Specify new directory name", NULL, ISF_PRESELECT);
+		"Specify new directory name.", NULL, NULL, ISF_PRESELECT);
 	if(!input) return;
 	
 	if(mkdir(input, dir_mode) == -1) {
@@ -506,7 +506,7 @@ void make_file_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	const mode_t file_mode = (S_IRUSR|S_IWUSR|S_IRGRP);
 	
 	input = input_string_dlg(app_inst.wshell, "New File",
-		"Specify new file name", NULL, ISF_PRESELECT);
+		"Specify new file name.", NULL, NULL, ISF_PRESELECT);
 	if(!input) return;
 	
 	if(mknod(input, file_mode, 0) == -1) {
@@ -611,9 +611,9 @@ void rename_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	cursel = strdup(app_inst.cur_sel.item.name);
 	
-	target = input_string_dlg(app_inst.wshell, 
-		"Rename", "Specify new file name",
-		cursel, ISF_NOSLASH | ISF_PRESELECT | ISF_FILENAME);
+	target = input_string_dlg(app_inst.wshell,
+		"Rename", "Specify new file name.",
+		cursel, NULL, ISF_NOSLASH | ISF_PRESELECT | ISF_FILENAME);
 	if(!target) {
 		free(cursel);
 		return;
@@ -673,7 +673,7 @@ void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	link = input_string_dlg(app_inst.wshell, "Link To",
 		"Specify a name for the symbolic link.\n"
-		"It may contain either absolute or relative path.", NULL, 0);
+		"It may contain either absolute or relative path.", NULL, NULL, 0);
 	if(!link) {
 		free(cursel);
 		return;
@@ -732,8 +732,8 @@ void select_pattern_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	char *input;
 	
 	input = input_string_dlg(app_inst.wshell, "Select Pattern",
-		"Specify a glob pattern to match file names against",
-		last_input, ISF_PRESELECT);
+		"Specify a glob pattern.",
+		last_input, "select", ISF_PRESELECT);
 	if(!input) {
 		file_list_deselect(app_inst.wlist);
 		return;
@@ -885,12 +885,12 @@ void show_status_field_cb(Widget w, XtPointer pclient, XtPointer pcall)
 void set_filter_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	char *input;
-	
+
 	input = input_string_dlg(app_inst.wshell, "Filter",
 		"Specify a glob pattern to filter out matching names.\n"
 		"Prefix the pattern with the ! character to negate it.\n"
-		"Leave the field empty or choose Cancel to disable filter.",
-		app_inst.filter, ISF_PRESELECT);
+		"Leave the field empty or choose Cancel to dismiss.",
+		app_inst.filter, "filter", ISF_PRESELECT);
 
 	if(!input) {
 		if(app_inst.filter) {
@@ -932,7 +932,7 @@ void new_window_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 	get_input: /* on failed access() check below */	
 	input = input_string_dlg(app_inst.wshell, "New Window",
-		"Specify path to browse.", "~", ISF_PRESELECT);
+		"Specify path to browse.", "~", "browse", ISF_PRESELECT);
 	
 	if(!input) return;
 	

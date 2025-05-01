@@ -215,6 +215,12 @@ int main(int argc, char **argv)
 		XtRString, sizeof(String),
 		XtOffsetOf(struct app_resources, icon_size),
 		XtRImmediate,(XtPointer)CS_ICON_AUTO
+	},
+	{
+		"historyMaxEntries", "HistoryMaxEntries",
+		XmRInt, sizeof(int),
+		XtOffsetOf(struct app_resources, history_max),
+		XmRImmediate,(XtPointer)DEF_HISTORY_MAX
 	}
 	};
 

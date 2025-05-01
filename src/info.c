@@ -41,8 +41,6 @@ void display_dbinfo_dialog(Widget wparent)
 	XmString xms;
 	unsigned int i;
 	char **ptr;
-	XmRenderTable rt;
-	Dimension font_height;
 	
 	if(!app_inst.type_db.count) {
 		message_box(wparent, MB_NOTIFY, "Type Database Info",
@@ -72,11 +70,6 @@ void display_dbinfo_dialog(Widget wparent)
 	XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
 	XtSetArg(args[n], XmNlabelString, xms); n++;
 	wdblabel = XmCreateLabel(wform, "label", args, n);
-
-	XtSetArg(args[0], XmNrenderTable, &rt);
-	XtGetValues(wdblabel, args, 1);
-	font_height = XmStringHeight(rt, xms);
-
 	XmStringFree(xms);
 
 
@@ -85,7 +78,7 @@ void display_dbinfo_dialog(Widget wparent)
 	XtSetArg(args[n], XmNtopWidget, wdblabel); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
-	XtSetArg(args[n], XmNheight, font_height * 4); n++;
+	XtSetArg(args[n], XmNvisibleItemCount, 4); n++;
 	wdblist = XmCreateScrolledList(wform, "files", args, n);
 
 	n = 0;
@@ -104,7 +97,7 @@ void display_dbinfo_dialog(Widget wparent)
 	XtSetArg(args[n], XmNtopWidget, wtlabel); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
-	XtSetArg(args[n], XmNheight, font_height * 10); n++;
+	XtSetArg(args[n], XmNvisibleItemCount, 10); n++;
 	wtlist = XmCreateScrolledList(wform, "types", args, n);
 
 	n = 0;

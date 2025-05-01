@@ -3,12 +3,12 @@
 User file type database files are read from the $HOME/.xfile/types/ directory.
 System file type database files are installed in PREFIX\(dg/share/xfile/types
 directory.
-
+.PP
 Icons in XPM (X Pixmap) format are looked for in user $HOME/.xfile/icons and
 system PREFIX\(dg/share/xfile/icons directories.
-
-XFile stores some state information in the $HOME/.xfile/history directory
-which can be safely deleted.
+.PP
+XFile stores some state information in the $HOME/.xfile directory. Files
+with the .his suffix contain prompt history, and can be safely deleted.
 
 \(dgPlatform dependent. (/usr on GNU/Linux, /usr/local on FreeBSD etc.)
 .SH AUTHORS

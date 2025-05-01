@@ -22,12 +22,16 @@
 #define DB_SUBDIR "types"
 #define PM_SUBDIR "icons"
 #define DB_SUFFIX ".db"
+#define HIS_SUFFIX ".his"
 
 /* Alternate invocation to just open files from db */
 #define XFILE_OPEN "xfile-open"
 
 /* Default update polling interval */
 #define DEF_REFRESH_INT 4
+
+/* Default history limit */
+#define DEF_HISTORY_MAX 8
 
 /* Default time format string (RFC 2822 like) */
 #define DEF_TIME_FMT "%d %b %Y %H:%M"

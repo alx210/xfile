@@ -56,7 +56,7 @@ char* dir_select_dlg(Widget parent, const char *title,
  * is returned it must be freed by the caller.
  */
 char* input_string_dlg(Widget parent, const char *title,
-	const char *msg_str, const char *init_str, int flags);
+	const char *msg_str, const char *init_str, const char *context, int flags);
 
 /* Displays attribute editor dialog for files */
 void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles);

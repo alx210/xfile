@@ -26,6 +26,10 @@ will also affect directories, files only otherwise\. Default is False\.
 Show full path to the current directory in the title bar if True,
 only current directory name otherwise\. Default is False\.
 .TP
+\fBhistoryMaxEntries\fP \fIInteger\fP
+Specifies the maximum number of entries to be stored in history\.
+Default is 8\.
+.TP
 \fBiconSize\fP auto|tiny|small|medium|large
 Sets the size of icons displayed in the file list\. Default is \fBauto\fP,
 in which case the size is deduced from font height\.
