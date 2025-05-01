@@ -530,7 +530,7 @@ void copy_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	}
 
 	dest = dir_select_dlg(app_inst.wshell,
-		"Copying - Select Destination Directory", last_dest);
+		"Select Destination", last_dest, "copyto");
 	
 	if(!dest) return;
 	
@@ -572,7 +572,7 @@ void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	}
 
 	dest = dir_select_dlg(app_inst.wshell,
-		"Moving - Select Destination Directory", last_dest);
+		"Select Destination", last_dest, "moveto");
 	
 	if(!dest) return;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 alx@fastestcode.org
+ * Copyright (C) 2023-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -20,6 +20,8 @@
 #include <Xm/SelectioB.h>
 #include <Xm/TextF.h>
 #include <Xm/List.h>
+#include <Xm/Frame.h>
+#include <Xm/Label.h>
 #include <Xm/MwmUtil.h>
 #include "comdlgs.h"
 #include "const.h"
@@ -34,10 +36,13 @@ static void msgbox_btn_cb(Widget w, XtPointer client, XtPointer call);
 static void input_dlg_cb(Widget w, XtPointer client, XtPointer call);
 static void input_modify_cb(Widget, XtPointer client, XtPointer call);
 static void msgbox_popup_cb(Widget w, XtPointer client, XtPointer call);
+static void dir_history_cb(Widget w, XtPointer client, XtPointer call);
 static Boolean is_blank(const char *sz);
 static char* get_history_fqn(const char *title);
 static Boolean load_history(Widget wlist, const char *name);
 static void store_history(Widget wlist, const char *name);
+
+#define HISTORY_VISIBLE_MAX	3
 
 struct input_dlg_data {
 	int flags;
@@ -306,7 +311,7 @@ char* input_string_dlg(Widget wparent, const char *title,
 			
 			XtSetArg(arg[0], XmNvisibleItemCount, 1);
 		} else {
-			XtSetArg(arg[0], XmNvisibleItemCount, 4);
+			XtSetArg(arg[0], XmNvisibleItemCount, HISTORY_VISIBLE_MAX);
 		}
 		XtSetValues(idd.whistory, arg, 1);
 	} else {
@@ -347,7 +352,7 @@ char* input_string_dlg(Widget wparent, const char *title,
 	XtDestroyWidget(wdlg);
 	XmUpdateDisplay(wparent);
 	
-	if(context && idd.string)
+	if(context && idd.valid && strlen(idd.string))
 		store_history(idd.whistory, context);
 
 	return idd.valid ? idd.string : NULL;
@@ -372,10 +377,10 @@ static void input_modify_cb(Widget w, XtPointer client, XtPointer call)
  * Returns a valid path name or NULL if selection was cancelled.
  * If a valid path name is returned it must be freed by the caller.
  */
-char* dir_select_dlg(Widget parent, const char *title,
-	const char *init_path)
+char* dir_select_dlg(Widget wparent, const char *title,
+	const char *init_path, const char *context)
 {
-	Widget dlg;
+	Widget wdlg;
 	Arg arg[8];
 	int i = 0;
 	XmString xm_init_path = NULL;
@@ -383,7 +388,7 @@ char* dir_select_dlg(Widget parent, const char *title,
 
 	if(!init_path) init_path = getenv("HOME");
 	if(init_path)
-		xm_init_path=XmStringCreateLocalized((String)init_path);
+		xm_init_path = XmStringCreateLocalized((String)init_path);
 
 	XtSetArg(arg[i], XmNfileTypeMask, XmFILE_DIRECTORY); i++;
 	XtSetArg(arg[i], XmNpathMode, XmPATH_MODE_FULL); i++;
@@ -391,24 +396,104 @@ char* dir_select_dlg(Widget parent, const char *title,
 	XtSetArg(arg[i], XmNtitle, title); i++;
 	XtSetArg(arg[i], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); i++;
 
-	dlg = XmCreateFileSelectionDialog(parent,
+	wdlg = XmCreateFileSelectionDialog(wparent,
 		"directorySelectionDialog", arg, i);
+	
 	if(xm_init_path) XmStringFree(xm_init_path);
-	XtUnmanageChild(XmFileSelectionBoxGetChild(dlg, XmDIALOG_LIST_LABEL));
+	XtUnmanageChild(XmFileSelectionBoxGetChild(wdlg, XmDIALOG_LIST_LABEL));
 	XtUnmanageChild(XtParent(
-		XmFileSelectionBoxGetChild(dlg,XmDIALOG_LIST)));
-	XtAddCallback(dlg, XmNokCallback, input_dlg_cb,(XtPointer)&idd);
-	XtAddCallback(dlg, XmNcancelCallback, input_dlg_cb, (XtPointer)&idd);
-	XtUnmanageChild(XmFileSelectionBoxGetChild(dlg, XmDIALOG_HELP_BUTTON));
-	XtManageChild(dlg);
+		XmFileSelectionBoxGetChild(wdlg,XmDIALOG_LIST)));
+	XtAddCallback(wdlg, XmNokCallback, input_dlg_cb,(XtPointer)&idd);
+	XtAddCallback(wdlg, XmNcancelCallback, input_dlg_cb, (XtPointer)&idd);
+	XtUnmanageChild(XmFileSelectionBoxGetChild(wdlg, XmDIALOG_HELP_BUTTON));
+	
+	if(context) {
+		i = 0;
+
+		XtSetArg(arg[i], XmNvisibleItemCount, HISTORY_VISIBLE_MAX); i++;
+		XtSetArg(arg[i], XmNselectionPolicy, XmSINGLE_SELECT); i++;
+		idd.whistory = XmCreateScrolledList(wdlg, "history", arg, i);
+		XtAddCallback(idd.whistory, XmNdefaultActionCallback,
+			dir_history_cb, (XtPointer)wdlg);
+		XtAddCallback(idd.whistory, XmNsingleSelectionCallback,
+			dir_history_cb, (XtPointer)wdlg);
+		
+		idd.has_history = load_history(idd.whistory, context);
+		if(!idd.has_history) {
+			XmString xms = XmStringCreateLocalized("No history available");
+			XmListAddItem(idd.whistory, xms, 0);
+			XtSetArg(arg[0], XmNvisibleItemCount, 1);
+			XtSetValues(idd.whistory, arg, 1);
+			XtSetSensitive(idd.whistory, False);
+		}
+		XtManageChild(idd.whistory);
+	}
+	
+	XtManageChild(wdlg);
 
 	while(!idd.done){
-		XtAppProcessEvent(XtWidgetToApplicationContext(dlg), XtIMAll);
+		XtAppProcessEvent(XtWidgetToApplicationContext(wdlg), XtIMAll);
 	}
-	XtDestroyWidget(dlg);
-	XmUpdateDisplay(parent);
+
+	XtDestroyWidget(wdlg);
+	XmUpdateDisplay(wparent);
+	
+	if(context && idd.has_history)
+		store_history(idd.whistory, context);
 	
 	return idd.valid ? idd.string : NULL;
+}
+
+
+/*
+ * Directory selection dialog history list activation callback
+ */
+static void dir_history_cb(Widget w, XtPointer client, XtPointer call)
+{
+	XmListCallbackStruct *cbs = (XmListCallbackStruct*)call;
+	Widget wdlg = (Widget)client;
+	static XmString wildcard = NULL;
+	XmString search;
+	char *sz;
+	int err_code = 0;
+	struct stat st;
+	
+	if(cbs->reason == XmCR_SINGLE_SELECT) {
+		if(!cbs->selected_item_count) /* reselect last */
+			XmListSelectPos(w, cbs->item_position, False);
+	} else if(cbs->reason != XmCR_DEFAULT_ACTION) return;
+	
+	sz = XmStringUnparse(cbs->item, NULL, XmMULTIBYTE_TEXT,
+			XmMULTIBYTE_TEXT, NULL, 0, XmOUTPUT_ALL);
+	
+	if(stat(sz, &st)) {
+		err_code = errno;
+	} else if(S_ISDIR(st.st_mode) &&
+		!(st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))) {
+		err_code = EPERM;
+	} else if(! (S_ISDIR(st.st_mode)) ) {
+		err_code = ENOTDIR;
+	}
+	
+	if(err_code) {
+		if(va_message_box(wdlg, MB_QUESTION, "Location Error",
+			"Cannot stat \'%s\'.\n%s.\n"
+			"Should this entry be removed from the list?",
+			sz, strerror(err_code)) == MBR_CONFIRM) {
+				XmListDeletePos(w, cbs->item_position);
+			}
+		free(sz);
+		return;
+	}
+	free(sz);
+	
+	if(!wildcard)
+		wildcard = XmStringCreateLocalized("/*");
+
+	search = XmStringConcat(cbs->item, wildcard);
+	
+	XmFileSelectionDoSearch(wdlg, search);
+	XmStringFree(search);
 }
 
 /*
@@ -436,8 +521,8 @@ static void input_dlg_cb(Widget w, XtPointer client, XtPointer call)
 				idd->has_history = True;
 			}
 			
-			/* Check if entry being added is a duplicate, and move
-			 * it up instead of adding if so */
+			/* Check if entry being added is a duplicate, move
+			 * it up instead of adding if that's the case */
 			if(XmListGetMatchPos(idd->whistory,
 				fscb->value, &pos_list, &count)) {
 				XmListDeletePositions(idd->whistory, pos_list, count);

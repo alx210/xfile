@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2024 alx@fastestcode.org
+ * Copyright (C) 2012-2025 alx@fastestcode.org
  * This software is distributed under the terms of the X/MIT license.
  * See the included COPYING file for further information.
  */
@@ -48,7 +48,7 @@ enum mb_result va_message_box(Widget parent, enum mb_type type,
  * If a valid path name is returned it must be freed by the caller.
  */
 char* dir_select_dlg(Widget parent, const char *title,
-	const char *init_path);
+	const char *init_path, const char *context);
 
 /*
  * Displays a blocking input dialog.

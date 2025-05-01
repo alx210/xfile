@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023-2024 alx@fastestcode.org
+ * Copyright (C) 2023-2025 alx@fastestcode.org
  * This software is distributed under the terms of the MIT/X license.
  * See the included COPYING file for further information.
  */
@@ -57,8 +57,8 @@ void display_dbinfo_dialog(Widget wparent)
 	wdlg = XmCreateDialogShell(wparent, "Type Database Info", args, n);
 
 	n = 0;
-	XtSetArg(args[n], XmNhorizontalSpacing, 4); n++;
-	XtSetArg(args[n], XmNverticalSpacing, 4); n++;
+	XtSetArg(args[n], XmNhorizontalSpacing, 8); n++;
+	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 	XtSetArg(args[n], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); n++;
 	wform = XmCreateForm(wdlg, "form", args, n);
 	
