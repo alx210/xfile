@@ -8,7 +8,7 @@ system PREFIX\(dg/share/xfile/icons directories.
 .PP
 XFile stores some state information in the $HOME/.xfile directory. Files
 with the .his suffix contain prompt history, and can be safely deleted.
-
+.PP
 \(dgPlatform dependent. (/usr on GNU/Linux, /usr/local on FreeBSD etc.)
 .SH AUTHORS
 XFile was written and is maintained by alx@fastestcode.org

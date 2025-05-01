@@ -27,4 +27,3 @@ XFile will display current working directory if invoked without arguments\.
 If invoked as xfile-open (through a symbolic link), XFile will match each file
 name specified against the file type database, run the default action if
 defined, and finally quit\.
-
