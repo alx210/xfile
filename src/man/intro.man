@@ -16,7 +16,7 @@ Ignore/show file names starting with a dot\.
 Hide files matching glob pattern specified\. Prefix the pattern with the
 ! character to negate\.
 .TP
-\fb-l\fP
+\fB-l\fP
 Invert sort direction (see sortDirection resource)\.
 .TP
 \fB-s\fP(n|s|t|f|x)
