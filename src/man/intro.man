@@ -1,4 +1,4 @@
-.TH XFILE 1
+.TH XFILE 1 2025-04-30 "XFile 1.0"
 .SH NAME
 xfile \- graphical file manager\.
 .SH SYNOPSIS
