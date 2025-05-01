@@ -1,89 +1,88 @@
 .SH RESOURCES
 .SS General Resources
-.PP
 In addition to standard X and Motif toolkit resources, following resources
-are used by XFile\.
+are used by XFile.
 .TP
 \fBappNameInTitle\fP \fIBoolean\fP
 Show application name (XFile) in the title bar if True, only current directory
-name/path otherwise\. Default is False\.
+name/path otherwise. Default is False.
 .TP
 \fBconfirmRemoval\fP always|multiple
-Controls whether file removal actions must be confirmed by the user\.
+Controls whether file removal actions must be confirmed by the user.
 If set to \fIalways\fP, the user is prompted before every removal, if
 set to \fImultiple\fP the user is prompted when removing more than three
-files, or a directory\. Default is \fIalways\fP\.
+files, or a directory. Default is \fIalways\fP.
 .TP
 \fBdefaultPath\fP \fIString\fP
 Specifies the default startup path if none was specified on the command line.
-Default is the current directory\.
+Default is the current directory.
 .TP
 \fBfilterDirectories\fP \fIBoolean\fP
 If True, filter pattern (see the \-f option and the View\->Filter... menu item)
-will also affect directories, files only otherwise\. Default is False\.
+will also affect directories, files only otherwise. Default is False.
 .TP
 \fBfullPathInTitle\fP \fIBoolean\fP
 Show full path to the current directory in the title bar if True,
-only current directory name otherwise\. Default is False\.
+only current directory name otherwise. Default is False.
 .TP
 \fBhistoryMaxEntries\fP \fIInteger\fP
 Specifies the maximum number of entries to be stored in history\.
 Default is 8\.
 .TP
 \fBiconSize\fP auto|tiny|small|medium|large
-Sets the size of icons displayed in the file list\. Default is \fBauto\fP,
-in which case the size is deduced from font height\.
+Sets the size of icons displayed in the file list. Default is \fBauto\fP,
+in which case the size is deduced from font height.
 .TP
 \fBmediaDirectory\fP \fIString\fP
-Specifies a mount daemon managed directory, if any (typically /media/$LOGNAME)\.
-Environment variables in \fBsh\fP syntax will be expanded accordingly\.
-This resource is not set by default\.
+Specifies a mount daemon managed directory, if any (typically /media/$LOGNAME).
+Environment variables in \fBsh\fP syntax will be expanded accordingly.
+This resource is not set by default.
 .TP
 \fBmediaMountCommand\fP
 Specifies a mount daemon specific command to mount mount\-points within
-the daemon managed media directory (see \fBmediaDirectory\fP)\. This resource
-is not set by default\.
+the daemon managed media directory (see \fBmediaDirectory\fP). This resource
+is not set by default.
 .TP
 \fBmediaUnmountCommand\fP
 Specifies a mount daemon specific command to unmount mount\-points within
 the daemon managed media directory (see \fBmediaDirectory\fP). This resource
-is not set by default\.
+is not set by default.
 .TP
 \fBmountCommand\fP \fIString\fP
-Specifies the command to be used to mount entries from fstab\.
-Default is "mount"\.
+Specifies the command to be used to mount entries from fstab.
+Default is "mount".
 .TP
 \fBunmountCommand\fP \fIString\fP
-Specifies the default command to unmount mount\-points\.
-Default is "umount"\.
+Specifies the default command to unmount mount\-points.
+Default is "umount".
 .TP
 \fBuserMounts\fP \fIBoolean\fP
 If True, Mount/Unmount entries will be shown in the context menu for mount
-points\. Default is True\.
+points. Default is True.
 .TP
 \fBpathField\fP \fIBoolean\fP
-If True, the path field will be shown in the main window\. Defaults to True\.
+If True, the path field will be shown in the main window. Defaults to True.
 .TP
 \fBrefreshInterval\fP \fIInteger\fP
 Specifies the interval in seconds at which xfile should check for changes
-within the current directory\. Default is 3 seconds\.
+within the current directory. Default is 3 seconds.
 .TP
 \fBstatusField\fP \fIBoolean\fP
-If True, the status field will be displayed in the main window\.
-Defaults to True\.
+If True, the status field will be displayed in the main window.
+Defaults to True.
 .TP
 \fBshowAll\fP \fIBoolean\fP
-Show all files (including ones starting with dot) by default\. This option
-may be inverted using command line parameters. Default is false\.
+Show all files (including ones starting with dot) by default. This option
+may be inverted using command line parameters. Default is false.
 .TP
 \fBterminal\fP \fIString\fP
-Specifies the command to run a terminal emulator\. Note that this differs from
-the \fBXFile\.variables\.terminal\fP (see \fBFILE TYPE DATABASE\fP) resource,
+Specifies the command to run a terminal emulator. Note that this differs from
+the \fBXFile.variables.terminal\fP (see \fBFILE TYPE DATABASE\fP) resource,
 in that it specifies a command to run an interactive shell session.
 .TP
 \fBuserDatabaseOnly\fP \fIBoolean\fP
-If True, only user ($HOME/\.xfile/*\.db) file type database is parsed, default
-database is ignored. Default is False\.
+If True, only user ($HOME/.xfile/*.db) file type database is parsed, default
+database is ignored. Default is False.
 .TP
 \fBvariables.\fP\fIname\fP \fIString\fP
 Defines a local environment variable used by the file type database
@@ -91,20 +90,19 @@ Defines a local environment variable used by the file type database
 \fIString\fP expansion.
 .TP
 \fBwmIconForeground\fP \fIColor\fP, \fBwmIconBackground\fP \fIColor\fP
-Colors to be used for rendering default window manager icons\.
+Colors to be used for rendering default window manager icons.
 .SS File List Widget Resources
-.PP
 The file list widget is the central element of the XFile window.
-It displays directory contents and provides interaction functionality\.
+It displays directory contents and provides interaction functionality.
 .PP
-The class name of the widget is \fBFileList\fP, the widget name \fBfileList\fP\.
+The class name of the widget is \fBFileList\fP, the widget name \fBfileList\fP.
 Aside from resources described below, the widget inherits resources from
-XmPrimitive(3)\.
+XmPrimitive(3).
 .TP
 \fBautoScrollSpeed\fP \fIInteger\fP
 Specifies auto-scroll speed (when performing rectangular selection and the
-mouse pointer is moved beyond an edge of the view)\. Must be an \fIInteger\fP
-between 1 and 10\. Default is 3\.
+mouse pointer is moved beyond an edge of the view). Must be an \fIInteger\fP
+between 1 and 10. Default is 3.
 .TP
 \fBcaseSensitive\fP \fIBoolean\fP
 If \fBTrue\fP, character case will be taken into account when sorting files,
@@ -112,90 +110,89 @@ which results in uppercase file names to be grouped separately.
 Default is \fBFalse\fP. See also \fBCAVEATS\fB.
 .TP
 \fBdoubleClickInterval\fP \fIInteger\fP
-Specifies the double-click interval in milliseconds\.
+Specifies the double-click interval in milliseconds.
 .TP
 \fBdragOffset\fP \fIDimension\fP
 Specifies the number of pixels the cursor must move while the primary button
-is pressed to engage "drag" action (e.g. rectangular selection)\. Default is 4\.
+is pressed to engage "drag" action (e.g. rectangular selection). Default is 4.
 .TP
 \fBselectColor\fP \fIColor\fP
-Color to be used to draw the background of selected items\.
+Color to be used to draw the background of selected items.
 .TP
 \fBhorizontalSpacing\fP \fIDimension\fP
-Specifies horizontal spacing between list items. Default is 2\.
+Specifies horizontal spacing between list items. Default is 2.
 .TP
 \fBlabelMargin\fP \fIDimension\fP
-Specifies the amount of space between the icon an the label of list items\.
-Default is 2\.
+Specifies the amount of space between the icon an the label of list items.
+Default is 2.
 .TP
 \fBlabelSpacing\fP \fIDimension\fP
-Specifies the amount of space between columns in detailed list view\.
-Default is derived from font size used to render the text\.
+Specifies the amount of space between columns in detailed list view.
+Default is derived from font size used to render the text.
 .TP
 \fBlookupTimeout\fP \fIinteger\fP
 This resource specifies the amount of time in seconds before incremental
-search is reset\. It may also be reset by pressing the key bound to osfCancel
-(Escape by default)\.
+search is reset. It may also be reset by pressing the key bound to osfCancel
+(Escape by default).
 .TP
 \fBmarginWidth\fP \fIDimension\fP, \fBmarginHeight\fP \fIDimension\fP
 Specifies the amount of space between edges of the list view and displayed
-items. Default is 2\.
+items. Default is 2.
 .TP
 \fBoutlineWidth\fP \fIDimension\fP
-Specifies the width of the selection outline\. Default is 1\.
+Specifies the width of the selection outline. Default is 1.
 .TP
 \fBshortenLabels\fP \fIInteger\fP
 Specifies length in characters for file name labels at which these will be
-abbreviated\. The value of zero disables label shortening\. The minimum value
-allowed is 12\.
+abbreviated. The value of zero disables label shortening. The minimum value
+allowed is 12.
 .TP
 \fBsortDirection\fP ascend|descend
-Specifies the file name sorting direction of displayed items. Default is ascend\.
+Specifies the file name sorting direction of displayed items.
+Default is ascend.
 .TP
 \fBsortOrder\fP name|time|suffix|type|size
-Specifies the sorting order of displayed items. Default is \fIname\fP\.
+Specifies the sorting order of displayed items. Default is \fIname\fP.
 .TP
 \fBsilent\fP \fIBoolean\fP
-Specifies whether audible feedback is disabled for item look\-up\.
-Default is \fBFalse\fP\.
+Specifies whether audible feedback is disabled for item look\-up.
+Default is \fBFalse\fP.
 .TP
 \fBnumberedSort\fP \fIBoolean\fP
 Specifies whether coinciding strings of digits in file names should be
 compared numerically, so that numbered files will be listed in the order
-expected\. Default is \fBTrue\fP\. See also \fBcaseSensitive\fP and
+expected. Default is \fBTrue\fP. See also \fBcaseSensitive\fP and
 \fBCAVEATS\fP.
 .TP
 \fBviewMode\fP compact|detailed
-Specifies the view mode. Default is compact\.
+Specifies the view mode. Default is compact.
 .SS File List Widget Fonts
-.PP
 The file list widget defines four rendition tags to display labels for different
 kinds of Unix file types:
 .PP
 .nf
 .ta 1i
 \fBregular\fP	Regular files
-\fBspecial\fP	Special files (devices, pipes, etc\.)
+\fBspecial\fP	Special files (devices, pipes, etc.)
 \fBdirectory\fP	Directories
 \fBsymlink\fP	Symbolic links
 .PP
 By default, labels of symbolic links are rendered in italic and special
-files in bold\.
+files in bold.
 .SS Path Field Resources
-.PP
 The path field widget consists of a text field that displays the current
 working directory with an array of push buttons, each representing an element
-of the path, above\.
+of the path, above.
 .PP
 The class name of the widget is \fBPathField\fP, the widget name
 \fBpathField\fP. Aside from resources described below, the widget inherits
-resources from XmManager(3)\.
+resources from XmManager(3).
 .TP
 \fBbuttonHeight \fIInteger\fP\fP
 A value in percent that sets the vertical size of path element buttons
-relative to the height of the font used to draw text in the widget\.
-Default is 100\.
+relative to the height of the font used to draw text in the widget.
+Default is 100.
 .TP
 \fBcompactPath\fP \fIBoolean\fP
-If True, the $HOME part of the path will be represented by a tilde\.
-Default is true\.
+If True, the $HOME part of the path will be represented by a tilde.
+Default is true.
