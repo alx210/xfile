@@ -366,7 +366,7 @@ static XtGeometryResult query_geometry(Widget w,
 {
 	pg->request_mode = CWHeight;
 	pg->height = compute_height(w);
-	return XtGeometryAlmost;
+	return XmeReplyToQueryGeometry(w, ig, pg);
 }
 
 static Boolean set_values(Widget wcur, Widget wreq,

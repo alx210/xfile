@@ -1708,10 +1708,11 @@ static XtGeometryResult query_geometry(Widget w,
 			update_sbar_visibility(w, rwidth,rheight);
 			update_sbar_range(w, rwidth, rheight);
 		}
+		pg->request_mode = (ig->request_mode & (CWWidth | CWHeight));
+		pg->width = rwidth;
+		pg->height = rheight;
 	}
-
-	memcpy(pg, ig, sizeof(XtWidgetGeometry));
-	return XtGeometryYes;
+	return XmeReplyToQueryGeometry(w, ig, pg);
 }
 
 static Boolean widget_display_rect(Widget w, XRectangle *r)
@@ -1904,14 +1905,14 @@ static Boolean set_values(Widget wcur, Widget wreq,
 	if( (cur->primitive.foreground != set->primitive.foreground) ||
 		(cur->core.background_pixel != set->core.background_pixel) ) {
 
-		XtReleaseGC(wcur, set->file_list.label_gc);
-		XtReleaseGC(wcur, set->file_list.icon_gc);
-		XtReleaseGC(wcur, set->file_list.bg_gc);
-		XtReleaseGC(wcur, set->file_list.nfbg_gc);
-		XtReleaseGC(wcur, set->file_list.sbg_gc);
-		XtReleaseGC(wcur, set->file_list.xor_gc);
-		XFreeColors(XtDisplay(wcur), cur->core.colormap,
-			&cur->file_list.nfbg_pixel, 1, 0);
+		XtReleaseGC(wset, set->file_list.label_gc);
+		XtReleaseGC(wset, set->file_list.icon_gc);
+		XtReleaseGC(wset, set->file_list.bg_gc);
+		XtReleaseGC(wset, set->file_list.nfbg_gc);
+		XtReleaseGC(wset, set->file_list.sbg_gc);
+		XtReleaseGC(wset, set->file_list.xor_gc);
+		XFreeColors(XtDisplay(wset), set->core.colormap,
+			&set->file_list.nfbg_pixel, 1, 0);
 		
 		init_gcs(wset);
 	}
