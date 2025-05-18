@@ -96,7 +96,7 @@ char* mbs_tolower(const char *src)
 	int ns, nd;
 	char *dest;
 
-	dest = malloc(nbytes + 3);
+	dest = malloc(mb_strlen(src) * MB_CUR_MAX + 1);
 	if(!dest) return NULL;
 
 
@@ -113,7 +113,7 @@ char* mbs_tolower(const char *src)
 		}
 
 		nd = wctomb(dest + id, towlower(wc));
-		if( (nd == -1) || (nd > ns)) {
+		if(nd == -1) {
 			dest[id] = '?';
 			nd = 1;
 		}
