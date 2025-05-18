@@ -59,6 +59,24 @@ static XtResource resources[] = {
 		(void*)default_select_color
 	},
 	{
+		XmNmarginWidth,
+		XmCMarginWidth,
+		XtRDimension,
+		sizeof(Dimension),
+		RFO(progress.hpadding),
+		XtRImmediate,
+		(XtPointer)2
+	},
+	{
+		XmNmarginHeight,
+		XmCMarginHeight,
+		XtRDimension,
+		sizeof(Dimension),
+		RFO(progress.vpadding),
+		XtRImmediate,
+		(XtPointer)2
+	},
+	{
 		XmNvalue,
 		XmCValue,
 		XtRInt,
@@ -151,9 +169,6 @@ static void redraw(Widget w)
 	
 	if( (width < shadow * 2) || (height < shadow * 2) ) return;
 
-	XFillRectangle(dpy, wnd, prog->bg_gc, shadow, shadow,
-		width - shadow, height - shadow);
-
 	XmeDrawShadows(dpy, wnd, prim->top_shadow_GC, prim->bottom_shadow_GC,
 		0, 0, width, height, shadow, XmSHADOW_IN);
 	
@@ -164,14 +179,18 @@ static void redraw(Widget w)
 	XmStringExtent(prog->text_rt, text, &text_width, &text_height);
 
 	if(prog->value == PROG_INTER) {
+		XSetFillStyle(dpy, prog->abg_gc, FillSolid);
+		XFillRectangle(dpy, wnd, prog->bg_gc, cx, cy, cw, ch);
 		XSetFillStyle(dpy, prog->abg_gc, FillStippled);
 		XFillRectangle(dpy, wnd, prog->abg_gc, cx, cy, cw, ch);
+		XFlush(dpy);
 	} else {
 		pw = ((float)cw / 100) * prog->value;
 		tx = cx + (cw - text_width) / 2;
 		ty = cy + (ch - text_height) / 2;
 
 		XSetFillStyle(dpy, prog->abg_gc, FillSolid);
+		XFillRectangle(dpy, wnd, prog->bg_gc, pw, cy, cw - pw, ch);
 		XFillRectangle(dpy, wnd, prog->abg_gc, cx, cy, pw, ch);
 		
 		if((prog->fg_pixel != prog->afg_pixel) && (pw >= tx)) {
@@ -324,8 +343,6 @@ static void initialize(Widget wreq, Widget wnew,
 	
 	XmRenderTableGetDefaultFontExtents(
 		p->text_rt,	&height, &ascent, &descent);
-	p->hpadding = height / 5;
-	p->vpadding = height / 5;
 	p->font_height = height;
 
 	init_gcs(wnew);
@@ -418,8 +435,6 @@ static Boolean set_values(Widget wcur, Widget wreq,
 
 		XmRenderTableGetDefaultFontExtents(
 			cur->progress.text_rt, &height, &ascent, &descent);
-		cur->progress.hpadding = height / 4;
-		cur->progress.vpadding = height / 3;
 		cur->progress.font_height = height;
 	}
 
@@ -533,7 +548,8 @@ void ProgressSetValue(Widget w, int value)
 	if((value < (-1)) || (value > 100)) {
 		WARNING(w, "Invalid progress value\n");
 		return;
-	}
+	} else if(value == p->value) return;
+	
 	if(p->xm_text) {
 		XmStringFree(p->xm_text);
 		p->xm_text = NULL;

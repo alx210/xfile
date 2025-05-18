@@ -2,7 +2,6 @@
 ! XFile App-Defaults 
 !-----------------------------------------------------------------------------
 XFile.geometry: 480x320
-XFile.title: XFile
 XFile.appNameInTitle: False
 XFile.fullPathInTitle: False
 XFile.confirmRemoval: always
@@ -38,7 +37,6 @@ XFile.unmountCommand: umount
 ! Environment variables used by the file type database
 !-----------------------------------------------------------------------------
 XFile.variable.terminal: xterm -e
-XFile.variable.terminalHold: xterm -hold -e
 XFile.variable.textEditor: xedit
 XFile.variable.imageViewer: ximaging
 XFile.variable.imageEditor: xpaint

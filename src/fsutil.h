@@ -9,10 +9,12 @@
 
 #define SIZE_CS_MAX 32
 #define MODE_CS_MAX 12
+#define FS_KILO 1024
 
 struct fsize {
-	long double size;
-	unsigned int factor;
+	double size;
+	double factor;
+	unsigned int exp;
 };
 
 /* Adds size to fs */

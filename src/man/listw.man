@@ -1,0 +1,89 @@
+.SS File List Widget Resources
+.PP
+The file list widget is the central element of the XFile window.
+It displays directory contents and provides interaction functionality.
+.PP
+The class name of the widget is \fBFileList\fP, the widget name \fBfileList\fP.
+Aside from resources described below, the widget inherits resources from
+XmPrimitive(3).
+.TP
+\fBautoScrollSpeed\fP \fIInteger\fP
+Specifies auto-scroll speed (when performing rectangular selection and the
+mouse pointer is moved beyond an edge of the view). Must be an \fIInteger\fP
+between 1 and 10. Default is 3.
+.TP
+\fBcaseSensitive\fP \fIBoolean\fP
+If \fBTrue\fP, character case will be taken into account when sorting files,
+which results in uppercase file names to be grouped separately.
+Default is \fBFalse\fP. See also \fBCAVEATS\fB.
+.TP
+\fBdoubleClickInterval\fP \fIInteger\fP
+Specifies the double-click interval in milliseconds.
+.TP
+\fBdragOffset\fP \fIDimension\fP
+Specifies the number of pixels the cursor must move while the primary button
+is pressed to engage "drag" action (e.g. rectangular selection). Default is 4.
+.TP
+\fBselectColor\fP \fIColor\fP
+Color to be used to draw the background of selected items.
+.TP
+\fBhorizontalSpacing\fP \fIDimension\fP
+Specifies horizontal spacing between list items. Default is 2.
+.TP
+\fBlabelMargin\fP \fIDimension\fP
+Specifies the amount of space between the icon an the label of list items.
+Default is 2.
+.TP
+\fBlabelSpacing\fP \fIDimension\fP
+Specifies the amount of space between columns in detailed list view.
+Default is derived from font size used to render the text.
+.TP
+\fBlookupTimeout\fP \fIinteger\fP
+This resource specifies the amount of time in seconds before incremental
+search is reset. It may also be reset by pressing the key bound to osfCancel
+(Escape by default).
+.TP
+\fBmarginWidth\fP \fIDimension\fP, \fBmarginHeight\fP \fIDimension\fP
+Specifies the amount of space between edges of the list view and displayed
+items. Default is 2.
+.TP
+\fBoutlineWidth\fP \fIDimension\fP
+Specifies the width of the selection outline. Default is 1.
+.TP
+\fBshortenLabels\fP \fIInteger\fP
+Specifies length in characters for file name labels at which these will be
+abbreviated. The value of zero disables label shortening. The minimum value
+allowed is 12.
+.TP
+\fBsortDirection\fP ascend|descend
+Specifies the file name sorting direction of displayed items. Default is ascend.
+.TP
+\fBsortOrder\fP name|time|suffix|type|size
+Specifies the sorting order of displayed items. Default is \fIname\fP.
+.TP
+\fBsilent\fP \fIBoolean\fP
+Specifies whether audible feedback is disabled for item look\-up.
+Default is \fBFalse\fP.
+.TP
+\fBnumberedSort\fP \fIBoolean\fP
+Specifies whether coinciding strings of digits in file names should be
+compared numerically, so that numbered files will be listed in the order
+expected. Default is \fBTrue\fP. See also \fBcaseSensitive\fP and
+\fBCAVEATS\fP.
+.TP
+\fBviewMode\fP compact|detailed
+Specifies the view mode. Default is compact.
+.SS File List Widget Fonts
+.PP
+The file list widget defines four rendition tags to display labels for different
+kinds of Unix file types:
+.PP
+.nf
+.ta 1i
+\fBregular\fP	Regular files
+\fBspecial\fP	Special files (devices, pipes, etc.)
+\fBdirectory\fP	Directories
+\fBsymlink\fP	Symbolic links
+.PP
+By default, labels of symbolic links are rendered in italic and special
+files in bold.

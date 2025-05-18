@@ -1827,6 +1827,11 @@ static void initialize(Widget wreq, Widget wnew,
 	if(fl->file_list.wvscrl) XtSetValues(fl->file_list.wvscrl, args, n);
 	
 	init_gcs(wnew);
+	
+	if(CORE_WIDTH(wreq) == 0)
+		CORE_WIDTH(wnew) = DEFAULT_WIDTH;
+	if(CORE_HEIGHT(wreq) == 0)
+		CORE_HEIGHT(wnew) = DEFAULT_HEIGHT;
 }
 
 static void init_gcs(Widget w)
@@ -1842,8 +1847,8 @@ static void init_gcs(Widget w)
 	gc_mask = GCForeground | GCFunction;
 
 	/* XmStringDraw needs an allocated GC */
-	fl->file_list.label_gc = XtAllocateGC(w, 0,	gc_mask, &gcv,
-		gc_mask | GCClipMask | GCFont, 0);
+	fl->file_list.label_gc = XtAllocateGC(w, 0,	gc_mask,
+		&gcv, GCForeground, 0);
 
 	/* stipple is used to shade selected icons and is inited in realize()
 	 * since we need a window handle to create the bitmap */

@@ -91,7 +91,7 @@ Tarball {
 	}
 	action {
 		&List: %terminal "tar -tf %n | less"
-		&Extract: %terminalHold tar -xf %n
+		&Extract: %terminal "tar -tf %n | less"
 	}
 }
 

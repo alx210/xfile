@@ -52,6 +52,7 @@
 /* Forward declarations */
 static void sigchld_handler(int);
 static void sigusr_handler(int);
+static void sigpipe_handler(int);
 static void create_main_window(void);
 static void create_main_menus(void);
 static Boolean load_db(void);
@@ -371,6 +372,7 @@ int main(int argc, char **argv)
 	rsignal(SIGCHLD, sigchld_handler, SA_NOCLDSTOP);
 	rsignal(SIGUSR1, sigusr_handler, 0);
 	rsignal(SIGUSR2, sigusr_handler, 0);
+	rsignal(SIGPIPE, sigpipe_handler, 0);
 	
 	res = initialize();
 	if(res) return res;
@@ -723,6 +725,11 @@ static void sigchld_handler(int sig)
 static void sigusr_handler(int sig)
 {
 	XtNoticeSignal(sigchld_sigid);
+}
+
+static void sigpipe_handler(int sig)
+{
+
 }
 
 /* Deferred SIGCHLD handler for pids that aren't our reader proc */

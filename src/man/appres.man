@@ -2,88 +2,88 @@
 .SS General Resources
 .PP
 In addition to standard X and Motif toolkit resources, following resources
-are used by XFile\.
+are used by XFile.
 .TP
 \fBappNameInTitle\fP \fIBoolean\fP
 Show application name (XFile) in the title bar if True, only current directory
-name/path otherwise\. Default is False\.
+name/path otherwise. Default is False.
 .TP
 \fBconfirmRemoval\fP always|multiple
-Controls whether file removal actions must be confirmed by the user\.
+Controls whether file removal actions must be confirmed by the user.
 If set to \fIalways\fP, the user is prompted before every removal, if
 set to \fImultiple\fP the user is prompted when removing more than three
-files, or a directory\. Default is \fIalways\fP\.
+files, or a directory. Default is \fIalways\fP.
 .TP
 \fBdefaultPath\fP \fIString\fP
 Specifies the default startup path if none was specified on the command line.
-Default is the current directory\.
+Default is the current directory.
 .TP
 \fBfilterDirectories\fP \fIBoolean\fP
 If True, filter pattern (see the \-f option and the View\->Filter... menu item)
-will also affect directories, files only otherwise\. Default is False\.
+will also affect directories, files only otherwise. Default is False.
 .TP
 \fBfullPathInTitle\fP \fIBoolean\fP
 Show full path to the current directory in the title bar if True,
-only current directory name otherwise\. Default is False\.
+only current directory name otherwise. Default is False.
 .TP
 \fBhistoryMaxEntries\fP \fIInteger\fP
-Specifies the maximum number of entries to be stored in history\.
-Default is 8\.
+Specifies the maximum number of entries to be stored in history.
+Default is 8.
 .TP
 \fBiconSize\fP auto|tiny|small|medium|large
-Sets the size of icons displayed in the file list\. Default is \fBauto\fP,
-in which case the size is deduced from font height\.
+Sets the size of icons displayed in the file list. Default is \fBauto\fP,
+in which case the size is deduced from font height.
 .TP
 \fBmediaDirectory\fP \fIString\fP
-Specifies a mount daemon managed directory, if any (typically /media/$LOGNAME)\.
-Environment variables in \fBsh\fP syntax will be expanded accordingly\.
-This resource is not set by default\.
+Specifies a mount daemon managed directory, if any (typically /media/$LOGNAME).
+Environment variables in \fBsh\fP syntax will be expanded accordingly.
+This resource is not set by default.
 .TP
 \fBmediaMountCommand\fP
 Specifies a mount daemon specific command to mount mount\-points within
-the daemon managed media directory (see \fBmediaDirectory\fP)\. This resource
-is not set by default\.
+the daemon managed media directory (see \fBmediaDirectory\fP). This resource
+is not set by default.
 .TP
 \fBmediaUnmountCommand\fP
 Specifies a mount daemon specific command to unmount mount\-points within
 the daemon managed media directory (see \fBmediaDirectory\fP). This resource
-is not set by default\.
+is not set by default.
 .TP
 \fBmountCommand\fP \fIString\fP
-Specifies the command to be used to mount entries from fstab\.
-Default is "mount"\.
+Specifies the command to be used to mount entries from fstab.
+Default is "mount".
 .TP
 \fBunmountCommand\fP \fIString\fP
-Specifies the default command to unmount mount\-points\.
-Default is "umount"\.
+Specifies the default command to unmount mount\-points.
+Default is "umount".
 .TP
 \fBuserMounts\fP \fIBoolean\fP
 If True, Mount/Unmount entries will be shown in the context menu for mount
-points\. Default is True\.
+points. Default is True.
 .TP
 \fBpathField\fP \fIBoolean\fP
-If True, the path field will be shown in the main window\. Defaults to True\.
+If True, the path field will be shown in the main window. Defaults to True.
 .TP
 \fBrefreshInterval\fP \fIInteger\fP
 Specifies the interval in seconds at which xfile should check for changes
-within the current directory\. Default is 3 seconds\.
+within the current directory. Default is 3 seconds.
 .TP
 \fBstatusField\fP \fIBoolean\fP
-If True, the status field will be displayed in the main window\.
-Defaults to True\.
+If True, the status field will be displayed in the main window.
+Defaults to True.
 .TP
 \fBshowAll\fP \fIBoolean\fP
-Show all files (including ones starting with dot) by default\. This option
-may be inverted using command line parameters. Default is false\.
+Show all files (including ones starting with dot) by default. This option
+may be inverted using command line parameters. Default is false.
 .TP
 \fBterminal\fP \fIString\fP
-Specifies the command to run a terminal emulator\. Note that this differs from
-the \fBXFile\.variables\.terminal\fP (see \fBFILE TYPE DATABASE\fP) resource,
+Specifies the command to run a terminal emulator. Note that this differs from
+the \fBXFile.variables.terminal\fP (see \fBFILE TYPE DATABASE\fP) resource,
 in that it specifies a command to run an interactive shell session.
 .TP
 \fBuserDatabaseOnly\fP \fIBoolean\fP
-If True, only user ($HOME/\.xfile/*\.db) file type database is parsed, default
-database is ignored. Default is False\.
+If True, only user ($HOME/.xfile/*.db) file type database is parsed, default
+database is ignored. Default is False.
 .TP
 \fBvariables.\fP\fIname\fP \fIString\fP
 Defines a local environment variable used by the file type database
@@ -91,4 +91,4 @@ Defines a local environment variable used by the file type database
 \fIString\fP expansion.
 .TP
 \fBwmIconForeground\fP \fIColor\fP, \fBwmIconBackground\fP \fIColor\fP
-Colors to be used for rendering default window manager icons\.
+Colors to be used for rendering default window manager icons.

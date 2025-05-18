@@ -15,12 +15,11 @@
 #include <unistd.h>
 #include <signal.h>
 #include <dirent.h>
+#include <time.h>
 #include <Xm/Xm.h>
 #include <Xm/MwmUtil.h>
-#include <Xm/TextF.h>
 #include <Xm/Label.h>
 #include <Xm/PushB.h>
-#include <Xm/RowColumn.h>
 #include <Xm/Form.h>
 #include <Xm/SeparatoG.h>
 #include "main.h"
@@ -34,11 +33,16 @@
 #include "path.h"
 #include "mbstr.h"
 #include "fsutil.h"
+#include "progw.h"
 #include "debug.h"
 
 /* Icon xbm */
 #include "xbm/copymove.xbm"
 #include "xbm/copymove_m.xbm"
+#include "xbm/copy.xpm"
+#include "xbm/move.xpm"
+#include "xbm/delete.xpm"
+#include "xbm/chattr.xpm"
 
 /* Wait before mapping the progress dialog */
 #define PROG_MAP_TIMEOUT 500
@@ -46,12 +50,16 @@
 /* Number of R/W blocks (st_blksize) */
 #define COPY_BUFFER_NBLOCKS 16
 
+/* GUI messages */
+#define MSG_STAT 0
+#define MSG_PROG 1
+#define MSG_FDBK 2
+
 /* Feedback dialog type and button ids; see feedback_dialog() */
-#define FBT_NONE			0
-#define FBT_RETRY_IGNORE	1
-#define FBT_CONTINUE_SKIP	2
-#define FBT_SKIP_CANCEL		3
-#define FBT_FATAL			4
+#define FBT_RETRY_IGNORE	0
+#define FBT_CONTINUE_SKIP	1
+#define FBT_SKIP_CANCEL		2
+#define FBT_FATAL			3
 
 #define FB_RETRY_CONTINUE	0
 #define FB_SKIP_IGNORE		1
@@ -60,9 +68,8 @@
 #define FB_NOPTIONS 4
 #define FB_VALID_ID(id) ((id) >= 0 && (id) <= 3)
 
-/* Initial progress dialog source/destination label width in
- * characters, also controls when path/file names get abbreviated */
-#define PROG_FNAME_MAX	50
+/* Controls when path/file names get abbreviated */
+#define PROG_FNAME_MAX	32
 
 #define RPERM (S_IRUSR|S_IRGRP|S_IROTH)
 #define WPERM (S_IWUSR|S_IWGRP|S_IWOTH)
@@ -75,6 +82,8 @@ enum wp_action {
 	WP_DELETE,
 	WP_CHATTR
 };
+
+#define NUM_ACTIONS 4
 
 struct wp_data {
 	enum wp_action action;
@@ -99,23 +108,21 @@ struct wp_data {
 	Boolean ignore_special;
 	void *copy_buffer;
 	size_t copy_buffer_size;
+	double one_percent_size;
+	double percent_total;
 };
 
 /* Instance data */
 struct fsproc_data {
+	enum wp_action action;
 	Widget wshell;
 	Widget wmain;
-	Widget wcol;
-	Widget wsrc;
-	Widget wsrc_label;
-	Widget wdest;
-	Widget wdest_label;
-	Widget witem;
-	Widget witem_label;
+	Widget wprstatus;
+	Widget wprogress;
+	Widget wprcancel;
 	Widget wfbdlg;
 	Widget wfbmsg;
 	Widget wfbinput[FB_NOPTIONS];
-	Widget wcancel;
 	XtSignalId sigchld_sid;
 	XtIntervalId map_iid;
 	XtInputId msg_input_iid;
@@ -137,9 +144,9 @@ static struct fsproc_data *fs_procs = NULL;
 #define MKDIR_PERMS (S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH)
 
 /* main/gui (progress window, feedback dialog) process routines */
-static int create_progress_ui(struct fsproc_data*, enum wp_action);
+static int create_progress_ui(struct fsproc_data*);
 static void destroy_progress_ui(struct fsproc_data*);
-static struct fsproc_data *init_fsproc(void);
+static struct fsproc_data *init_fsproc(enum wp_action);
 static void destroy_fsproc(struct fsproc_data*);
 static void map_timeout_cb(XtPointer, XtIntervalId*);
 static void shell_map_cb(Widget, XtPointer, XEvent*, Boolean*);
@@ -150,12 +157,16 @@ static void feedback_cb(Widget, XtPointer, XtPointer);
 static void window_close_cb(Widget, XtPointer, XtPointer);
 static void progress_cb(XtPointer, int*, XtInputId*);
 static void xt_prog_sigchld_handler(XtPointer, XtSignalId*);
-static void quit_with_error(struct fsproc_data *d, const char*);
 
 /* background/work process routines */
 static int wp_main(struct fsproc_data*, struct wp_data*);
-static int wp_post_message(struct wp_data*,
-	int, const char*, const char*, const char*, const char*);
+static void wp_post_stat(struct wp_data*, const char*);
+static void wp_post_astat(struct wp_data*,
+	const char*, const char*, const char*);
+static void wp_post_prog(struct wp_data*, int);
+static int wp_post_msg(struct wp_data*, int, const char*);
+static int wp_count(struct wp_data*, const char*);
+static int wp_count_tree(const char*, struct fsize*);
 static int wp_copy_file(struct wp_data*,
 	const char*, const char*, Boolean);
 static int wp_copy_tree(struct wp_data*,
@@ -176,12 +187,13 @@ static int wp_sym_link(struct wp_data*,
 	const char *target, const char *link);
 static char* wp_error_string(const char *verb, const char *src_name,
 	const char *dest_name, const char *errstr);
+static void wp_sigpipe_handler(int);
 
 /*
  * Allocates, initializes and inserts an fsproc_data struct
  * into the fs_procs list. Returns NULL on error.
  */
-static struct fsproc_data *init_fsproc(void)
+static struct fsproc_data *init_fsproc(enum wp_action action)
 {
 	int pipe_fd[2];
 	struct fsproc_data *d;
@@ -210,6 +222,8 @@ static struct fsproc_data *init_fsproc(void)
 
 	d->sigchld_sid = XtAppAddSignal(app_inst.context,
 		xt_prog_sigchld_handler, (XtPointer)d);
+	
+	d->action = action;
 
 	d->next = fs_procs;
 	fs_procs = d;
@@ -251,17 +265,19 @@ static void destroy_fsproc(struct fsproc_data *d)
 /*
  * Builds the progress dialog
  */
-static int create_progress_ui(struct fsproc_data *d, enum wp_action action)
+static int create_progress_ui(struct fsproc_data *d)
 {
 	Cardinal n;
-	Arg args[16];
+	Arg args[20];
 	Widget wform;
 	XmString xms;
-	char *title = NULL;
-	Pixel frm_bg;
-	XmRenderTable label_rt;
+	static Pixmap label_pix[NUM_ACTIONS] = { None };
 	static Pixmap icon_pix = None;
-	static Pixmap icon_mask = None;
+	static Pixmap icon_mask;
+	static char *title_str[NUM_ACTIONS] = {
+		"Copying", "Moving", "Deleting", "Setting Attributes"
+	};
+
 	XtCallbackRec destroy_cbr[] = {
 		{ sub_shell_destroy_cb, NULL }, /* all sub-shells must have that */
 		{ destroy_cb, (XtPointer) d},
@@ -272,120 +288,65 @@ static int create_progress_ui(struct fsproc_data *d, enum wp_action action)
 		{ (XtCallbackProc)NULL, NULL}
 	};
 
-	if(!icon_pix) create_wm_icon(copymove, &icon_pix, &icon_mask);
+	if(icon_pix == None) create_wm_icon(copymove, &icon_pix, &icon_mask);
 
-	switch(action) {
-		case WP_COPY:
-		title = "Copying";
-		break;
-		case WP_MOVE:
-		title = "Moving";
-		break;
-		case WP_DELETE:
-		title = "Deleting";
-		break;
-		case WP_CHATTR:
-		title = "Setting Attributes";
-		break;
-	}
-	
 	n = 0;
 	XtSetArg(args[n], XmNdestroyCallback, destroy_cbr); n++;
 	XtSetArg(args[n], XmNmappedWhenManaged, False); n++;
 	XtSetArg(args[n], XmNmwmFunctions, MWM_FUNC_MOVE | MWM_FUNC_MINIMIZE); n++;
 	XtSetArg(args[n], XmNallowShellResize, True); n++;
-	XtSetArg(args[n], XmNtitle, title); n++;
-	XtSetArg(args[n], XmNiconName, title); n++;
+	XtSetArg(args[n], XmNtitle, title_str[d->action]); n++;
+	XtSetArg(args[n], XmNiconName, title_str[d->action]); n++;
 	XtSetArg(args[n], XmNiconPixmap, icon_pix); n++;
 	XtSetArg(args[n], XmNiconMask, icon_mask); n++;
-	d->wshell = XtAppCreateShell(APP_NAME "Progress", APP_CLASS "Progress",
-		applicationShellWidgetClass, app_inst.display, args, n);
+	d->wshell = XtAppCreateShell(
+		APP_NAME "Progress",
+		APP_CLASS "Progress",
+		topLevelShellWidgetClass,
+		app_inst.display, args, n);
 
 	add_delete_window_handler(d->wshell, window_close_cb, (XtPointer)d);
 
 	n = 0;
-	XtSetArg(args[n], XmNhorizontalSpacing, 4); n++;
-	XtSetArg(args[n], XmNverticalSpacing, 4); n++; 
+	XtSetArg(args[n], XmNhorizontalSpacing, 8); n++;
+	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
+	XtSetArg(args[n], XmNresizePolicy, XmRESIZE_GROW); n++;
+	XtSetArg(args[n], XmNwidth, 360); n++;
 	wform = XmCreateForm(d->wshell, "form", args, n);
-	
-	n = 0;
-	XtSetArg(args[n], XmNmarginWidth, 0); n++;
-	XtSetArg(args[n], XmNmarginHeight, 0); n++;
-	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
-	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
-	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
-	XtSetArg(args[n], XmNorientation, XmVERTICAL); n++;
-	XtSetArg(args[n], XmNpacking, XmPACK_COLUMN); n++;
-	XtSetArg(args[n], XmNcolumns, 1); n++;
-	d->wcol = XmCreateRowColumn(wform, "rowColumn", args, n);
 
-	if(action == WP_CHATTR || action == WP_DELETE)
-		xms = XmStringCreateLocalized("Target");
-	else
-		xms = XmStringCreateLocalized("Source");
-	
-	n = 0;
-	XtSetArg(args[n], XmNlabelString, xms); n++;
-	d->wsrc_label = XmCreateLabel(d->wcol, "sourceLabel", args, n);
-	XmStringFree(xms);
-
-	n = 0;
-	XtSetArg(args[n], XmNbackground, &frm_bg); n++;
-	XtSetArg(args[n], XmNtextRenderTable, &label_rt); n++;
-	XtGetValues(d->wsrc_label, args, n);
-
-	n = 0;
-	XtSetArg(args[n], XmNeditable, False); n++;
-	XtSetArg(args[n], XmNcursorPositionVisible, False); n++;
-	XtSetArg(args[n], XmNshadowThickness, 1); n++;
-	XtSetArg(args[n], XmNmarginHeight, 1); n++;
-	XtSetArg(args[n], XmNmarginWidth, 1); n++;
-	XtSetArg(args[n], XmNtraversalOn, False); n++;
-	XtSetArg(args[n], XmNcolumns, PROG_FNAME_MAX); n++;
-	XtSetArg(args[n], XmNbackground, frm_bg); n++;
-	d->wsrc = XmCreateTextField(d->wcol, "source", args, n);
-	XtUninstallTranslations(d->wsrc);
-	
-	if(action == WP_COPY || action == WP_MOVE){
-		n = 0;
-		xms = XmStringCreateLocalized("Destination");
-		XtSetArg(args[n], XmNlabelString, xms); n++;
-		d->wdest_label = XmCreateLabel(d->wcol,
-			"destinationLabel", args, n);
-		XmStringFree(xms);
-
-		n = 0;
-		XtSetArg(args[n], XmNeditable, False); n++;
-		XtSetArg(args[n], XmNcursorPositionVisible, False); n++;
-		XtSetArg(args[n], XmNshadowThickness, 1); n++;
-		XtSetArg(args[n], XmNmarginHeight, 1); n++;
-		XtSetArg(args[n], XmNmarginWidth, 1); n++;
-		XtSetArg(args[n], XmNtraversalOn, False); n++;
-		XtSetArg(args[n], XmNcolumns, PROG_FNAME_MAX); n++;
-		XtSetArg(args[n], XmNbackground, frm_bg); n++;
-		d->wdest = XmCreateTextField(d->wcol, "destination", args, n);
-		XtUninstallTranslations(d->wdest);
+	if(label_pix[0] == None) {
+		int i;
+		char **pix_data[NUM_ACTIONS] = {
+			copy_xpm, move_xpm,
+			delete_xpm, chattr_xpm
+		};
+		
+		for(i = 0; i < NUM_ACTIONS; i++) {
+			if(!create_ui_pixmap(wform, pix_data[i], &label_pix[i], NULL))
+				label_pix[i] = XmUNSPECIFIED_PIXMAP;
+		}
 	}
 	
 	n = 0;
-	xms = XmStringCreateLocalized("Item");
+	xms = XmStringCreateLocalized("");
+	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
+	XtSetArg(args[n], XmNpixmapTextPadding, 8); n++;
+	XtSetArg(args[n], XmNlabelPixmap, label_pix[d->action]); n++;
+	XtSetArg(args[n], XmNlabelType, XmPIXMAP_AND_STRING); n++;
 	XtSetArg(args[n], XmNlabelString, xms); n++;
-	d->witem_label = XmCreateLabel(d->wcol, "itemLabel", args, n);
+	d->wprstatus = XmCreateLabel(wform, "progress", args, n);
 	XmStringFree(xms);
-
-
+	
 	n = 0;
-	XtSetArg(args[n], XmNeditable, False); n++;
-	XtSetArg(args[n], XmNcursorPositionVisible, False); n++;
-	XtSetArg(args[n], XmNshadowThickness, 1); n++;
-	XtSetArg(args[n], XmNmarginHeight, 1); n++;
-	XtSetArg(args[n], XmNmarginWidth, 1); n++;
-	XtSetArg(args[n], XmNtraversalOn, False); n++;
-	XtSetArg(args[n], XmNcolumns, PROG_FNAME_MAX); n++;
-	XtSetArg(args[n], XmNbackground, frm_bg); n++;
-	d->witem = XmCreateTextField(d->wcol, "item", args, n);
-	XtUninstallTranslations(d->witem);
-
+	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+	XtSetArg(args[n], XmNtopWidget, d->wprstatus); n++;
+	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
+	d->wprogress = CreateProgress(wform, "progressBar", args, n);
+	
 	n = 0;
 	xms = XmStringCreateLocalized("Cancel");
 
@@ -394,28 +355,21 @@ static int create_progress_ui(struct fsproc_data *d, enum wp_action action)
 	XtSetArg(args[n], XmNsensitive, True); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
-	XtSetArg(args[n], XmNtopWidget, d->wcol); n++;
+	XtSetArg(args[n], XmNtopWidget, d->wprogress); n++;
 	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNactivateCallback, cancel_cbr); n++;
-	d->wcancel = XmCreatePushButton(wform, "cancelButton", args, n);
+	d->wprcancel = XmCreatePushButton(wform, "cancelButton", args, n);
 	XmStringFree(xms);
-	
+
 	d->map_iid = XtAppAddTimeOut(app_inst.context,
 		PROG_MAP_TIMEOUT, map_timeout_cb, (XtPointer)d);
 
 	/* decremented in sub_shell_destroy_cb */
 	app_inst.num_sub_shells++;
 
-	if(action == WP_COPY || action == WP_MOVE) {
-		XtManageChild(d->wdest_label);
-		XtManageChild(d->wdest);
-		XtManageChild(d->witem_label);
-		XtManageChild(d->witem);
-	}
-	XtManageChild(d->wsrc_label);
-	XtManageChild(d->wsrc);
-	XtManageChild(d->wcancel);
-	XtManageChild(d->wcol);
+	XtManageChild(d->wprstatus);
+	XtManageChild(d->wprogress);
+	XtManageChild(d->wprcancel);
 	XtManageChild(wform);
 
 	place_shell_over(d->wshell, app_inst.wshell);
@@ -430,6 +384,8 @@ static int create_progress_ui(struct fsproc_data *d, enum wp_action action)
 
 /*
  * Destroys progress UI and feedback dialog widgets.
+ * This function is called by the SIGCHLD handler for WPs, hence it shouldn't
+ * be called after a successfull fork().
  * NOTE: associated fsproc data will be freed through shell's destroy callback.
  */
 static void destroy_progress_ui(struct fsproc_data *d)
@@ -488,7 +444,7 @@ static void cancel_cb(Widget w, XtPointer client, XtPointer call)
 static void window_close_cb(Widget w, XtPointer client, XtPointer call)
 {
 	struct fsproc_data *d = (struct fsproc_data*) client;
-	cancel_cb(d->wcancel, (XtPointer)d, NULL);
+	cancel_cb(d->wprcancel, (XtPointer)d, NULL);
 }
 
 /* Progress shell destroy callback */
@@ -499,7 +455,8 @@ static void destroy_cb(Widget w, XtPointer client, XtPointer call)
 }
 
 /*
- * GUI feedback dialog. Invoked whenever user input is required.
+ * GUI feedback dialog. Handles WP's MSG_FDBK messages and posts back
+ * a response (in feedback_cb).
  */
 static void feedback_dialog(struct fsproc_data *d, int type, const char *msg)
 {
@@ -508,12 +465,15 @@ static void feedback_dialog(struct fsproc_data *d, int type, const char *msg)
 	Cardinal i;
 	XmString xms;
 	XmString *pxms = NULL;
+	static Pixmap err_pixmap = None;
+	static Pixmap warn_pixmap = None;
 	static XmString ret_ign_labels[FB_NOPTIONS];
 	static XmString cont_skip_labels[FB_NOPTIONS];
 
 	
 	if(!d->wfbdlg) {
 		Widget wsep;
+		
 		XtCallbackRec button_cbr[] = {
 			{ (XtCallbackProc)feedback_cb, (XtPointer)d},
 			{ NULL, NULL}
@@ -525,14 +485,14 @@ static void feedback_dialog(struct fsproc_data *d, int type, const char *msg)
 		char* const cont_skip_sz[] = {
 			"Proceed", "Skip", "Skip All", "Cancel"
 		};
-		
+
 		xms = XmStringCreateLocalized(APP_TITLE);
 		XtSetArg(args[n], XmNdeleteResponse, XmDO_NOTHING); n++;
 		XtSetArg(args[n], XmNdialogTitle, xms); n++;
 		XtSetArg(args[n], XmNnoResize, True); n++;
 		XtSetArg(args[n], XmNautoUnmanage, True); n++;
-		XtSetArg(args[n], XmNhorizontalSpacing, 4); n++;
-		XtSetArg(args[n], XmNverticalSpacing, 4); n++;
+		XtSetArg(args[n], XmNhorizontalSpacing, 8); n++;
+		XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 		XtSetArg(args[n], XmNfractionBase, 4); n++;
 		XtSetArg(args[n], XmNdialogStyle, XmDIALOG_APPLICATION_MODAL); n++;
 
@@ -542,11 +502,16 @@ static void feedback_dialog(struct fsproc_data *d, int type, const char *msg)
 
 		XtSetArg(args[0], XmNmwmFunctions, MWM_FUNC_MOVE);
 		XtSetValues(XtParent(d->wfbdlg), args, 1);
+
+		warn_pixmap = get_standard_icon(d->wfbdlg, "xm_warning");
+		err_pixmap = get_standard_icon(d->wfbdlg, "xm_error");
 		
 		n = 0;
+		XtSetArg(args[n], XmNpixmapTextPadding, 8); n++;
+		XtSetArg(args[n], XmNlabelType, XmPIXMAP_AND_STRING); n++;
 		XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
-		XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
 		XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;
+		XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
 		XtSetArg(args[n], XmNalignment, XmALIGNMENT_BEGINNING); n++;
 		d->wfbmsg = XmCreateLabel(d->wfbdlg, "feedbackMessage", args, n);
 		
@@ -597,7 +562,9 @@ static void feedback_dialog(struct fsproc_data *d, int type, const char *msg)
 	
 	xms = XmStringCreateLocalized((String)msg);
 	XtSetArg(args[0], XmNlabelString, xms);
-	XtSetValues(d->wfbmsg, args, 1);
+	XtSetArg(args[1], XmNlabelPixmap,
+		(type == FBT_RETRY_IGNORE) ? err_pixmap : warn_pixmap);
+	XtSetValues(d->wfbmsg, args, 2);
 	XmStringFree(xms);
 	XtSetSensitive(d->wfbinput[FB_RETRY_CONTINUE], True);
 	
@@ -638,32 +605,20 @@ static void feedback_cb(Widget w, XtPointer client, XtPointer call)
 	while(d->wfbinput[id] != w) id++;
 	
 	dbg_trace("feedback button id: %d\n", id);
-	if(write(d->reply_out_fd, &id, sizeof(int)) != sizeof(int)) {
-		quit_with_error(d, NULL);
-	}
+	write(d->reply_out_fd, &id, sizeof(int));
 }
 
 /*
- * GUI process message handler (sent by work proc in wp_post_message)
- * Any I/O errors here are considered fatal.
+ * GUI process message handler (sent by work proc's wp_post* functions)
+ * Read errors are ignored here, since abnormal WP terminations are
+ * handled in the SIGCHLD handler.
  */
 static void progress_cb(XtPointer cd, int *pfd, XtInputId *iid)
 {
 	struct fsproc_data *d = (struct fsproc_data*)cd;
-	int feedback;
-	char *buffer;
-	size_t src_len = 0;
-	size_t dest_len = 0;
-	size_t item_len = 0;
-	size_t emsg_len = 0;
-	size_t buf_len = 0;
-	char *src = NULL;
-	char *dest = NULL;
-	char *item = NULL;
-	char *emsg = NULL;
-	ssize_t io;
+	int msg_type;
+	ssize_t rc = 0;
 	
-	dbg_trace("WP %ld message\n", d->wp_pid);
 	/* Don't bother if work proc has quit already */
 	if(!d->wp_pid) {
 		XtRemoveInput(d->msg_input_iid);
@@ -671,86 +626,68 @@ static void progress_cb(XtPointer cd, int *pfd, XtInputId *iid)
 		return;
 	}
 
-	io = read(d->msg_in_fd, &feedback, sizeof(int));
-	io += read(d->msg_in_fd, &src_len, sizeof(size_t));
-	io += read(d->msg_in_fd, &dest_len, sizeof(size_t));
-	io += read(d->msg_in_fd, &item_len, sizeof(size_t));
-	io += read(d->msg_in_fd, &emsg_len, sizeof(size_t));
+	rc = read(d->msg_in_fd, &msg_type, sizeof(int));
+	if(!rc) return;
 	
-	if(io < (sizeof(int) + sizeof(size_t) * 4)) {
-		XtRemoveInput(d->msg_input_iid);
-		d->msg_input_iid = None;
-		return;
-	}
-	
-	buf_len = src_len + dest_len + item_len + emsg_len + 4;
-	
-	buffer = malloc(buf_len);
-	if(!buffer) {
-		quit_with_error(d, strerror(errno));
-		return;
-	}
-	
-	if(src_len) {
-		src = buffer;
-		read(d->msg_in_fd, src, src_len);
-		src[src_len] = '\0';
-	}
+	if(msg_type == MSG_STAT) {
+		int msg_len;
+		char *msg;
+		
+		rc = read(d->msg_in_fd, &msg_len, sizeof(int));
+		if(rc < sizeof(int)) return;
+		
+		if(msg_len) {
+			msg = malloc(msg_len + 1);
+			if(!msg) return;
 
-	if(dest_len) {
-		dest = buffer + src_len + 1;
-		read(d->msg_in_fd, dest, dest_len);
-		dest[dest_len] = '\0';
-	}
-
-	if(item_len) {
-		item = buffer + src_len + dest_len + 2;
-		read(d->msg_in_fd, item, item_len);
-		item[item_len] = '\0';
-	}
-
-	if(emsg_len) {
-		emsg = buffer + src_len + dest_len + item_len + 3;		
-		read(d->msg_in_fd, emsg, emsg_len);
-		emsg[emsg_len] = '\0';
-	}
-
-	if(src) {
-		char *tmp = NULL;
-		if(src_len > PROG_FNAME_MAX) {
-			tmp = shorten_mb_string(src, PROG_FNAME_MAX, True);
-			if(tmp) src = tmp;
+			rc = read(d->msg_in_fd, msg, msg_len);
+			if(rc == msg_len)  {
+				msg[rc] = '\0';
+				set_label_string(d->wprstatus, msg);
+				free(msg);
+			}
 		}
-		XmTextFieldSetString(d->wsrc, src);
-		if(tmp) free(tmp);
-	}
-	if(dest) {
-		char *tmp = NULL;
-		if(dest_len > PROG_FNAME_MAX) {
-			tmp = shorten_mb_string(dest, PROG_FNAME_MAX, True);
-			if(tmp) dest = tmp;
-		}
-		XmTextFieldSetString(d->wdest, dest);
-		if(tmp) free(tmp);
-	}
-	if(item) {
-		char *tmp = NULL;
-		if(item_len > PROG_FNAME_MAX) {
-			tmp = shorten_mb_string(item, PROG_FNAME_MAX, True);
-			if(tmp) item = tmp;
-		}
-		XmTextFieldSetString(d->witem, item);
-		if(tmp) free(tmp);
-	} else if(feedback == FBT_NONE) {
-		XmTextFieldSetString(d->witem, "");
-	}
+		
+	} else if(msg_type == MSG_PROG) {
+		int prog_val;
+		
+		rc = read(d->msg_in_fd, &prog_val, sizeof(int));
+		if(rc == sizeof(int))
+			ProgressSetValue(d->wprogress, prog_val);
 	
-	if(feedback == FBT_FATAL) {
-		quit_with_error(d, emsg);
-	} else if(feedback != FBT_NONE) {
-		feedback_dialog(d, feedback, emsg);
+	} else if(msg_type == MSG_FDBK) {
+		int fb_type;
+		int msg_len;
+		char *msg;
+		
+		rc = read(d->msg_in_fd, &fb_type, sizeof(int));
+		rc += read(d->msg_in_fd, &msg_len, sizeof(int));
+		
+		if(rc == sizeof(int) * 2) {
+
+			msg = malloc(msg_len + 1);
+			if(!msg) return;
+
+			rc = read(d->msg_in_fd, msg, msg_len);
+			if(rc < msg_len) {
+				free(msg);
+				return;
+			}
+
+			msg[msg_len] = '\0';
+
+			if(fb_type == FBT_FATAL) {
+				if(d->wp_pid)
+					message_box(d->wshell, MB_ERROR, "Error", msg);
+				else
+					stderr_msg("%s: %s", "Error", msg);
+			} else {
+				feedback_dialog(d, fb_type, msg);
+			}
+
+			free(msg);
+		}
 	}
-	free(buffer);
 }
 
 /*
@@ -776,34 +713,6 @@ static void xt_prog_sigchld_handler(XtPointer p, XtSignalId *id)
 }
 
 /*
- * Displays an error message box and removes fsproc
- */
-static void quit_with_error(struct fsproc_data *d, const char *error)
-{
-	if(d->msg_input_iid) {
-		XtRemoveInput(d->msg_input_iid);
-		d->msg_input_iid = None;
-	}
-	XtMapWidget(d->wshell);
-	
-	if(error) {
-		char *msg;
-		char *fatal_msg = "Unrecoverable error.";
-		
-		msg = malloc(strlen(error) + strlen(fatal_msg) + 3);
-		sprintf(msg, "%s\n%s.", fatal_msg, error);
-		message_box(d->wshell, MB_ERROR, APP_TITLE, msg);
-		free(msg);
-		
-	} else {
-		message_box(d->wshell, MB_ERROR,
-			APP_TITLE, "Unexpected internal error.");
-	}
-	
-	destroy_progress_ui(d);
-}
-
-/*
  * Forks off the work process
  */
 static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
@@ -816,6 +725,7 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 	int reply;
 	char *cdest = NULL;
 	const char *cwd;
+	struct timespec proc_time[2];
 
 	pid = fork();
 	if(pid == -1) return errno;
@@ -835,9 +745,13 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 
 	/* the work process */
 	dbg_trace("Work proc spawned: %ld\n", getpid());
+	
+	clock_gettime(CLOCK_MONOTONIC, &proc_time[0]);
+	rsignal(SIGPIPE, wp_sigpipe_handler, 0);
+
 	close(d->msg_in_fd);
 	close(d->reply_out_fd);
-	
+
 	if(wpd->wdir) {
 		if(chdir(wpd->wdir)) exit(EXIT_FAILURE);
 		cwd = wpd->wdir;
@@ -846,16 +760,29 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 		if(!cwd) exit(EXIT_FAILURE);
 	}
 
+	if((wpd->action == WP_COPY) || (wpd->action == WP_MOVE)) {
+		wp_post_prog(wpd, PROG_INTERMEDIATE);
+		wp_post_stat(wpd, "Gathering data...");
+		wp_post_prog(wpd, 0);
+		if(wp_count(wpd, cwd)) exit(EXIT_FAILURE);
+	} else if(wpd->action == WP_CHATTR) {
+		wp_post_prog(wpd, PROG_INTERMEDIATE);
+		wp_post_stat(wpd, "Setting attributes...");		
+	} else if(wpd->action == WP_DELETE) {
+		wp_post_prog(wpd, PROG_INTERMEDIATE);
+		wp_post_stat(wpd, "Deleting files...");		
+	}
+
 	if(wpd->dest) {
 		if(stat(wpd->dest, &st_dest) == -1) {
-			wp_post_message(wpd, FBT_FATAL, NULL, wpd->dest, NULL,
+			wp_post_msg(wpd, FBT_FATAL,
 				wp_error_string("Error accessing", wpd->dest,
-				NULL, strerror(errno)));
+				NULL, strerror(errno)) );
 			exit(EXIT_SUCCESS);
 		} else if(!S_ISDIR(st_dest.st_mode)) {
-			wp_post_message(wpd, FBT_FATAL, NULL, wpd->dest, NULL,
+			wp_post_msg(wpd, FBT_FATAL,
 				wp_error_string("Error writing", wpd->dest,
-				NULL, strerror(ENOTDIR)));
+				NULL, strerror(ENOTDIR)) );
 			exit(EXIT_SUCCESS);			
 		}
 		cdest = realpath(wpd->dest, NULL);
@@ -868,22 +795,20 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 	} else {
 		wpd->copy_buffer = NULL;
 	}
-
+	
 	for(i = 0; i < wpd->num_srcs; i++) {
 		char csrc[strlen(cwd) + strlen(wpd->srcs[i]) + 2];
 		int rv = 0;
 
 		build_path(csrc, cwd, wpd->srcs[i], NULL);
-	
-		wp_post_message(wpd, FBT_NONE, csrc, cdest, NULL, NULL);
-	
+		
 		retry_src: /* see FB_RETRY_CONTINUE case below */
 		
 		rv = lstat(csrc, &st_src);
 		if(rv == -1) {
 			if(errno == ENOENT || !wpd->ignore_read_err) continue;
 
-			reply = wp_post_message(wpd, FBT_RETRY_IGNORE, csrc, cdest, NULL,
+			reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
 				wp_error_string("Error reading", csrc, NULL, strerror(errno)));
 			
 			switch(reply) {
@@ -898,74 +823,71 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 				continue;
 			}
 		}
-		
+
 		switch(wpd->action) {
 			case WP_DELETE:
 			
-			if(S_ISDIR(st_src.st_mode))
+			if(S_ISDIR(st_src.st_mode)) {
 				rv = wp_delete_tree(wpd, csrc);
-			else
+			} else {
+				wp_post_astat(wpd, "Deleting", csrc, NULL);
 				rv = wp_delete_file(wpd, csrc);
+			}
 
 			break; /* WP_DELETE */
 
 			case WP_MOVE:
 			move = True;
 			case WP_COPY:
-			
-			if(st_src.st_dev == st_dest.st_dev &&
-				st_src.st_ino == st_dest.st_ino) {
-				wp_post_message(wpd, FBT_FATAL, NULL, cdest, NULL,
-					wp_error_string("Error writing", cdest, NULL,
-					"Source and destination are the same"));
-				exit(EXIT_FAILURE);
-			}
-			
+
 			if(S_ISDIR(st_src.st_mode)) {
 				char *src_title = get_path_tail(csrc);
 				char dest_fqn[strlen(cdest) + strlen(src_title) + 2];
-				
+
 				build_path(dest_fqn, cdest, src_title, NULL);
+
+				if(!lstat(dest_fqn, &st_dest) &&
+					st_src.st_dev == st_dest.st_dev &&
+					st_src.st_ino == st_dest.st_ino) {
+					wp_post_msg(wpd, FBT_SKIP_CANCEL,
+						wp_error_string("Error writing", cdest, NULL,
+						"Source and destination are same!"));
+					continue;
+				}
+
 				rv = wp_copy_tree(wpd, csrc, dest_fqn, move);
 			} else if(S_ISREG(st_src.st_mode)){
 				char *src_title = get_path_tail(csrc);
 				char dest_fqn[strlen(cdest) + strlen(src_title) + 2];
-				char src_path[strlen(csrc) + 1];
 
-				strcpy(src_path, csrc);
-				trim_path(src_path, 1);
 				build_path(dest_fqn, cdest, src_title, NULL);
-				wp_post_message(wpd, FBT_NONE, src_path,
-					cdest, src_title, NULL);
+				wp_post_astat(wpd, move ? "Moving" : "Copying", csrc, cdest);
 				rv = wp_copy_file(wpd, csrc, dest_fqn, move);
+
 			} else if(S_ISLNK(st_src.st_mode)){
 				char *src_title = get_path_tail(csrc);
 				char dest_fqn[strlen(cdest) + strlen(src_title) + 2];
-				char src_path[strlen(csrc) + 1];
 				char *link_tgt;
 
-				strcpy(src_path, csrc);
-				trim_path(src_path, 1);
-
 				build_path(dest_fqn, cdest, src_title, NULL);
-				wp_post_message(wpd, FBT_NONE, src_path,
-					cdest, src_title, NULL);
-
 				if( (rv = get_link_target(csrc, &link_tgt)) ) break;
 
+				wp_post_astat(wpd, "Symlinking", link_tgt, dest_fqn);
 				rv = wp_sym_link(wpd, link_tgt, dest_fqn);
 				free(link_tgt);
+
 			} else if(!wpd->ignore_special) {
 				char *msg = wp_error_string(
 					"Skipping non-regular file", cdest, NULL,
 					"No attempt will be made to copy/move special files.");
-				if(wp_post_message(wpd, FBT_SKIP_CANCEL, NULL, cdest, NULL, msg)
+				if(wp_post_msg(wpd, FBT_SKIP_CANCEL, msg)
 					== FB_SKIP_IGNORE_ALL) wpd->ignore_special = True;
 			}
 
 			break; /* WP_COPY */
 			
 			case WP_CHATTR:
+
 			if(S_ISDIR(st_src.st_mode)) {
 				if(wpd->att_flags & ATT_RECUR) {
 					rv = wp_chattr_tree(wpd, csrc, wpd->gid, wpd->uid,
@@ -986,15 +908,135 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 		if(rv) {
 			/* since recoverable errors are handled within subroutines,
 			 * mention that something didn't go as planned here */
-			wp_post_message(wpd, FBT_FATAL, NULL, NULL, NULL, strerror(rv));
+			wp_post_msg(wpd, FBT_FATAL, strerror(rv));
 			break;
 		}
 	}
 
 	if(wpd->copy_buffer) free(wpd->copy_buffer);
 
+	/* If it took long enough for the progress dialog to get mapped
+	 * in the GUI process, hang in there a bit longer so it doesn't
+	 * suddenly disappear while possibly still updating */
+	clock_gettime(CLOCK_MONOTONIC, &proc_time[1]);
+	
+	if((proc_time[1].tv_sec - proc_time[0].tv_sec) ||
+		((proc_time[1].tv_nsec - proc_time[0].tv_nsec) >
+			PROG_MAP_TIMEOUT * 1000000) ) {	
+			sleep(1);
+	}
+
 	exit(EXIT_SUCCESS);
 	return 0;
+}
+
+/*
+ * Walks through the list of sources in wpd and computes total size.
+ */
+static int wp_count(struct wp_data *wpd, const char *cwd)
+{
+	unsigned int i;
+	struct stat st;
+	struct fsize fs_total = { 0 };
+	size_t cwd_len = strlen(cwd);
+	int rv = 0;
+	
+	for(i = 0; i < wpd->num_srcs; i++) {
+		char cname[cwd_len + strlen(wpd->srcs[i]) + 2];
+
+		build_path(cname, cwd, wpd->srcs[i], NULL);
+		
+		if(!stat(cname, &st)) {
+			if(S_ISDIR(st.st_mode))
+				rv = wp_count_tree(cname, &fs_total);
+			else
+				add_fsize(&fs_total, st.st_size);
+		}
+		if(rv) break;
+	}
+	wpd->one_percent_size = (fs_total.size / 100) * fs_total.factor;
+
+	return rv;
+}
+
+/*
+ * Called by wp_count for directories.
+ * Recursively walks the directory structure under top and computes total size.
+ */
+static int wp_count_tree(const char *top, struct fsize *fs_total)
+{
+	int errv = 0;
+	DIR *dir;
+	struct dirent *ent;
+	struct stack *rec_stk;
+	char *cur_path;
+	size_t len = strlen(top);
+	
+	rec_stk = stk_alloc();
+	if(!rec_stk) return ENOMEM;
+
+	if(stk_push(rec_stk, top, len + 1)) {
+		stk_free(rec_stk);
+		return ENOMEM;
+	}
+	
+	/* NOTE: cur_path is on heap and needs to be freed when done */
+	while( !errv && (cur_path = stk_pop(rec_stk, NULL)) ) {
+		struct stat cd_st;
+		int rv;
+
+		if(! (rv = lstat(cur_path, &cd_st)) ) {
+			/* skip symbolic links to directories */
+			if(S_ISLNK(cd_st.st_mode)) {
+				free(cur_path);
+				continue;
+			}
+		} else {
+			free(cur_path);
+			continue;
+		}
+		
+
+		if(!(dir = opendir(cur_path)) ) {
+			free(cur_path);
+			continue;
+		}
+
+		while( (ent = readdir(dir)) && !errv) {
+			struct stat st;
+			char *cur_fqn;
+			
+			if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
+				continue;
+			
+			cur_fqn = build_path(NULL, cur_path, ent->d_name, NULL);
+			if(!cur_fqn) {
+				errv = errno;
+				break;
+			}
+			
+			if(lstat(cur_fqn, &st) == -1) {
+				free(cur_fqn);
+				continue;
+			}
+			
+			/* if directory, push it onto the recursion stack */
+			if(S_ISDIR(st.st_mode)) {
+				size_t fqn_len = strlen(cur_fqn) + 1;
+				if(stk_push(rec_stk, cur_fqn, fqn_len))
+					errv = ENOMEM;
+			/* or proceed normally, ignoring symbolic links */
+			} else if(!S_ISLNK(st.st_mode)) {
+				add_fsize(fs_total, st.st_size);
+			}
+			free(cur_fqn);
+		}
+		free(cur_path);
+		closedir(dir);
+	}
+	stk_free(rec_stk);
+
+	return errv;
 }
 
 /*
@@ -1021,6 +1063,8 @@ static int wp_copy_tree(struct wp_data *wpd,
 		ino_t inode;
 		char name[1];
 	};
+	
+	wp_post_prog(wpd, 0);
 	
 	if(move) {
 		/* try to rename first, in case we're moving on the same FS
@@ -1071,8 +1115,8 @@ static int wp_copy_tree(struct wp_data *wpd,
 				free(cur_path);
 				continue;
 			}
-
-			reply = wp_post_message(wpd, FBT_RETRY_IGNORE, cur_path, dest, NULL,
+			wp_post_stat(wpd, (move ? "Moving..." : "Copying..."));
+			reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
 					wp_error_string("Error reading directory",
 					cur_path, NULL, strerror(errno)) );
 					
@@ -1128,8 +1172,8 @@ static int wp_copy_tree(struct wp_data *wpd,
 					continue;
 				}
 
-				reply = wp_post_message(wpd, FBT_RETRY_IGNORE, cur_fqn,
-					dest, NULL,	wp_error_string("Error accessing", cur_path,
+				reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
+					wp_error_string("Error accessing", cur_path,
 					NULL, strerror(errno)) );
 				switch(reply) {
 					case FB_RETRY_CONTINUE:
@@ -1176,12 +1220,10 @@ static int wp_copy_tree(struct wp_data *wpd,
 					break;
 				}
 			
-				wp_post_message(wpd, FBT_NONE, cur_path,
-					dest_fqn, ent->d_name, NULL);
-
 				build_path(dest_fqn, dest,
 					&cur_path[src_len], ent->d_name, NULL);
 
+				wp_post_astat(wpd, "Symlinking", link_tgt, dest_fqn);
 				errv = wp_sym_link(wpd, link_tgt, dest_fqn);
 				
 				free(dest_fqn);
@@ -1210,8 +1252,8 @@ static int wp_copy_tree(struct wp_data *wpd,
 					break;
 				}
 
-				wp_post_message(wpd, FBT_NONE, cur_path,
-					dest_fqn, ent->d_name, NULL);
+				wp_post_astat(wpd, (move ? "Moving" : "Copying"),
+					cur_fqn, dest_fqn);
 
 				build_path(dest_fqn, dest,
 					&cur_path[src_len], ent->d_name, NULL);
@@ -1257,9 +1299,9 @@ static int wp_copy_tree(struct wp_data *wpd,
 					"Skipping non-regular file", cur_fqn, NULL,
 					"No attempt will be made to copy/move special files.");
 					
-				if(wp_post_message(wpd, FBT_SKIP_CANCEL,
-					NULL, NULL, NULL, msg) == FB_SKIP_IGNORE_ALL)
-						wpd->ignore_special = True;
+				if(wp_post_msg(wpd, FBT_SKIP_CANCEL, msg)
+					== FB_SKIP_IGNORE_ALL) wpd->ignore_special = True;
+
 				free(msg);
 			}
 
@@ -1281,8 +1323,11 @@ static int wp_copy_tree(struct wp_data *wpd,
 	}
 	stk_free(ro_stk);
 	
+	wp_post_prog(wpd, 100);
+	
 	/* purge directory structure */
 	if(move) {
+		wp_post_stat(wpd, "Purging directory structure...");
 		while(!errv && (cur_path = stk_pop(rem_stk, NULL)) ) {
 			errv = wp_delete_directory(wpd, cur_path);
 			free(cur_path);
@@ -1305,16 +1350,21 @@ static int wp_copy_file(struct wp_data *wpd,
 	ssize_t rw;
 	int reply = 0;
 	int res = 0;
+	double size_total = 0;
 	Boolean read_err = False;
 
-	if(stat(src, &st_src)) return errno;
+	if(stat(src, &st_src)) {
+		wp_post_msg(wpd, FBT_SKIP_CANCEL,
+			wp_error_string("Error reading", src, NULL, strerror(errno)) );
+		return 0;
+	}
 
 	if(!stat(dest, &st_dest)) {
 		static Boolean ignore_exist = False;
 		int fb_type;
 		char *msg;
 
-		if(ignore_exist) return 0;
+		if(ignore_exist) goto skip_copying;
 
 		if(S_ISDIR(st_dest.st_mode))	{
 			fb_type = FBT_SKIP_CANCEL;
@@ -1330,33 +1380,40 @@ static int wp_copy_file(struct wp_data *wpd,
 			}
 		}
 		
-		reply = wp_post_message(wpd, fb_type, NULL, NULL, NULL,
+		reply = wp_post_msg(wpd, fb_type,
 			wp_error_string("Error writing", dest, NULL, msg) );
 
 		switch(reply) {
 			case FB_RETRY_CONTINUE:
-			if( (res = unlink(dest)) ) return res;
+			if( unlink(dest) ) {
+				wp_post_msg(wpd, FBT_SKIP_CANCEL,
+					wp_error_string("Error overwriting", dest,
+					NULL, strerror(errno)) );
+				goto skip_copying;
+			}
 			break;
 			
 			case FB_SKIP_IGNORE:
-			return 0;
+			goto skip_copying;
+			break;
 
 			case FB_SKIP_IGNORE_ALL:
 			ignore_exist = 1;
-			return 0;
+			goto skip_copying;
+			break;
 		}	
 	}
-	
-	/* try to rename the file first if moving*/
-	if(move && !rename(src, dest)) return 0;
+
+	/* try to rename the file first if moving */
+	if(move && !rename(src, dest)) goto skip_copying;
 
 	/* buffered copy */
 	retry_open_src:
 	fin = open(src, O_RDONLY);
 	if(fin == -1) {
-		if(wpd->ignore_read_err) return 0;
+		if(wpd->ignore_read_err) goto skip_copying;
 		
-		reply = wp_post_message(wpd, FBT_RETRY_IGNORE, NULL, NULL, NULL,
+		reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
 			wp_error_string("Error reading", src, NULL, strerror(errno)) );
 
 		switch(reply) {
@@ -1365,11 +1422,14 @@ static int wp_copy_file(struct wp_data *wpd,
 			break;
 			
 			case FB_SKIP_IGNORE:
-			return 0;
+			goto skip_copying;
+			break;
+
 
 			case FB_SKIP_IGNORE_ALL:
 			wpd->ignore_read_err = True;
-			return 0;
+			goto skip_copying;
+			break;
 		}		
 	}
 	
@@ -1378,10 +1438,10 @@ static int wp_copy_file(struct wp_data *wpd,
 	if(fout == -1) {
 		if(wpd->ignore_write_err) {
 			close(fin);
-			return 0;
+			goto skip_copying;
 		}
 		
-		reply = wp_post_message(wpd, FBT_RETRY_IGNORE, NULL, NULL, NULL,
+		reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
 			wp_error_string("Error writing", dest, NULL, strerror(errno)) );
 
 		switch(reply) {
@@ -1391,12 +1451,14 @@ static int wp_copy_file(struct wp_data *wpd,
 			
 			case FB_SKIP_IGNORE:
 			close(fin);
-			return 0;
-
+			goto skip_copying;
+			break;
+			
 			case FB_SKIP_IGNORE_ALL:
 			wpd->ignore_write_err = True;
 			close(fin);
-			return 0;
+			goto skip_copying;
+			break;
 		}		
 	}
 	
@@ -1416,12 +1478,21 @@ static int wp_copy_file(struct wp_data *wpd,
 			break;
 		}
 		
+		size_total += (size_t)rw;
+
+		if(size_total >= wpd->one_percent_size) {
+			wp_post_prog(wpd, (int) (0.5 + wpd->percent_total +
+				(size_total / wpd->one_percent_size)) );
+		}
+		
 		rw = write(fout, wpd->copy_buffer, wpd->copy_buffer_size);
 		if(rw != wpd->copy_buffer_size) {
 			read_err = False;
 			res = errno;
 			break;
 		}
+		
+
 	}
 
 	if(!res && rest){
@@ -1433,11 +1504,11 @@ static int wp_copy_file(struct wp_data *wpd,
 		}
 		if(rw != rest) res = errno;
 	}
-
+	
 	if(res) {
 		const char *msg = read_err ? "Error reading" : "Error writing";
 		const char *name = read_err ? src : dest;
-		reply = wp_post_message(wpd, FBT_SKIP_CANCEL, NULL, NULL, NULL,
+		reply = wp_post_msg(wpd, FBT_SKIP_CANCEL,
 			wp_error_string(msg, name, NULL, strerror(res)) );
 		if(reply == FB_SKIP_IGNORE_ALL) {
 			if(read_err)
@@ -1446,7 +1517,7 @@ static int wp_copy_file(struct wp_data *wpd,
 				wpd->ignore_write_err = True;
 		}
 	} else if(fchmod(fout, st_src.st_mode) == -1) {
-		reply = wp_post_message(wpd, FBT_SKIP_CANCEL, NULL, NULL, NULL,
+		reply = wp_post_msg(wpd, FBT_SKIP_CANCEL,
 			wp_error_string("Error setting attributes", dest,
 			NULL, strerror(res)) );
 		if(reply == FB_SKIP_IGNORE_ALL) wpd->ignore_write_err = True;
@@ -1460,7 +1531,12 @@ static int wp_copy_file(struct wp_data *wpd,
 	} else if(move) {
 		wp_delete_file(wpd, src);
 	}
+	
+	skip_copying:
 
+	wpd->percent_total += (double)st_src.st_size / wpd->one_percent_size;
+	wp_post_prog(wpd, (int)(0.5 + wpd->percent_total));
+	
 	return 0;	
 }
 
@@ -1489,7 +1565,7 @@ static int wp_sym_link(struct wp_data *wpd,
 			break;
 		}
 		
-		reply = wp_post_message(wpd, msg_id, NULL, NULL, NULL,
+		reply = wp_post_msg(wpd, msg_id,
 			wp_error_string("Error creating a symbolic link",
 				link, target, strerror(errno)) );
 		switch(reply) {
@@ -1526,7 +1602,7 @@ static int wp_hard_link(struct wp_data *wpd, const char *from, const char *to)
 			break;
 		}
 		
-		reply = wp_post_message(wpd, msg_id, NULL, NULL, NULL,
+		reply = wp_post_msg(wpd, msg_id,
 			wp_error_string("Error creating a hard link",
 				from, to, strerror(errno)) );
 		switch(reply) {
@@ -1568,12 +1644,12 @@ static int wp_delete_tree(struct wp_data *wpd, const char *src)
 			stk_free(rem_stk);
 			return ENOMEM;
 	}
-	
+
 	/* NOTE! cur_path is on heap and needs to be freed when done */
 	while( !errv && (cur_path = stk_pop(rec_stk, NULL)) ) {
 		struct stat cd_st;
 
-		wp_post_message(wpd, FBT_NONE, cur_path, NULL, NULL, NULL);
+		wp_post_astat(wpd, "Deleting all in", cur_path, NULL);
 
 		retry_dir: /* see FB_RETRY_CONTINUE case below */
 		if( stat(cur_path, &cd_st) || !(dir = opendir(cur_path))) {
@@ -1583,7 +1659,7 @@ static int wp_delete_tree(struct wp_data *wpd, const char *src)
 				continue;
 			}
 
-			reply = wp_post_message(wpd, FBT_RETRY_IGNORE, cur_path, NULL, NULL,
+			reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
 					wp_error_string("Error reading directory",
 					cur_path, NULL, strerror(errno)) );
 					
@@ -1606,7 +1682,7 @@ static int wp_delete_tree(struct wp_data *wpd, const char *src)
 		while( (ent = readdir(dir)) && !errv) {
 			struct stat st;
 			char *cur_fqn;
-			
+		
 			if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
 				continue;
 
@@ -1615,7 +1691,6 @@ static int wp_delete_tree(struct wp_data *wpd, const char *src)
 				errv = errno;
 				break;
 			}
-			wp_post_message(wpd, FBT_NONE, cur_fqn, NULL, NULL, NULL);
 			
 			retry_sub_dir: /* see FB_RETRY_CONTINUE case below */
 			if(lstat(cur_fqn, &st) == -1) {
@@ -1624,8 +1699,7 @@ static int wp_delete_tree(struct wp_data *wpd, const char *src)
 					continue;
 				}
 
-				reply = wp_post_message(wpd, FBT_RETRY_IGNORE,
-					cur_fqn, NULL, NULL,
+				reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
 					wp_error_string("Error accessing", cur_fqn,
 					NULL, strerror(errno)) );
 				switch(reply) {
@@ -1660,7 +1734,7 @@ static int wp_delete_tree(struct wp_data *wpd, const char *src)
 	
 	/* purge directory structure */
 	while(!errv && (cur_path = stk_pop(rem_stk, NULL)) ) {
-		wp_post_message(wpd, FBT_NONE, cur_path, NULL, NULL, NULL);
+		wp_post_stat(wpd, "Purging directory structure...");
 		errv = wp_delete_directory(wpd, cur_path);
 		free(cur_path);
 	}
@@ -1698,15 +1772,15 @@ static int wp_chattr_tree(struct wp_data *wpd, const char *src,
 			stk_free(rem_stk);
 			return ENOMEM;
 	}
-
+	
 	/* NOTE: cur_path is on heap and needs to be freed when done */
 	while( !errv && (cur_path = stk_pop(rec_stk, NULL)) ) {
 		Boolean eacces_once = False;
 		struct stat cd_st;
 		int rv;
 
-		wp_post_message(wpd, FBT_NONE, cur_path, NULL, NULL, NULL);
-		
+		wp_post_astat(wpd, "Setting attributes in", cur_path, NULL);
+
 		retry_dir: /* see FB_RETRY_CONTINUE case below */
 
 		if(! (rv = lstat(cur_path, &cd_st)) ) {
@@ -1732,7 +1806,7 @@ static int wp_chattr_tree(struct wp_data *wpd, const char *src,
 				continue;
 			}
 
-			reply = wp_post_message(wpd, FBT_RETRY_IGNORE, cur_path, NULL, NULL,
+			reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
 					wp_error_string("Error accessing directory",
 					cur_path, NULL, strerror(errno)) );
 					
@@ -1778,10 +1852,7 @@ static int wp_chattr_tree(struct wp_data *wpd, const char *src,
 				
 				if(wpd->ignore_read_err) continue;
 				
-				wp_post_message(wpd, FBT_NONE, cur_path, NULL, NULL, NULL);
-				
-				reply = wp_post_message(wpd, FBT_RETRY_IGNORE,
-					cur_fqn, NULL, NULL,
+				reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
 					wp_error_string("Error accessing", cur_fqn,
 						NULL, strerror(st_error)) );
 				
@@ -1807,7 +1878,6 @@ static int wp_chattr_tree(struct wp_data *wpd, const char *src,
 					stk_push(rem_stk, cur_fqn, fqn_len)) errv = ENOMEM;
 			/* or proceed normally, ignoring symbolic links */
 			} else if(!S_ISLNK(st.st_mode)) {
-				wp_post_message(wpd, FBT_NONE, cur_fqn, NULL, NULL, NULL);
 				wp_chattr(wpd, cur_fqn, uid, gid, fmode, fmode_mask, flags);
 			}
 			free(cur_fqn);
@@ -1819,7 +1889,7 @@ static int wp_chattr_tree(struct wp_data *wpd, const char *src,
 	
 	/* process remaining directories */
 	while(!errv && (cur_path = stk_pop(rem_stk, NULL)) ) {
-		wp_post_message(wpd, FBT_NONE, cur_path, NULL, NULL, NULL);
+		wp_post_stat(wpd, "Processing directory tree...");
 		wp_chattr(wpd, cur_path, uid, gid, dmode, dmode_mask, flags);
 		free(cur_path);
 	}
@@ -1867,7 +1937,7 @@ static int wp_chattr(struct wp_data *wpd, const char *path,
 	if(errv && !ignore_err) {
 		int reply;
 		
-		reply = wp_post_message(wpd, FBT_RETRY_IGNORE, NULL, NULL, NULL,
+		reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
 			wp_error_string("Error setting attributes", path,
 			NULL, strerror(errv)) );
 		
@@ -1897,8 +1967,8 @@ static int wp_delete_directory(struct wp_data *wpd, const char *path)
 
 	if(rmdir(path) == -1 && errno != ENOENT && !ignore_err) {
 		int reply;
-		reply = wp_post_message(wpd, FBT_RETRY_IGNORE, NULL, NULL, NULL,
-					wp_error_string("Error removing",
+		reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
+					wp_error_string("Error deleting",
 					path, NULL, strerror(errno)) );
 		switch(reply) {
 			case FB_RETRY_CONTINUE:
@@ -1924,8 +1994,8 @@ static int wp_delete_file(struct wp_data *wpd, const char *path)
 
 	if(unlink(path) == -1 && errno != ENOENT && !ignore_err) {
 		int reply;
-		reply = wp_post_message(wpd, FBT_RETRY_IGNORE, NULL, NULL, NULL,
-					wp_error_string("Error removing",
+		reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
+					wp_error_string("Error deleting",
 					path, NULL, strerror(errno)) );
 		switch(reply) {
 			case FB_RETRY_CONTINUE:
@@ -1951,7 +2021,7 @@ static int wp_check_create_path(struct wp_data *wpd,
 
 	if( (ev = create_path(path, mode)) ) {
 		int reply;
-		reply = wp_post_message(wpd, FBT_RETRY_IGNORE, NULL, NULL, NULL,
+		reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
 					wp_error_string("Error creating",
 					path, NULL, strerror(errno)) );
 		if(reply ==  FB_RETRY_CONTINUE)
@@ -1961,85 +2031,208 @@ static int wp_check_create_path(struct wp_data *wpd,
 }
 
 /*
- * Sends a message to the parent (GUI) process, gets a response if required.
+ * Sends a message to the parent (GUI) process, which displays it in a
+ * blocking message dialog and returns a response ID.
  * The response FB_CANCEL is handled right here by terminating the process.
  * Any IO errors here are considered fatal.
  */
-static int wp_post_message(struct wp_data *wpd, int msg_id,
-	const char *src, const char *dest, const char *item, const char *emsg)
+static int wp_post_msg(struct wp_data *wpd, int fb_type, const char *msg)
 {
-	size_t src_len = src ? strlen(src) : 0;
-	size_t dest_len = dest ? strlen(dest) : 0;
-	size_t item_len = item ? strlen(item) : 0;
-	size_t emsg_len = emsg ? strlen(emsg) : 0;
+	unsigned long pid = (unsigned long)getpid();
+	int msg_len = strlen(msg);
 	ssize_t io, msg_data_len;
+	int msg_type = MSG_FDBK;
+	int oid;
 	
-	msg_data_len = sizeof(size_t) * 4  + sizeof(int) +
-		src_len + dest_len + item_len + emsg_len;
+	msg_data_len = sizeof(int) * 3 + msg_len;
 	
-	io = write(wpd->msg_out_fd, &msg_id, sizeof(int));
-	io += write(wpd->msg_out_fd, &src_len, sizeof(size_t));
-	io += write(wpd->msg_out_fd, &dest_len, sizeof(size_t));
-	io += write(wpd->msg_out_fd, &item_len, sizeof(size_t));
-	io += write(wpd->msg_out_fd, &emsg_len, sizeof(size_t));
-	
-	if(src_len) io += write(wpd->msg_out_fd, src, src_len);
-	if(dest_len) io += write(wpd->msg_out_fd, dest, dest_len);
-	if(item_len) io += write(wpd->msg_out_fd, item, item_len);
-	if(emsg_len) io += write(wpd->msg_out_fd, emsg, emsg_len);
-	
-	if(io < msg_data_len) exit(EXIT_FAILURE);
-	
-	/* Wait for and read the response if required */
-	if(msg_id != FBT_NONE) {
-		int oid;
-		
-		dbg_trace("%ld waiting for reply\n", getpid());
-		io = read(wpd->reply_in_fd, &oid, sizeof(int));
-		if(io < sizeof(int) || !FB_VALID_ID(oid)) {
-			exit(EXIT_FAILURE);
-		} else if(oid == FB_CANCEL) {
-			exit(EXIT_SUCCESS);
-		}
-		return oid;
+	io = write(wpd->msg_out_fd, &msg_type, sizeof(int));
+	io += write(wpd->msg_out_fd, &fb_type, sizeof(int));
+	io += write(wpd->msg_out_fd, &msg_len, sizeof(int));
+	io += write(wpd->msg_out_fd, msg, msg_len);
+
+	if(io < msg_data_len) {
+		stderr_msg("Subprocess %lu cannot communicate with"
+			" the GUI process; exiting!\n", pid);
+		exit(EXIT_FAILURE);
 	}
-	return 0;
+	
+	dbg_trace("%ld waiting for reply\n", getpid());
+
+	io = read(wpd->reply_in_fd, &oid, sizeof(int));
+	if(io < sizeof(int) || !FB_VALID_ID(oid)) {
+		stderr_msg("Subprocess %lu received invalid response from"
+			" the GUI process; exiting!\n", pid);
+		exit(EXIT_FAILURE);
+	} else if(oid == FB_CANCEL) {
+		exit(EXIT_SUCCESS);
+	}
+
+	return oid;
 }
 
 /*
- * Non-reentrant. Generates user friendly, formatted error messages.
+ * Constructs and sends an action status update message
+ * to the parent (GUI) process.
  */
-static char* wp_error_string(const char *verb, const char *src_name,
-	const char *dest_name, const char *errstr)
+static void wp_post_astat(struct wp_data *wpd,
+	const char *action, const char *csrc, const char *cdest)
+{
+	char *buffer;
+	int buf_len = 0;
+	int msg_type = MSG_STAT;
+	char *sz_src;
+	char *sz_dest;
+	
+	sz_src = mbs_make_displayable(csrc);
+
+	if(mb_strlen(sz_src) > PROG_FNAME_MAX) {
+		char *tmp;
+		tmp = shorten_mb_string(sz_src, PROG_FNAME_MAX, True);
+		if(tmp) {
+			free(sz_src);
+			sz_src = tmp;
+		}
+	}
+
+	if(cdest) {
+		sz_dest = mbs_make_displayable(cdest);
+		if(mb_strlen(sz_dest) > PROG_FNAME_MAX) {
+			char *tmp;
+			tmp = shorten_mb_string(sz_dest, PROG_FNAME_MAX, True);
+			if(tmp) {
+				free(sz_dest);
+				sz_dest = tmp;
+			}
+		}
+		buf_len = snprintf(NULL, 0,	"%s \'%s\'\nto \'%s\'.",
+			action, sz_src, sz_dest) + 1;
+
+		buffer = malloc(buf_len);
+
+		snprintf(buffer, buf_len, "%s \'%s\'\nto \'%s\'.",
+			action, sz_src, sz_dest);
+	} else {
+		buf_len = snprintf(NULL, 0,	"%s \'%s\'.",
+			action, sz_src) + 1;
+
+		buffer = malloc(buf_len);
+
+		snprintf(buffer, buf_len, "%s \'%s\'.",
+			action, sz_src);
+	}
+
+	write(wpd->msg_out_fd, &msg_type, sizeof(int));
+	buf_len = strlen(buffer);
+	write(wpd->msg_out_fd, &buf_len, sizeof(int));
+	write(wpd->msg_out_fd, buffer, buf_len);
+}
+
+/*
+ * Sends a status update message to the parent (GUI) process.
+ */
+static void wp_post_stat(struct wp_data *wpd, const char *str)
+{
+	int msg_type = MSG_STAT;
+	size_t len;
+
+	write(wpd->msg_out_fd, &msg_type, sizeof(int));
+	len = strlen(str);
+	write(wpd->msg_out_fd, &len, sizeof(int));
+	write(wpd->msg_out_fd, str, len);
+
+}
+
+/*
+ * Sends total progress update to the parent (GUI) process.
+ */
+static void wp_post_prog(struct wp_data *wpd, int prog)
+{
+	int msg_type = MSG_PROG;
+
+	if(prog > 100) prog = 100;
+	write(wpd->msg_out_fd, &msg_type, sizeof(int));
+	write(wpd->msg_out_fd, &prog, sizeof(int));
+}
+
+/*
+ * Generates GUI friendly, formatted error messages. Non-reentrant,
+ * because it maintains a buffer that it uses to return messages.
+ */
+static char* wp_error_string(const char *verb, const char *csrc_name,
+	const char *cdest_name, const char *errstr)
 {
 	static size_t last_len = 0;
 	static char *buffer = NULL;
 	size_t len;
 	char tmpl1[] = "%s \'%s\'\n%s";
 	char tmpl2[] = "%s \'%s\' to \'%s\'\n%s";
+	char *sz_src = NULL;
+	char *sz_dest = NULL;
 	
-	if(!dest_name) {
-		len = snprintf(NULL, 0, tmpl1, verb, src_name, errstr) + 2;
+	/* Make sure names are good to display in a message box */
+	sz_src = mbs_make_displayable(csrc_name);
+
+	if(mb_strlen(sz_src) > PROG_FNAME_MAX) {
+		char *tmp;
+		tmp = shorten_mb_string(sz_src, PROG_FNAME_MAX, True);
+		if(tmp) {
+			free(sz_src);
+			sz_src = tmp;
+		}
+	}
+	
+	if(cdest_name) {
+		sz_dest = mbs_make_displayable(cdest_name);
+		if(mb_strlen(sz_dest) > PROG_FNAME_MAX) {
+			char *tmp;
+			tmp = shorten_mb_string(sz_dest, PROG_FNAME_MAX, True);
+			if(tmp) {
+				free(sz_dest);
+				sz_dest = tmp;
+			}
+		}
+	}
+	
+	/* Construct the message */
+	if(!sz_dest) {
+		len = snprintf(NULL, 0, tmpl1, verb, sz_src, errstr) + 2;
 	} else {
-		len = snprintf(NULL, 0, tmpl2, verb, src_name, dest_name, errstr) + 2;
+		len = snprintf(NULL, 0, tmpl2, verb, sz_src, sz_dest, errstr) + 2;
 	}
 	
 	if(len > last_len) {
-		void *p;
-		p = realloc(buffer, len + 1);
-		if(!p) return strerror(errno);
-		buffer = p;
+		buffer = realloc(buffer, len + 1);
 		last_len = len;
 	}
 
-	if(!dest_name) {
-		len = snprintf(buffer, len, tmpl1, verb, src_name, errstr);
+	if(!sz_dest) {
+		len = snprintf(buffer, len, tmpl1, verb, sz_src, errstr);
 	} else {
-		len = snprintf(buffer, len, tmpl2, verb,
-			src_name, dest_name, errstr);
+		len = snprintf(buffer, len, tmpl2, verb, sz_src, sz_dest, errstr);
 	}
+	
+	/* Add a . to the end of the string if nothing there yet */
 	if(len && !ispunct(buffer[len - 1])) strcat(buffer, ".");
+	
+	free(sz_src);
+	free(sz_dest);
+		
 	return buffer;
+}
+
+/*
+ * WP's SIGPIPE handler
+ */
+static void wp_sigpipe_handler(int sig)
+{
+	static Boolean first = True;
+	
+	if(first) {
+		unsigned long pid = (unsigned long)getpid();
+		stderr_msg("Subprocess %lu IPC failed!", pid);
+		first = False;
+	}
 }
 
 /* 
@@ -2076,9 +2269,10 @@ int copy_files(const char *wd, char * const *srcs,
 		.dest = dest
 	};
 	
-	d = init_fsproc();
+	d = init_fsproc(WP_COPY);
 	if(!d) return ENOMEM;
-	create_progress_ui(d, WP_COPY);
+	
+	create_progress_ui(d);
 	if( (res = wp_main(d, &wpd)) ) {
 		destroy_progress_ui(d);
 	}
@@ -2099,9 +2293,10 @@ int move_files(const char *wd, char * const *srcs,
 		.dest = dest
 	};
 	
-	d = init_fsproc();
+	d = init_fsproc(WP_MOVE);
 	if(!d) return ENOMEM;
-	create_progress_ui(d, WP_MOVE);
+	
+	create_progress_ui(d);
 	if( (res = wp_main(d, &wpd)) ) {
 		destroy_progress_ui(d);
 	}
@@ -2122,9 +2317,10 @@ int delete_files(const char *wd, char * const *srcs, size_t num_srcs)
 		.dest = NULL
 	};
 	
-	d = init_fsproc();
+	d = init_fsproc(WP_DELETE);
 	if(!d) return ENOMEM;
-	create_progress_ui(d, WP_DELETE);
+	
+	create_progress_ui(d);
 	if( (res = wp_main(d, &wpd)) ) {
 		destroy_progress_ui(d);
 	}
@@ -2154,9 +2350,10 @@ int set_attributes(const char *wd, char * const *srcs, size_t num_srcs,
 		.att_flags = att_flags
 	};
 
-	d = init_fsproc();
+	d = init_fsproc(WP_CHATTR);
 	if(!d) return ENOMEM;
-	create_progress_ui(d, WP_DELETE);
+	
+	create_progress_ui(d);
 	if( (res = wp_main(d, &wpd)) ) {
 		destroy_progress_ui(d);
 	}

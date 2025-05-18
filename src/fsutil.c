@@ -17,8 +17,7 @@
 #include "fsutil.h"
 #include "debug.h"
 
-#define FS_FACTOR_MAX 6
-#define FS_KILO 1024
+#define FS_EXP_MAX 6
 
 /* Same as readlink, but allocates a buffer */
 int get_link_target(const char *path, char **ptr)
@@ -105,18 +104,17 @@ char* get_fsize_string(const struct fsize *fs, char buffer[SIZE_CS_MAX])
 		"B", "K", "M", "G", "T", "P", "E"
 	};
 	char *sz_units;
-	long double dp;
+	double dp;
 	char *fmt;
 
-	sz_units = sz_names[(int)fs->factor];
+	sz_units = sz_names[(int)fs->exp];
 	
 	/* don't show decimal part if it's near .0 */
-	dp = fs->size - truncl(fs->size);
+	dp = fs->size - trunc(fs->size);
 	if(dp > 0.1 && dp < 0.9)
-		fmt = "%.1Lf%s";
+		fmt = "%.1f%s";
 	else
-		fmt = "%.0Lf%s";
-
+		fmt = "%.0f%s";
 	snprintf(buffer, SIZE_CS_MAX, fmt, fs->size, sz_units);
 	return buffer;
 }
@@ -124,22 +122,23 @@ char* get_fsize_string(const struct fsize *fs, char buffer[SIZE_CS_MAX])
 /* Adds size to fs */
 void add_fsize(struct fsize *fs, unsigned long size)
 {
-	unsigned int nfac = 0;
-	long double rsize = size;
+	unsigned int i = 0;
+	double rsize = size;
 	
-	while( ((rsize / powl(FS_KILO, nfac)) >= FS_KILO)
-	 	&& (nfac < FS_FACTOR_MAX) ) nfac++;
+	while( ((rsize / pow(FS_KILO, i)) >= FS_KILO)
+	 	&& (i < FS_EXP_MAX) ) i++;
 
-	if(nfac > fs->factor) {
-		fs->size /= powl(FS_KILO, nfac - fs->factor);
-		fs->factor = nfac;
+	if(i > fs->exp) {
+		fs->size /= pow(FS_KILO, i - fs->exp);
+		fs->exp = i;
 	}
-	fs->size += rsize / powl(FS_KILO, fs->factor);
+	fs->size += rsize / pow(FS_KILO, fs->exp);
 
-	if( (fs->size > FS_KILO) && (fs->factor < FS_FACTOR_MAX) ) {
+	if( (fs->size > FS_KILO) && (fs->exp < FS_EXP_MAX) ) {
 		 fs->size /= FS_KILO;
-		 fs->factor += 1;
+		 fs->exp += 1;
 	}
+	fs->factor = pow(FS_KILO, fs->exp);
 }
 
 char* get_size_string(unsigned long size, char buffer[SIZE_CS_MAX])

@@ -527,7 +527,7 @@ static void reader_callback_proc(XtPointer cd, int *pfd, XtInputId *iid)
 				(app_inst.nfiles_hidden != msg.files_skipped ||
 				app_inst.nfiles_shown != msg.files_total ||
 				app_inst.size_shown.size != msg.size_total.size ||
-				app_inst.size_shown.factor != msg.size_total.factor)
+				app_inst.size_shown.exp != msg.size_total.exp)
 				
 				? True : False;
 

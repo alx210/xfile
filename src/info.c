@@ -200,8 +200,8 @@ void display_about_dialog(Widget wparent)
 	wdlg = XmCreateDialogShell(wparent, "About", args, n);
 
 	n = 0;
-	XtSetArg(args[n], XmNhorizontalSpacing, 4); n++;
-	XtSetArg(args[n], XmNverticalSpacing, 4); n++;
+	XtSetArg(args[n], XmNhorizontalSpacing, 8); n++;
+	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 	XtSetArg(args[n], XmNnoResize, True); n++;
 	XtSetArg(args[n], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); n++;
 	wform = XmCreateForm(wdlg, "form", args, n);

@@ -1,0 +1,8 @@
+.SS Progress Widget Resources
+.PP
+The class name of the widget is \fBProgress\fP, the widget name
+\fBprogress\fP. Aside from resources described below, the widget inherits
+resources from XmPrimitive(3).
+.TP
+\fBhighlightColor\fP \fIPixel\fP
+Specifies the fill color for the completed part of the bar.

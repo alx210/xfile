@@ -615,7 +615,7 @@ static Boolean load_history(Widget wlist, const char *name)
 						XmString xms = XmStringCreateLocalized(ps);
 
 						if(!XmListItemExists(wlist, xms))
-							XmListAddItem(wlist, xms, 1);
+							XmListAddItem(wlist, xms, 0);
 
 						XmStringFree(xms);
 						count++;
@@ -645,12 +645,12 @@ static void store_history(Widget wlist, const char *name)
 	XmStringTable items = NULL;
 	int i, count;
 	Arg args[2];
+
+	if(!fqn) return;
 	
 	XtSetArg(args[0], XmNitemCount, &count);
 	XtSetArg(args[1], XmNitems, &items);
 	XtGetValues(wlist, args, 2);
-	
-	if(!count || !fqn) return;
 	
 	file = fopen(fqn, "w");
 	free(fqn);
@@ -658,7 +658,9 @@ static void store_history(Widget wlist, const char *name)
 	if(!file) return;
 	
 	for(i = 0; i < count; i++) {
-		char *sz = XmStringUnparse(items[i], NULL, XmMULTIBYTE_TEXT,
+		char *sz;
+
+		sz = XmStringUnparse(items[i], NULL, XmMULTIBYTE_TEXT,
 			XmMULTIBYTE_TEXT, NULL, 0, XmOUTPUT_ALL);
 		if(!sz) continue;
 

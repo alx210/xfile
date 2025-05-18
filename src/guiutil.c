@@ -258,3 +258,23 @@ void set_label_string(Widget wlabel, const char *psz)
 	XtSetValues(wlabel, arg, 1);
 	XmStringFree(cs);
 }
+
+/*
+ * Retrieves standard motif icon pixmap
+ */
+Pixmap get_standard_icon(Widget w, const char *name)
+{
+	Display *dpy = XtDisplay(w);
+	Pixel fg;
+	Pixel bg;
+	Screen *pscreen;
+	Arg args[2];
+	
+	pscreen = XDefaultScreenOfDisplay(dpy);
+	
+	XtSetArg(args[0], XmNbackground, &bg);
+	XtSetArg(args[1], XmNforeground, &fg);
+	XtGetValues(w, args, 2);
+
+	return XmGetPixmap(pscreen, (char*)name, fg, bg);
+}

@@ -13,6 +13,9 @@
 #include <Xm/PrimitiveP.h>
 #include <Xm/ScrollBar.h>
 
+#define DEFAULT_WIDTH 300
+#define DEFAULT_HEIGHT 200
+
 /* Time format for detailed view */
 #define TIME_FMT "%d %b %Y %H:%M"
 #define TIME_BUFSIZ 64
@@ -60,7 +63,7 @@
 #define RT_SYMLINK	"symlink"
 #define RT_SPECIAL	"special"
 
-/* Background magnitude at which text turns white */
+/* Background color magnitude at which text turns white */
 #define DEF_FG_THRESHOLD 56000
 
 enum {
@@ -124,7 +127,6 @@ struct file_list_class_rec {
 
 /* Motif widget instance data */
 struct file_list_part {
-	Widget wview;
 	Widget whscrl;
 	Widget wvscrl;
 	

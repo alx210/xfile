@@ -9,7 +9,7 @@ CFLAGS += -DPREFIX='"$(PREFIX)"' $(INCDIRS)
 XFILE_OBJS = main.o menu.o defaults.o comdlgs.o guiutil.o typedb.o \
 	path.o listw.o pathw.o filemgr.o graphics.o cbproc.o exec.o \
 	stack.o fsutil.o mbstr.o attrib.o mount.o fsproc.o fstab.o \
-	select.o usrtool.o info.o debug.o $(EXTRA_OBJS)
+	progw.o select.o usrtool.o info.o debug.o $(EXTRA_OBJS)
 
 .PHONY: clean install uninstall
 
@@ -26,7 +26,7 @@ icons.h: mkicons.sh icons/*.xpm
 # to one of these in platform specific makefiles 
 APPDEFS_CORE = res/prefs.ad res/fonts.ad res/accels.ad res/misc.ad
 APPDEFS_XFT = res/prefs.ad res/fonts-xft.ad res/accels.ad res/misc.ad
-xfile.ad: $(APPDEFS)
+xfile.ad: $(APPDEFS_CORE)
 	cat $(APPDEFS) > xfile.ad
 
 # Default (fallback) resources

@@ -1,3 +1,2 @@
 #!/bin/sh
-
-cat intro.man gui.man db.man res.man footer.man | mandoc | less
+cat intro.man gui.man db.man appres.man listw.man pathw.man progw.man footer.man | mandoc | less

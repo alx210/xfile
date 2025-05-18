@@ -45,4 +45,10 @@ void create_masked_pixmap(Display *dpy,
  */
 void set_label_string(Widget wlabel, const char *psz);
 
+/*
+ * Retrieves standard motif icon pixmap
+ * Returns XmUNSPECIFIED_PIXMAP if not found
+ */
+Pixmap get_standard_icon(Widget w, const char *name);
+
 #endif /* GUIUTIL_H */
