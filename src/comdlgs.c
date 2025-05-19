@@ -528,7 +528,7 @@ static void input_dlg_cb(Widget w, XtPointer client, XtPointer call)
 				XmListDeletePositions(idd->whistory, pos_list, count);
 			}
 			
-			XmListAddItem(idd->whistory, fscb->value, 0);
+			XmListAddItem(idd->whistory, fscb->value, 1);
 		}
 
 		str = XmStringUnparse(fscb->value, NULL, XmMULTIBYTE_TEXT,
