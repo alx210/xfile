@@ -563,7 +563,7 @@ static void feedback_dialog(struct fsproc_data *d, int type, const char *msg)
 	xms = XmStringCreateLocalized((String)msg);
 	XtSetArg(args[0], XmNlabelString, xms);
 	XtSetArg(args[1], XmNlabelPixmap,
-		(type == FBT_RETRY_IGNORE) ? err_pixmap : warn_pixmap);
+		(type == FBT_CONTINUE_SKIP) ? warn_pixmap : err_pixmap);
 	XtSetValues(d->wfbmsg, args, 2);
 	XmStringFree(xms);
 	XtSetSensitive(d->wfbinput[FB_RETRY_CONTINUE], True);
