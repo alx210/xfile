@@ -731,10 +731,14 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 			msg.stat_errno = errno;
 			memset(&st, 0, sizeof(struct stat));
 		} else if(S_ISLNK(st.st_mode)) {
+			off_t lnk_size = st.st_size;
+			
 			msg.is_symlink = True;
 			if(stat(ent->d_name, &st) == -1) {
 				msg.stat_errno = errno;
 			}
+			
+			st.st_size = lnk_size;
 		} else {
 			msg.is_symlink = False;
 		}
@@ -868,10 +872,13 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 				msg.stat_errno = errno;
 				memset(&st, 0, sizeof(struct stat));
 			} else if(S_ISLNK(st.st_mode)) {
+				off_t lnk_size = st.st_size;
+				
 				msg.is_symlink = True;
 				if(stat(ent->d_name, &st) == -1) {
 					msg.stat_errno = errno;
 				}
+				st.st_size = lnk_size;
 			} else {
 				msg.is_symlink = False;
 			}
