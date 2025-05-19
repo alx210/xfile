@@ -190,7 +190,7 @@ static void redraw(Widget w)
 		ty = cy + (ch - text_height) / 2;
 
 		XSetFillStyle(dpy, prog->abg_gc, FillSolid);
-		XFillRectangle(dpy, wnd, prog->bg_gc, pw, cy, cw - pw, ch);
+		XFillRectangle(dpy, wnd, prog->bg_gc, cx + pw, cy, cw - pw, ch);
 		XFillRectangle(dpy, wnd, prog->abg_gc, cx, cy, pw, ch);
 		
 		if((prog->fg_pixel != prog->afg_pixel) && (pw >= tx)) {
