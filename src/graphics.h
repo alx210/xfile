@@ -41,14 +41,4 @@ Boolean create_ui_pixmap(Widget wui, char **data,
 	Pixmap *image, Pixmap *mask);
 
 
-/* Builds a window manager icon and mask from bitmap data */
-#define create_wm_icon(name, image, mask) \
-	__create_wm_icon(name##_bits, name##_m_bits,\
-	 name##_width, name##_height, image, mask)
-
-void __create_wm_icon(
-	const void *bits, const void *mask_bits,
-	unsigned int width, unsigned int height,
-	Pixmap *image, Pixmap *mask);
-
 #endif /* GRAPHICS_H */

@@ -164,7 +164,8 @@ static struct mount_proc_data* init_mount_proc(
 	info_sz = malloc(length);
 	snprintf(info_sz, length, info_tmpl, mp->cmd_info);
 	
-	if(!wm_icon_pix) create_wm_icon(hrglas, &wm_icon_pix, &wm_icon_mask);
+	if(!wm_icon_pix) create_wm_icon(app_inst.display,
+		hrglas, &wm_icon_pix, &wm_icon_mask);
 	
 	n = 0;
 	destroy_cbr[1].closure = (XtPointer) mp;

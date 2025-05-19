@@ -307,7 +307,7 @@ int main(int argc, char **argv)
 	
 	create_main_window();
 
-	create_wm_icon(cabinet, &icon_pix, &icon_mask);
+	create_wm_icon(app_inst.display, cabinet, &icon_pix, &icon_mask);
 	
 	n = 0;	
 	XtSetArg(args[n], XmNiconPixmap, icon_pix); n++;

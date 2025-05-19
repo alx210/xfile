@@ -13,6 +13,7 @@ icon will be used instead.
 ICONS USED IN THE DEFAULT CONFIGURATION
 ---------------------------------------
 audio    Audio files (wav, mp3, flac, etc.)
+asm      Assembly code
 bin      Generic binary files
 cinc     C Header
 comp     Compressed Files (.Z, .bz, .gz, etc.)

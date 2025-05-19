@@ -227,7 +227,6 @@ static int create_icon_pixmap(struct icon *icon, enum icon_size size)
 	return res;
 }
 
-
 /*
  * Loads an icon image from search path, or built-in if none found.
  * Returns True on success, False otherwise.
@@ -295,32 +294,4 @@ Boolean create_ui_pixmap(Widget wui, char **data,
 			XtWindow(app_inst.wshell), data, image, mask, &att);
 
 	return (res == XpmSuccess) ? True : False;
-}
-
-/*
- * Builds a window manager icon and mask from bitmap data
- * This is invoked with the create_wm_icon macro
- */
-void __create_wm_icon(
-	const void *bits, const void *mask_bits,
-	unsigned int width, unsigned int height,
-	Pixmap *image, Pixmap *mask)
-{
-	Window root;
-	int depth, screen;
-	Screen *pscreen;
-	Pixel fg_color, bg_color;
-	
-	pscreen = XDefaultScreenOfDisplay(app_inst.display);
-	screen = XScreenNumberOfScreen(pscreen);
-	root = RootWindowOfScreen(pscreen);
-	depth = DefaultDepth(app_inst.display, screen);
-	
-	fg_color = BlackPixel(app_inst.display, screen);
-	bg_color = WhitePixel(app_inst.display, screen);
-
-	*image = XCreatePixmapFromBitmapData(app_inst.display, root,
-		(char*)bits, width, height, fg_color, bg_color, depth);
-	*mask = XCreatePixmapFromBitmapData(app_inst.display, root,
-		(char*)mask_bits, width, height, 1, 0, 1);
 }

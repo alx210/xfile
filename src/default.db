@@ -91,7 +91,7 @@ Tarball {
 	}
 	action {
 		&List: %terminal "tar -tf %n | less"
-		&Extract: %terminal "tar -tf %n | less"
+		&Extract: %terminal "tar -xf %n | less"
 	}
 }
 
@@ -220,13 +220,11 @@ C++ Header {
 }
 
 Assembler Source {
-	icon text
+	icon asm
 	match_name {
 		*.m
 		*.asm
-		*.ASM
 		*.inc
-		*.INC
 	}
 	action &Open: %textEditor %n
 }

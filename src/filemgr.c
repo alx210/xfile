@@ -982,11 +982,13 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 		closedir(dir);
 
 		/* check for deleted files */
-		for(i = 0; i < nfiles; i++) {
+		for(i = 0; i < nfiles; ) {
 			size_t delta;
 		
 			if(file_list[i].touched) {
 				file_list[i].touched = False;
+				
+				i++;
 				continue;
 			}
 			dbg_trace("update: \'%s\' was removed\n", file_list[i].name);

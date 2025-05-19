@@ -30,25 +30,39 @@ void raise_and_focus(Widget wshell);
 Boolean add_delete_window_handler(Widget w,
 	XtCallbackProc proc, XtPointer closure);
 
-/* 
- * Builds a pixmap and a mask from xbm data specified.
- */
-void create_masked_pixmap(Display *dpy,
-	const void *bits, const void *mask_bits,
-	unsigned int width, unsigned int height,
-	Pixel fg_color, Pixel bg_color,
-	Pixmap *image, Pixmap *mask);
-
 /*
  * Convenience function for setting XmLabel text.
  * psz may be null, in which case empty string is assumed.
  */
 void set_label_string(Widget wlabel, const char *psz);
 
+/* Builds a window manager icon and mask from bitmap data */
+#define create_wm_icon(dpy, name, image, mask) \
+	__create_wm_icon(dpy, name##_bits, name##_m_bits,\
+	 name##_width, name##_height, image, mask)
+
+void __create_wm_icon(Display*,
+	const void *bits, const void *mask_bits,
+	unsigned int width, unsigned int height,
+	Pixmap *image, Pixmap *mask);
+
 /*
  * Retrieves standard motif icon pixmap
  * Returns XmUNSPECIFIED_PIXMAP if not found
  */
 Pixmap get_standard_icon(Widget w, const char *name);
+
+/*
+ * Returns pixmap dimensions and depth. Depth may be NULL if not needed.
+ */
+void get_pixmap_info(Display *dpy, Pixmap pixmap,
+	unsigned int *rwidth, unsigned int *rheight, unsigned int *rdepth);
+
+/*
+ * Scales a pixmap to n times of its original size.
+ * Returns an new pixmap on success, None otherwise.
+ */
+Pixmap scale_pixmap(Display *dpy, Visual *vi,
+	Pixmap src_pixmap, unsigned int n);
 
 #endif /* GUIUTIL_H */

@@ -288,7 +288,8 @@ static int create_progress_ui(struct fsproc_data *d)
 		{ (XtCallbackProc)NULL, NULL}
 	};
 
-	if(icon_pix == None) create_wm_icon(copymove, &icon_pix, &icon_mask);
+	if(icon_pix == None) create_wm_icon(
+		app_inst.display, copymove, &icon_pix, &icon_mask);
 
 	n = 0;
 	XtSetArg(args[n], XmNdestroyCallback, destroy_cbr); n++;
@@ -1327,7 +1328,7 @@ static int wp_copy_tree(struct wp_data *wpd,
 	
 	/* purge directory structure */
 	if(move) {
-		wp_post_stat(wpd, "Purging directory structure...");
+		wp_post_stat(wpd, "Deleting directory tree...");
 		while(!errv && (cur_path = stk_pop(rem_stk, NULL)) ) {
 			errv = wp_delete_directory(wpd, cur_path);
 			free(cur_path);
@@ -1734,7 +1735,7 @@ static int wp_delete_tree(struct wp_data *wpd, const char *src)
 	
 	/* purge directory structure */
 	while(!errv && (cur_path = stk_pop(rem_stk, NULL)) ) {
-		wp_post_stat(wpd, "Purging directory structure...");
+		wp_post_stat(wpd, "Deleting directory tree...");
 		errv = wp_delete_directory(wpd, cur_path);
 		free(cur_path);
 	}

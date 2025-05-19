@@ -260,6 +260,35 @@ void set_label_string(Widget wlabel, const char *psz)
 }
 
 /*
+ * Builds a window manager icon and mask from bitmap data
+ * This is invoked with the create_wm_icon macro
+ */
+void __create_wm_icon(Display *dpy,
+	const void *bits, const void *mask_bits,
+	unsigned int width, unsigned int height,
+	Pixmap *image, Pixmap *mask)
+{
+	Window root;
+	int depth, screen;
+	Screen *pscreen;
+	Pixel fg_color, bg_color;
+	
+	pscreen = XDefaultScreenOfDisplay(dpy);
+	screen = XScreenNumberOfScreen(pscreen);
+	root = RootWindowOfScreen(pscreen);
+	depth = DefaultDepth(dpy, screen);
+	
+	fg_color = BlackPixel(dpy, screen);
+	bg_color = WhitePixel(dpy, screen);
+
+	*image = XCreatePixmapFromBitmapData(dpy, root,
+		(char*)bits, width, height, fg_color, bg_color, depth);
+	*mask = XCreatePixmapFromBitmapData(dpy, root,
+		(char*)mask_bits, width, height, 1, 0, 1);
+}
+
+
+/*
  * Retrieves standard motif icon pixmap
  */
 Pixmap get_standard_icon(Widget w, const char *name)
@@ -267,14 +296,100 @@ Pixmap get_standard_icon(Widget w, const char *name)
 	Display *dpy = XtDisplay(w);
 	Pixel fg;
 	Pixel bg;
-	Screen *pscreen;
 	Arg args[2];
-	
-	pscreen = XDefaultScreenOfDisplay(dpy);
 	
 	XtSetArg(args[0], XmNbackground, &bg);
 	XtSetArg(args[1], XmNforeground, &fg);
 	XtGetValues(w, args, 2);
 
-	return XmGetPixmap(pscreen, (char*)name, fg, bg);
+	return XmGetPixmap(XtScreen(w), (char*)name, fg, bg);
+}
+
+/*
+ * Returns pixmap dimensions and depth.
+ * Depth may be NULL if not needed.
+ */
+void get_pixmap_info(Display *dpy, Pixmap pixmap,
+	unsigned int *rwidth, unsigned int *rheight, unsigned int *rdepth)
+{
+	unsigned int depth;
+	Window wnd;
+	int x, y;
+	unsigned int bw;
+	
+	XGetGeometry(dpy, pixmap, &wnd,
+		&x, &y, rwidth, rheight, &bw, &depth);
+
+	if(rdepth) *rdepth = depth;
+}
+
+/*
+ * Scales a pixmap to n times of its original size.
+ * Returns an new pixmap on success, None otherwise.
+ */
+Pixmap scale_pixmap(Display *dpy, Visual *vi,
+	Pixmap src_pixmap, unsigned int scale)
+{
+	unsigned int width;
+	unsigned int height;
+	unsigned int depth;
+	unsigned int cx, cy;
+	Pixmap dst_pixmap;
+	XImage *xisrc;
+	XImage *xidst;
+
+	if(!vi) vi = XDefaultVisual(dpy, DefaultScreen(dpy));
+	
+	get_pixmap_info(dpy, src_pixmap, &width, &height, &depth);
+	
+	xisrc = XGetImage(dpy, src_pixmap, 0, 0,
+		width, height, AllPlanes, ZPixmap);
+	if(!xisrc) return None;
+	
+	xidst = XCreateImage(dpy, vi, xisrc->depth, ZPixmap, 0, NULL,
+		width * scale, height * scale, xisrc->bitmap_pad, 0);
+	if(xidst) {
+		xidst->data = malloc((width * scale) *
+			(height * scale) * (xisrc->bitmap_pad / 8));
+		if(!xidst->data) {
+			XDestroyImage(xisrc);
+			XDestroyImage(xidst);
+			return None;
+		}
+	} else {
+		XDestroyImage(xisrc);
+		return None;
+	}
+
+	for(cy = 0; cy < height; cy++) {
+		for(cx = 0; cx < width; cx++) {
+			unsigned int dx, dy;
+			Pixel px;
+			
+			px = XGetPixel(xisrc, cx, cy);
+			
+			for(dy = 0; dy < scale; dy++) {
+				for(dx = 0; dx < scale; dx++) {
+					XPutPixel(xidst, cx * scale + dx,
+						cy * scale + dy, px);
+				}
+			}
+		}
+	}
+	
+	XDestroyImage(xisrc);
+
+	dst_pixmap = XCreatePixmap(dpy, src_pixmap,
+		width * scale, height * scale, depth);
+	if(dst_pixmap) {
+		GC blt_gc = XCreateGC(dpy, dst_pixmap, 0, NULL);
+
+		XPutImage(dpy, dst_pixmap, blt_gc, xidst, 0, 0, 0, 0,
+			width * scale, height * scale);
+
+		XFreeGC(dpy, blt_gc);
+	}
+	XDestroyImage(xidst);
+	
+	return dst_pixmap;
 }
