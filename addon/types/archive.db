@@ -6,8 +6,9 @@ ZIP Archive {
 		*.zip
 		*.ZIP
 	}
-	&List: %terminal "unzip -l %n | less"
-	&Extract: %terminal "unzip %n | less"
+	action &List: %terminal "unzip -l %n | less"
+	action &Extract: %terminal "unzip %n | less"
+	action E&xtract (Subdirectory): %terminal "unzip -d %{n}.d %n | less"
 }
 
 RAR Archive {
@@ -16,8 +17,8 @@ RAR Archive {
 		*.rar
 		*.RAR
 	}
-	&List: %terminal "unrar l %n | less"
-	&Extract:  %terminal "unrar %n | less"
+	action &List: %terminal "unrar l %n | less"
+	action &Extract: %terminal "unrar %n | less"
 }
 
 7ZIP Archive {
@@ -26,5 +27,5 @@ RAR Archive {
 		*.7z
 		*.7Z
 	}
-	&Extract: %terminal "p7zip -d %n | less"
+	action &Extract: %terminal "p7zip -d %n | less"
 }
