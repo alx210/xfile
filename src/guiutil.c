@@ -293,7 +293,6 @@ void __create_wm_icon(Display *dpy,
  */
 Pixmap get_standard_icon(Widget w, const char *name)
 {
-	Display *dpy = XtDisplay(w);
 	Pixel fg;
 	Pixel bg;
 	Arg args[2];

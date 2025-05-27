@@ -18,6 +18,10 @@ files, or a directory. Default is \fIalways\fP.
 Specifies the default startup path if none was specified on the command line.
 Default is the current directory.
 .TP
+\fBduplicateSuffix\fP \fIString\fP
+Specifies the default suffix used to construct suggested names for duplicates.
+Default value is \fI.copy\fP.
+.TP
 \fBfilterDirectories\fP \fIBoolean\fP
 If True, filter pattern (see the \-f option and the View\->Filter... menu item)
 will also affect directories, files only otherwise. Default is False.

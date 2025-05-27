@@ -957,11 +957,11 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 					is_mounted = (path_mounted(fqn) ? True : False);
 				}
 				msg.db_index = DB_UNKNOWN;
+				dbg_trace("%s: mounted %s\n",
+					ent->d_name, is_mounted ? "True" : "False");
 			} else {
 				msg.db_index = DB_UNKNOWN;
 			}
-			dbg_trace("%s: mounted %s\n",
-				ent->d_name, is_mounted ? "True" : "False");
 
 			msg.size = st.st_size;
 			msg.name_len = strlen(ent->d_name);
@@ -1016,7 +1016,7 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 		msg.files_total = files_total;
 		msg.files_skipped = files_skipped;
 		msg.size_total = size_total;
-		
+
 		out = write(pipe_fd, &msg, sizeof(struct msg_data));
 		if(out < sizeof(struct msg_data)) return RP_IOFAIL;
 						

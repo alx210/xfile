@@ -64,6 +64,9 @@
 #define CS_ICON_MEDIUM	"medium"
 #define CS_ICON_LARGE	"large"
 
+/* Default duplicate suffix */
+#define DEF_DUP_SUFFIX ".copy"
+
 /* Fallback X resources */
 extern const char *xfile_ad[]; /* in fallback.c */
 

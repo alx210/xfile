@@ -14,6 +14,9 @@
 int copy_files(const char *wd, char* const *srcs,
 	size_t num_srcs, const char *dest);
 
+/* Duplicates files/directories specified in srcs */
+int dup_files(const char *wd, char * const *srcs, size_t num_srcs);
+
 /* Recursively moves files and directories in srcs to dest directory */
 int move_files(const char *wd, char* const *srcs,
 	size_t num_srcs, const char *dest);

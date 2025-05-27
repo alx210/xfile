@@ -222,6 +222,12 @@ int main(int argc, char **argv)
 		XmRInt, sizeof(int),
 		XtOffsetOf(struct app_resources, history_max),
 		XmRImmediate,(XtPointer)DEF_HISTORY_MAX
+	},
+	{
+		"duplicateSuffix", "DuplicateSuffix",
+		XtRString, sizeof(String),
+		XtOffsetOf(struct app_resources, dup_suffix),
+		XtRImmediate,(XtPointer)DEF_DUP_SUFFIX
 	}
 	};
 
@@ -583,6 +589,7 @@ static void create_main_menus(void)
 		{IT_PUSH, "copyTo", "&Copy To...", copy_to_cb, NULL},
 		{IT_PUSH, "moveTo", "&Move To...", move_to_cb, NULL},
 		{IT_PUSH, "link", "&Link...", link_to_cb, NULL},
+		{IT_PUSH, "duplicate", "D&uplicate...", duplicate_cb, NULL},
 		{IT_PUSH, "rename", "&Rename", rename_cb, NULL},
 		{IT_PUSH, "delete", "&Delete", delete_cb, NULL},
 		{IT_PUSH, "attributes", "A&ttributes", attributes_cb, NULL},
@@ -649,6 +656,7 @@ static void create_main_menus(void)
 		{IT_SEPARATOR, "actionsSeparator", NULL, NULL},
 		{IT_PUSH, "copyTo", "&Copy To...", copy_to_cb, NULL},
 		{IT_PUSH, "moveTo", "&Move To...", move_to_cb, NULL},
+		{IT_PUSH, "duplicate", "D&uplicate...", duplicate_cb, NULL},
 		{IT_PUSH, "link", "&Link...", link_to_cb, NULL},
 		{IT_PUSH, "rename", "&Rename", rename_cb, NULL},
 		{IT_PUSH, "delete", "&Delete", delete_cb, NULL},
@@ -1080,6 +1088,7 @@ void set_ui_sensitivity(short flags)
 		"*copyTo",
 		"*moveTo",
 		"*link",
+		"*duplicate",
 		"*delete"
 	};
 	

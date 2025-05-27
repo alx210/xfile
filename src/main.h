@@ -39,6 +39,7 @@ struct app_resources {
 	String media_dir;
 	String media_mount_cmd;
 	String media_umount_cmd;
+	String dup_suffix;
 	unsigned int history_max;
 };
 

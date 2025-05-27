@@ -89,6 +89,7 @@ struct wp_data {
 	enum wp_action action;
 	const char *wdir;
 	char * const *srcs;
+	char * const *dsts;
 	size_t num_srcs;
 	const char *dest;
 	
@@ -747,6 +748,12 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 	/* the work process */
 	dbg_trace("Work proc spawned: %ld\n", getpid());
 	
+	wpd->ignore_read_err = False;
+	wpd->ignore_write_err = False;
+	wpd->ignore_special = False;
+	wpd->one_percent_size = 0;
+	wpd->percent_total = 0;
+	
 	clock_gettime(CLOCK_MONOTONIC, &proc_time[0]);
 	rsignal(SIGPIPE, wp_sigpipe_handler, 0);
 
@@ -842,7 +849,7 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 			case WP_COPY:
 
 			if(S_ISDIR(st_src.st_mode)) {
-				char *src_title = get_path_tail(csrc);
+				char *src_title = wpd->dsts ? wpd->dsts[i] : wpd->srcs[i];
 				char dest_fqn[strlen(cdest) + strlen(src_title) + 2];
 
 				build_path(dest_fqn, cdest, src_title, NULL);
@@ -857,16 +864,16 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 				}
 
 				rv = wp_copy_tree(wpd, csrc, dest_fqn, move);
-			} else if(S_ISREG(st_src.st_mode)){
-				char *src_title = get_path_tail(csrc);
+			} else if(S_ISREG(st_src.st_mode)) {
+				char *src_title = wpd->dsts ? wpd->dsts[i] : wpd->srcs[i];
 				char dest_fqn[strlen(cdest) + strlen(src_title) + 2];
 
 				build_path(dest_fqn, cdest, src_title, NULL);
 				wp_post_astat(wpd, move ? "Moving" : "Copying", csrc, cdest);
 				rv = wp_copy_file(wpd, csrc, dest_fqn, move);
 
-			} else if(S_ISLNK(st_src.st_mode)){
-				char *src_title = get_path_tail(csrc);
+			} else if(S_ISLNK(st_src.st_mode)) {
+				char *src_title = wpd->dsts ? wpd->dsts[i] : wpd->srcs[i];
 				char dest_fqn[strlen(cdest) + strlen(src_title) + 2];
 				char *link_tgt;
 
@@ -1535,7 +1542,8 @@ static int wp_copy_file(struct wp_data *wpd,
 	
 	skip_copying:
 
-	wpd->percent_total += (double)st_src.st_size / wpd->one_percent_size;
+	wpd->percent_total += 
+		st_src.st_size ? ((double)st_src.st_size / wpd->one_percent_size) : 0;
 	wp_post_prog(wpd, (int)(0.5 + wpd->percent_total));
 	
 	return 0;	
@@ -2266,6 +2274,7 @@ int copy_files(const char *wd, char * const *srcs,
 		.action = WP_COPY,
 		.wdir = wd,
 		.srcs = srcs,
+		.dsts = NULL,
 		.num_srcs = num_srcs,
 		.dest = dest
 	};
@@ -2290,6 +2299,7 @@ int move_files(const char *wd, char * const *srcs,
 		.action = WP_MOVE,
 		.wdir = wd,
 		.srcs = srcs,
+		.dsts = NULL,
 		.num_srcs = num_srcs,
 		.dest = dest
 	};
@@ -2314,6 +2324,7 @@ int delete_files(const char *wd, char * const *srcs, size_t num_srcs)
 		.action = WP_DELETE,
 		.wdir = wd,
 		.srcs = srcs,
+		.dsts = NULL,
 		.num_srcs = num_srcs,
 		.dest = NULL
 	};
@@ -2341,6 +2352,7 @@ int set_attributes(const char *wd, char * const *srcs, size_t num_srcs,
 		.wdir = wd,
 		.srcs = srcs,
 		.num_srcs = num_srcs,
+		.dsts = NULL,
 		.dest = NULL,
 		.gid = gid,
 		.uid = uid,
@@ -2358,6 +2370,107 @@ int set_attributes(const char *wd, char * const *srcs, size_t num_srcs,
 	if( (res = wp_main(d, &wpd)) ) {
 		destroy_progress_ui(d);
 	}
+	
+	return res;
+}
+
+int dup_files(const char *wd, char * const *srcs, size_t num_srcs)
+{
+	struct stat st;
+	size_t i;
+	int res = 0;
+	char **dsts;
+	struct fsproc_data *d;
+	char *dup_suffix = app_res.dup_suffix;
+	struct wp_data wpd = {
+		.action = WP_COPY,
+		.wdir = wd,
+		.srcs = srcs,
+		.dsts = NULL,
+		.num_srcs = num_srcs,
+		.dest = (wd ? wd : get_working_dir())
+	};
+
+	
+	if(!wpd.dest) return ENOENT;
+
+	dsts = malloc(sizeof(char*) * num_srcs);
+	if(!dsts) return errno;
+	
+	if(num_srcs == 1) {
+		unsigned short in = 0;
+		char init_name[strlen(srcs[0]) + strlen(dup_suffix) + 8];
+		
+		sprintf(init_name, "%s%s", srcs[0], dup_suffix);
+
+		while(!stat(init_name, &st)) {
+			sprintf(init_name, "%s%s%hu", srcs[0], dup_suffix, ++in);
+			if(!in) break;
+		}
+		
+		dsts[0] = input_string_dlg(app_inst.wshell, "Duplicate Item",
+			"Specify a new name", init_name, NULL, ISF_FILENAME | ISF_NOSLASH);
+		
+		if(!dsts[0]) {
+			free(dsts);
+			return 0;
+		}
+	} else {
+		char *suffix;
+		size_t suffix_len;
+		
+		suffix = input_string_dlg(app_inst.wshell,
+			"Duplicate Multiple Items",
+			"Specify a suffix to be appended to names.\n\n"
+			"A number will also be appended if a name,\n"
+			"despite the suffix added, is already taken.",
+			dup_suffix, NULL, ISF_FILENAME | ISF_NOSLASH | ISF_ALLOWEMPTY);
+		
+		if(!suffix) {
+			free(dsts);
+			return 0;
+		}
+		
+		suffix_len = strlen(suffix);
+		
+		for(i = 0; i < num_srcs; i++) {
+			dsts[i] = malloc(strlen(srcs[i]) + suffix_len + 8);
+			if(!dsts[i]) {
+				while(i) free(dsts[--i]);
+				free(dsts);
+				free(suffix);
+				return ENOMEM;
+			}
+		}
+
+		for(i = 0; i < num_srcs; i++) {
+			unsigned short in = 0;
+			
+			size_t name_len = (strlen(srcs[i]) + suffix_len + 8);
+			snprintf(dsts[i], name_len, "%s%s", srcs[i], suffix);
+			
+			while(!stat(dsts[i], &st)) {
+				snprintf(dsts[i], name_len, "%s%s%hu", srcs[i], suffix, ++in);
+				if(!in) break;
+			}
+		}
+		free(suffix);
+	}
+
+	wpd.dsts = dsts;
+
+	d = init_fsproc(WP_COPY);
+	if(d) {
+		create_progress_ui(d);
+		if( (res = wp_main(d, &wpd)) ) {
+			destroy_progress_ui(d);
+		}
+	}
+	
+	for(i = 0; i < num_srcs; i++)
+		free(dsts[i]);
+	
+	free(dsts);	
 	
 	return res;
 }

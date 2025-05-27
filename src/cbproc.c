@@ -84,7 +84,7 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	dbg_assert(app_inst.cur_sel.count == 1);
 	
 	input = input_string_dlg(app_inst.wshell, "Pass To",
-		"Specify a command to run on the file.",
+		"Specify a command to run on the file",
 		last_input, "command", ISF_PRESELECT);
 	if(!input) return;
 	
@@ -487,8 +487,8 @@ void make_dir_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	char *input;
 	mode_t dir_mode = (S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
 	
-	input = input_string_dlg(app_inst.wshell, "New Directory",
-		"Specify new directory name.", NULL, NULL, ISF_PRESELECT);
+	input = input_string_dlg(app_inst.wshell, "Make Directory",
+		"Specify new directory name", NULL, NULL, ISF_PRESELECT);
 	if(!input) return;
 	
 	if(mkdir(input, dir_mode) == -1) {
@@ -504,8 +504,8 @@ void make_file_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	char *input;
 	const mode_t file_mode = (S_IRUSR|S_IWUSR|S_IRGRP);
 	
-	input = input_string_dlg(app_inst.wshell, "New File",
-		"Specify new file name.", NULL, NULL, ISF_PRESELECT);
+	input = input_string_dlg(app_inst.wshell, "Make File",
+		"Specify new file name", NULL, NULL, ISF_PRESELECT);
 	if(!input) return;
 	
 	if(mknod(input, file_mode, 0) == -1) {
@@ -611,7 +611,7 @@ void rename_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	cursel = strdup(app_inst.cur_sel.item.name);
 	
 	target = input_string_dlg(app_inst.wshell,
-		"Rename", "Specify new file name.",
+		"Rename", "Specify new file name",
 		cursel, NULL, ISF_NOSLASH | ISF_PRESELECT | ISF_FILENAME);
 	if(!target) {
 		free(cursel);
@@ -702,6 +702,20 @@ void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	free(link);
 }
 
+void duplicate_cb(Widget w, XtPointer pclient, XtPointer pcall)
+{
+	int rv;
+	
+	if(!app_inst.cur_sel.count)	return;
+	
+	rv = dup_files(NULL, app_inst.cur_sel.names, app_inst.cur_sel.count);
+	if(rv) {
+		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+			"Could not complete requested action.\n%s.",
+			strerror(errno), NULL);
+	}
+}
+
 void attributes_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	dbg_assert(app_inst.cur_sel.count);
@@ -731,7 +745,7 @@ void select_pattern_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	char *input;
 	
 	input = input_string_dlg(app_inst.wshell, "Select Pattern",
-		"Specify a glob pattern.",
+		"Specify a glob pattern",
 		last_input, "select", ISF_PRESELECT);
 	if(!input) {
 		file_list_deselect(app_inst.wlist);
@@ -931,7 +945,7 @@ void new_window_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 	get_input: /* on failed access() check below */	
 	input = input_string_dlg(app_inst.wshell, "New Window",
-		"Specify path to browse.", "~", "browse", ISF_PRESELECT);
+		"Specify path to browse", "~", "browse", ISF_PRESELECT);
 	
 	if(!input) return;
 	
