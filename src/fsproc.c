@@ -2417,7 +2417,7 @@ int dup_files(const char *wd, char * const *srcs, size_t num_srcs)
 		}
 		
 		dsts[0] = input_string_dlg(app_inst.wshell, "Duplicate Item",
-			"Specify a new name", init_name, NULL, ISF_FILENAME | ISF_NOSLASH);
+			"Specify a new name", init_name, NULL, ISF_NOSLASH | ISF_PRESELECT);
 		
 		if(!dsts[0]) {
 			free(dsts);
@@ -2432,7 +2432,7 @@ int dup_files(const char *wd, char * const *srcs, size_t num_srcs)
 			"Specify a suffix to be appended to names.\n\n"
 			"A number will also be appended if a name,\n"
 			"despite the suffix added, is already taken.",
-			dup_suffix, NULL, ISF_FILENAME | ISF_NOSLASH | ISF_ALLOWEMPTY);
+			dup_suffix, NULL, ISF_NOSLASH | ISF_PRESELECT | ISF_ALLOWEMPTY);
 		
 		if(!suffix) {
 			free(dsts);
