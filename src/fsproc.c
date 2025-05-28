@@ -1367,7 +1367,7 @@ static int wp_copy_file(struct wp_data *wpd,
 		return 0;
 	}
 
-	if(!stat(dest, &st_dest)) {
+	if(!lstat(dest, &st_dest)) {
 		static Boolean ignore_exist = False;
 		int fb_type;
 		char *msg;
@@ -1377,7 +1377,11 @@ static int wp_copy_file(struct wp_data *wpd,
 		if(S_ISDIR(st_dest.st_mode))	{
 			fb_type = FBT_SKIP_CANCEL;
 			msg = "Destination exists and is a directory!";
-		} else {
+		} else if(S_ISLNK(st_dest.st_mode)) {
+			fb_type = FBT_SKIP_CANCEL;
+			msg = "Destination file exists and is a symbolic link.\n"
+					"No attempt will be made to write through it.";
+		} else if(S_ISREG(st_dest.st_mode)) {
 			if(st_src.st_dev == st_dest.st_dev &&
 				st_src.st_ino == st_dest.st_ino) {
 				fb_type = FBT_SKIP_CANCEL;
@@ -1386,6 +1390,10 @@ static int wp_copy_file(struct wp_data *wpd,
 				fb_type = FBT_CONTINUE_SKIP;
 				msg = "Destination file exists. Proceed and overwrite?";
 			}
+		} else {
+			fb_type = FBT_SKIP_CANCEL;
+			msg = "Destination file exists and is a special file.\n"
+					"No attempt will be made to write to it.";
 		}
 		
 		reply = wp_post_msg(wpd, fb_type,
