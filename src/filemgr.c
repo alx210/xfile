@@ -1028,7 +1028,6 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 
 static void read_proc_sigalrm(int sig)
 {
-	sleep(1);
 	/* we use SIGALRM to force refresh */
 }
 
