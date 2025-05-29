@@ -302,8 +302,7 @@ static int create_progress_ui(struct fsproc_data *d)
 	XtSetArg(args[n], XmNiconPixmap, icon_pix); n++;
 	XtSetArg(args[n], XmNiconMask, icon_mask); n++;
 	d->wshell = XtAppCreateShell(
-		APP_NAME "Progress",
-		APP_CLASS "Progress",
+		APP_NAME "ProgressDialog", APP_CLASS,
 		topLevelShellWidgetClass,
 		app_inst.display, args, n);
 
@@ -314,7 +313,7 @@ static int create_progress_ui(struct fsproc_data *d)
 	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 	XtSetArg(args[n], XmNresizePolicy, XmRESIZE_GROW); n++;
 	XtSetArg(args[n], XmNwidth, 360); n++;
-	wform = XmCreateForm(d->wshell, "form", args, n);
+	wform = XmCreateForm(d->wshell, "main", args, n);
 
 	if(label_pix[0] == None) {
 		int i;
