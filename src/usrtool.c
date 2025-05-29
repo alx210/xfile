@@ -59,6 +59,22 @@ static Bool xrm_enum_cb(XrmDatabase *rdb, XrmBindingList bindings,
 	return False;
 }
 
+static int compare(const void* a, const void* b)
+{
+	if(NULL == a || NULL == b)
+		return 0;
+
+    return strcmp(((struct user_tool_rec*)a)->name,
+                  ((struct user_tool_rec*)b)->name);
+}
+
+static void sort(struct user_tool_rec* p, int n)
+{
+	if(n < 1 || NULL == p) return;
+
+	qsort(p, n, sizeof(struct user_tool_rec), compare);
+}
+
 unsigned int get_user_tools(struct user_tool_rec **p)
 {
 	XrmDatabase rdb = XtDatabase(app_inst.display);
@@ -73,8 +89,12 @@ unsigned int get_user_tools(struct user_tool_rec **p)
 	
 	XrmEnumerateDatabase(rdb, name_list, class_list,
 		XrmEnumOneLevel, xrm_enum_cb, NULL);
-	
-	if(ntools) *p = tools;
+
+	if(ntools) {
+		sort(tools, ntools);
+		*p = tools;
+	}
+
 	return ntools;
 }
 
