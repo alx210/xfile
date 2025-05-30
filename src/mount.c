@@ -179,9 +179,8 @@ static struct mount_proc_data* init_mount_proc(
 	XtSetArg(args[n], XmNiconMask, wm_icon_mask); n++;
 
 	mp->wfbdlg = XtAppCreateShell(
-		APP_NAME "Mount",
-		APP_CLASS "Mount",
-		applicationShellWidgetClass,
+		APP_NAME "MountDialog",	APP_CLASS,
+		topLevelShellWidgetClass,
 		app_inst.display, args, n);
 
 	n = 0;
@@ -190,7 +189,7 @@ static struct mount_proc_data* init_mount_proc(
 	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 	XtSetArg(args[n], XmNresizePolicy, XmRESIZE_GROW); n++;
 
-	wform = XmCreateForm(mp->wfbdlg, "mountFeedback", args, n);
+	wform = XmCreateForm(mp->wfbdlg, "main", args, n);
 
 	if(!mount_icon) {
 		if(!create_ui_pixmap(wform, mount_xpm, &mount_icon, NULL) ||

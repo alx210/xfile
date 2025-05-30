@@ -302,8 +302,7 @@ static int create_progress_ui(struct fsproc_data *d)
 	XtSetArg(args[n], XmNiconPixmap, icon_pix); n++;
 	XtSetArg(args[n], XmNiconMask, icon_mask); n++;
 	d->wshell = XtAppCreateShell(
-		APP_NAME "Progress",
-		APP_CLASS "Progress",
+		APP_NAME "ProgressDialog", APP_CLASS,
 		topLevelShellWidgetClass,
 		app_inst.display, args, n);
 
@@ -314,7 +313,7 @@ static int create_progress_ui(struct fsproc_data *d)
 	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 	XtSetArg(args[n], XmNresizePolicy, XmRESIZE_GROW); n++;
 	XtSetArg(args[n], XmNwidth, 360); n++;
-	wform = XmCreateForm(d->wshell, "form", args, n);
+	wform = XmCreateForm(d->wshell, "main", args, n);
 
 	if(label_pix[0] == None) {
 		int i;
@@ -1367,7 +1366,7 @@ static int wp_copy_file(struct wp_data *wpd,
 		return 0;
 	}
 
-	if(!stat(dest, &st_dest)) {
+	if(!lstat(dest, &st_dest)) {
 		static Boolean ignore_exist = False;
 		int fb_type;
 		char *msg;
@@ -1377,7 +1376,11 @@ static int wp_copy_file(struct wp_data *wpd,
 		if(S_ISDIR(st_dest.st_mode))	{
 			fb_type = FBT_SKIP_CANCEL;
 			msg = "Destination exists and is a directory!";
-		} else {
+		} else if(S_ISLNK(st_dest.st_mode)) {
+			fb_type = FBT_SKIP_CANCEL;
+			msg = "Destination file exists and is a symbolic link.\n"
+					"No attempt will be made to write through it.";
+		} else if(S_ISREG(st_dest.st_mode)) {
 			if(st_src.st_dev == st_dest.st_dev &&
 				st_src.st_ino == st_dest.st_ino) {
 				fb_type = FBT_SKIP_CANCEL;
@@ -1386,6 +1389,10 @@ static int wp_copy_file(struct wp_data *wpd,
 				fb_type = FBT_CONTINUE_SKIP;
 				msg = "Destination file exists. Proceed and overwrite?";
 			}
+		} else {
+			fb_type = FBT_SKIP_CANCEL;
+			msg = "Destination file exists and is a special file.\n"
+					"No attempt will be made to write to it.";
 		}
 		
 		reply = wp_post_msg(wpd, fb_type,
@@ -2409,7 +2416,7 @@ int dup_files(const char *wd, char * const *srcs, size_t num_srcs)
 		}
 		
 		dsts[0] = input_string_dlg(app_inst.wshell, "Duplicate Item",
-			"Specify a new name", init_name, NULL, ISF_FILENAME | ISF_NOSLASH);
+			"Specify a new name", init_name, NULL, ISF_NOSLASH | ISF_PRESELECT);
 		
 		if(!dsts[0]) {
 			free(dsts);
@@ -2424,7 +2431,7 @@ int dup_files(const char *wd, char * const *srcs, size_t num_srcs)
 			"Specify a suffix to be appended to names.\n\n"
 			"A number will also be appended if a name,\n"
 			"despite the suffix added, is already taken.",
-			dup_suffix, NULL, ISF_FILENAME | ISF_NOSLASH | ISF_ALLOWEMPTY);
+			dup_suffix, NULL, ISF_NOSLASH | ISF_PRESELECT | ISF_ALLOWEMPTY);
 		
 		if(!suffix) {
 			free(dsts);
