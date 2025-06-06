@@ -682,7 +682,7 @@ void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		target = realpath(cursel, NULL);
 		if(!target) {
 			va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
-				"Error accessing '\%s\'.\n%s", cursel, strerror(errno));
+				"Error accessing \'%s\'.\n%s", cursel, strerror(errno));
 			return;
 		}
 	} else {

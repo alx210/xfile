@@ -315,7 +315,7 @@ static void realize(Widget w, XtValueMask *mask, XSetWindowAttributes *att)
 	struct progress_part *p = PROG_PART(w);
 	Display *dpy = XtDisplay(w);
 	Window wnd;
-	const char stipple_data[] = {
+	const unsigned char stipple_data[] = {
 		0xC1, 0xE0, 0x70, 0x38,
 		0x1C, 0x0E, 0x07, 0x83
 	};

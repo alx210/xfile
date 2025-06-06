@@ -1730,7 +1730,7 @@ static void realize(Widget w, XtValueMask *mask, XSetWindowAttributes *att)
 	struct file_list_part *fl = FL_PART(w);
 	Display *dpy = XtDisplay(w);
 	Window wnd;
-	const char stipple_data[] = {
+	const unsigned char stipple_data[] = {
 		0x55, 0xAA, 0x55, 0xAA,
 		0x55, 0xAA, 0x55, 0xAA
 	};
