@@ -19,10 +19,10 @@
 /* Configuration files/directories */
 #define HOME_SUBDIR ".xfile"
 #define SHARE_SUBDIR "share/xfile"
+#define HIST_SUBDIR "history"
 #define DB_SUBDIR "types"
 #define PM_SUBDIR "icons"
 #define DB_SUFFIX ".db"
-#define HIS_SUFFIX ".his"
 
 /* Alternate invocation to just open files from db */
 #define XFILE_OPEN "xfile-open"

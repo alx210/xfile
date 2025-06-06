@@ -8,15 +8,16 @@ Icons in XPM (X Pixmap) format are looked for in user $HOME/.xfile/icons and
 system PREFIX\(dg/share/xfile/icons directories.
 .PP
 XFile stores some state information in the $HOME/.xfile directory. Files
-with the .his suffix contain prompt history, and can be safely deleted.
-
-\(dgPlatform dependent. (/usr on GNU/Linux, /usr/local on FreeBSD etc.)
-.SH AUTHORS
+in the \fBhistory\fP sub\-directory contain prompt history, and can be
+safely deleted.
 .PP
-XFile was written and is maintained by alx@fastestcode.org
+\(dgPlatform dependent. (/usr on GNU/Linux, /usr/local on FreeBSD etc.)
 .SH CAVEATS
 .PP
 1\. There is no xattr handling as of now.
 .PP
 2\. The FileList widget ignores LC_COLLATE locale setting if
 \fBcaseSensitive\fP and/or \fBnumberedSort\fP are \fBTrue\fP. 
+.SH AUTHORS
+.PP
+XFile was written and is maintained by alx@fastestcode.org

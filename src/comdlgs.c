@@ -28,6 +28,7 @@
 #include "main.h"
 #include "version.h"
 #include "guiutil.h"
+#include "path.h"
 #include "debug.h"
 
 
@@ -557,28 +558,48 @@ static Boolean is_blank(const char *sz)
 	return True;
 }
 
-/* Given file title, returns a FQN: ~/.xfile/<title>.his
+/* Given file title, returns a FQN: ~/.xfile/history/<title>
  * Caller is responsible for freeing the memory */
 static char* get_history_fqn(const char *title)
 {
-	char *path;
-	char *home;
-	size_t len;
+	static char *path = NULL;
+	static Boolean first_try = True;
+	char *fqn = NULL;
+	int rv;
+	struct stat st;
 	
-	home = getenv("HOME");
-	if(!home) return NULL;
+	if(!path) {
+		char *home = getenv("HOME");
+		if(!home) return NULL;
+
+		path = build_path(NULL, home, HOME_SUBDIR, HIST_SUBDIR, NULL);
+		if(!path) return NULL;
+	}
 	
-	len = snprintf(NULL, 0, "%s/%s/%s%s", home, HOME_SUBDIR, title, HIS_SUFFIX);
-	path = malloc(len + 1);
-	if(!path) return NULL;
-	
-	snprintf(path, len + 1, "%s/%s/%s%s", home, HOME_SUBDIR, title, HIS_SUFFIX);
-	
-	return path;
+	if(lstat(path, &st)) {
+		if(errno == ENOENT) {
+			rv = create_path(path, (S_IRUSR | S_IWUSR | S_IXUSR));
+			if(rv && first_try) {
+				stderr_msg("Failed to create \'%s\'. %s\n",
+					path, strerror(rv));
+				first_try = False;
+			}
+		} else if(first_try) {
+			stderr_msg("Cannot access \'%s\'. %s.\n",
+				path, strerror(errno));
+			first_try = False;
+		}
+	} else if(S_ISDIR(st.st_mode)) {
+		fqn = build_path(NULL, path, title, NULL);
+	} else if(first_try) {
+		stderr_msg("\'%s\' exists, but is not a directory.\n", path);
+		first_try = False;
+	}
+	return fqn;
 }
 
 /* 
- * Loads strings from file in ~/.xfile/<name>.his into the list widget.
+ * Loads strings from file in ~/.xfile/history/<name> into the list widget.
  * Returns True if any strings were added to the list, False otherwise
  */
 static Boolean load_history(Widget wlist, const char *name)
@@ -637,7 +658,7 @@ static Boolean load_history(Widget wlist, const char *name)
 	return (count > 0) ? True : False;	
 }
 
-/* Stores items from a list widget to a file in ~/.xfile/<name>.his */
+/* Stores items from a list widget to a file in ~/.xfile/history/<name> */
 static void store_history(Widget wlist, const char *name)
 {
 	char *fqn = get_history_fqn(name);
