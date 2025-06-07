@@ -681,9 +681,9 @@ static void sort_list(Widget w)
  */
 static int compare_names(const char *a, const char *b)
 {
-	int res;
-	
-	for( ; *a && *b; a++, b++) {
+	int res = 0;
+
+	while(*a && *b) {
 		if(isdigit(*a) && isdigit(*b)) {
 			const char *sp_a = a;
 			const char *sp_b = b;
@@ -712,19 +712,21 @@ static int compare_names(const char *a, const char *b)
 				fa *= 10;
 			} while(p != b);
 			
+			res = (ai - bi);
+			if(res)	return res;
+			
 			a = sp_a;
 			b = sp_b;
-			
-			res = (ai - bi);
-			if(res) return res;
 		} else {
 			res = *a - *b;
 			if(res) return res;
+			
+			a++; b++;
 		}
 	}
 	
 	if(*a) res = 1; else if(*b) res = -1; else res = 0;
-	
+
 	return res;
 }
 
@@ -756,7 +758,7 @@ static int sort_by_time_des(const void *aptr, const void *bptr)
 	const struct item_rec *b = (struct item_rec*)bptr;
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
 	if(!r) r = (b->mtime - a->mtime);
-	if(!r) r = sort_by_name_des(a, b);
+	if(!r) r = sort_by_name_des(aptr, bptr);
 	
 	return r;
 }
@@ -768,7 +770,7 @@ static int sort_by_time(const void *aptr, const void *bptr)
 	const struct item_rec *b = (struct item_rec*)bptr;
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
 	if(!r) r = (a->mtime - b->mtime);
-	if(!r) r = sort_by_name(a, b);
+	if(!r) r = sort_by_name(aptr, bptr);
 	
 	return r;
 }
@@ -780,7 +782,7 @@ static int sort_by_type_des(const void *aptr, const void *bptr)
 	const struct item_rec *b = (struct item_rec*)bptr;
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
 	if(!r) r = (a->db_type - b->db_type);
-	if(!r) r = sort_by_suffix_des(a, b);
+	if(!r) r = sort_by_suffix_des(aptr, bptr);
 
 	return r;
 }
@@ -792,7 +794,7 @@ static int sort_by_type(const void *aptr, const void *bptr)
 	const struct item_rec *b = (struct item_rec*)bptr;
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
 	if(!r) r = (b->db_type - a->db_type);
-	if(!r) r = sort_by_suffix(a, b);
+	if(!r) r = sort_by_suffix(aptr, bptr);
 
 	return r;
 }
@@ -816,7 +818,7 @@ static int sort_by_suffix_des(const void *aptr, const void *bptr)
 		} else r = 0;
 	}
 
-	return r ? r : sort_by_name_des(a, b);
+	return r ? r : sort_by_name_des(aptr, bptr);
 }
 
 static int sort_by_suffix(const void *aptr, const void *bptr)
@@ -831,13 +833,13 @@ static int sort_by_suffix(const void *aptr, const void *bptr)
 		char *sa = strrchr(a->tr_name, '.');
 		char *sb = strrchr(b->tr_name, '.');
 		if(sa && sb) {
-			r = qsort_strcmp_fp(sa + 1, sb + 1);
+			r = qsort_strcmp_fp(sb + 1, sa + 1);
 		} else if(sa || sb) {
-			r = (sa) ? -1 : 1;
+			r = (sb) ? -1 : 1;
 		} else r = 0;
 	}
 
-	return r ? r : sort_by_name(a, b);
+	return r ? r : sort_by_name(aptr, bptr);
 }
 
 static int sort_by_size_des(const void *aptr, const void *bptr)
@@ -847,7 +849,7 @@ static int sort_by_size_des(const void *aptr, const void *bptr)
 	const struct item_rec *b = (struct item_rec*)bptr;
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
 	if(!r) r = (b->size - a->size);
-	if(!r) r = sort_by_name_des(b, a);
+	if(!r) r = sort_by_name_des(aptr, bptr);
 
 	return r;
 }
@@ -859,7 +861,7 @@ static int sort_by_size(const void *aptr, const void *bptr)
 	const struct item_rec *b = (struct item_rec*)bptr;
 	r = S_ISDIR(b->mode) - S_ISDIR(a->mode);
 	if(!r) r = (a->size - b->size);
-	if(!r) r = sort_by_name(a, b);
+	if(!r) r = sort_by_name(aptr, bptr);
 
 	return r;
 }
