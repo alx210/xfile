@@ -1,18 +1,18 @@
 !-----------------------------------------------------------------------------
 ! Accelerators
 !-----------------------------------------------------------------------------
-*fileMenu.makeDirectory.acceleratorText: F7
-*fileMenu.makeDirectory.accelerator: <Key>F7
-*fileMenu.makeFile.acceleratorText: F6
-*fileMenu.makeFile.accelerator: <Key>F6
+*fileMenu.makeDirectory.acceleratorText: F6
+*fileMenu.makeDirectory.accelerator: <Key>F6
+*fileMenu.makeFile.acceleratorText: F5
+*fileMenu.makeFile.accelerator: <Key>F5
 *fileMenu.copyTo.acceleratorText: F4
 *fileMenu.copyTo.accelerator: <Key>F4
 *fileMenu.moveTo.acceleratorText: F3
 *fileMenu.moveTo.accelerator: <Key>F3
-! *fileMenu.link.acceleratorText: Alt+F4
-! *fileMenu.link.accelerator: Alt<Key>F4
-! *fileMenu.duplicate.acceleratorText: Alt+F2
-! *fileMenu.duplicate.accelerator: Alt<Key>F2
+*fileMenu.link.acceleratorText: Shift+F4
+*fileMenu.link.accelerator: Shift<Key>F4
+*fileMenu.duplicate.acceleratorText: Shift+F2
+*fileMenu.duplicate.accelerator: Shift<Key>F2
 *fileMenu.rename.acceleratorText: F2
 *fileMenu.rename.accelerator: <Key>F2
 *fileMenu.delete.acceleratorText: Delete
@@ -23,8 +23,8 @@
 
 *editMenu.selectAll.acceleratorText: Ctrl+A
 *editMenu.selectAll.accelerator: Ctrl<Key>a
-*editMenu.selectPattern.acceleratorText: Ctrl+P
-*editMenu.selectPattern.accelerator: Ctrl<Key>p
+*editMenu.selectPattern.acceleratorText: Ctrl+G
+*editMenu.selectPattern.accelerator: Ctrl<Key>g
 *editMenu.deselect.acceleratorText: Ctrl+Shift+A
 *editMenu.deselect.accelerator: Ctrl Shift<Key>a
 *editMenu.copyHere.acceleratorText: Ctrl+Insert
@@ -32,8 +32,8 @@
 *editMenu.moveHere.acceleratorText: Ctrl+Shift+Insert
 *editMenu.moveHere.accelerator: Ctrl Shift<Key>Insert
 
-*viewMenu.reread.acceleratorText: F5
-*viewMenu.reread.accelerator: <Key>F5
+*viewMenu.reread.acceleratorText: Ctrl+R
+*viewMenu.reread.accelerator: Ctrl<Key>r
 *viewMenu.detailed.acceleratorText: Ctrl+L
 *viewMenu.detailed.accelerator: Ctrl<Key>l
 *viewMenu.showAll.acceleratorText: Ctrl+.
@@ -41,15 +41,15 @@
 *viewMenu.filter.acceleratorText: Ctrl+F
 *viewMenu.filter.accelerator: Ctrl<Key>F
 
-*toolsMenu.terminal.acceleratorText: F10
-*toolsMenu.terminal.accelerator: <Key>F10
+*toolsMenu.terminal.acceleratorText: F9
+*toolsMenu.terminal.accelerator: <Key>F9
 
-*windowMenu.new.acceleratorText: F11
-*windowMenu.new.accelerator: <Key>F11
-*windowMenu.duplicate.acceleratorText: F12
-*windowMenu.duplicate.accelerator: <Key>F12
+*windowMenu.new.acceleratorText: Ctrl+N
+*windowMenu.new.accelerator: Ctrl<Key>n
+*windowMenu.duplicate.acceleratorText: Ctrl+D
+*windowMenu.duplicate.accelerator: Ctrl<Key>D
 
-! These are handled through FileList's default translations
+! These keys are bound through FileList's translation table.
+! Accelerator text is set here to reflect default bindings.
 *fileMenu*contextAction1.acceleratorText: Enter
 *viewMenu.goUp.acceleratorText: Bksp
-
