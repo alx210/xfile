@@ -1,0 +1,31 @@
+/* XPM */
+static char * java_t_xpm[] = {
+/* width height ncolors cpp [x_hot y_hot] */
+"16 16 9 1 0 0",
+/* colors */
+" 	s Gray8	m black	c #212121212121",
+".	s none	m none	c none",
+"X	s Color2	m white	c white",
+"o	s Color1	m black	c black",
+"O	s Gray1	m white	c #dededededede",
+"+	s Gray3	m white	c #adadadadadad",
+"@	s Color3	m black	c darkred",
+"#	s Gray6	m black	c #636363636363",
+"$	s Color7	m black	c darkblue",
+/* pixels */
+"          ......",
+" XXXXXXXoO .....",
+" XXXXXXXoXO ....",
+" XXXX+@Xoooo....",
+" XXX+@+XX###o...",
+" XXX@O@XXX##o...",
+" XXX@O@XXXX#o...",
+" XXX+@+XXXX#o...",
+" XX$+@XX$XX#o...",
+" X$XXXXXX$X#o...",
+" XX$$$$$X$X#o...",
+" XX$XXXX$XX#o...",
+" X$X$$$$XXX#o...",
+" XXXXXXXXXX#o...",
+" ###########o...",
+"..ooooooooooo..."};
