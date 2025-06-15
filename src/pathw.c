@@ -558,7 +558,9 @@ static void update_visuals(Widget w, const char *path)
 	tpos = 0;
 	p = (char*)path;
 	path_len = strlen(path);
-
+	
+	mblen(NULL, 0);
+	
 	while(p[i]) {
 		size_t blen = 0;
 		size_t clen = 0;
