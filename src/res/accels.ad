@@ -15,7 +15,6 @@
 *fileMenu.duplicate.accelerator: Shift<Key>F2
 *fileMenu.rename.acceleratorText: F2
 *fileMenu.rename.accelerator: <Key>F2
-*fileMenu.delete.acceleratorText: Delete
 *fileMenu.attributes.acceleratorText: F1
 *fileMenu.attributes.accelerator: <Key>F1
 *fileMenu.exit.acceleratorText: Alt+F4
@@ -49,7 +48,8 @@
 *windowMenu.duplicate.acceleratorText: Ctrl+D
 *windowMenu.duplicate.accelerator: Ctrl<Key>D
 
-! These keys are bound through FileList's translation table.
-! Accelerator text is set here to reflect default bindings.
+! Keys below are bound through FileList's translation table. Therefore merely
+! the accelerator text is set here to reflect translation table bindings.
 *fileMenu*contextAction1.acceleratorText: Enter
+*fileMenu.delete.acceleratorText: Delete
 *viewMenu.goUp.acceleratorText: Bksp

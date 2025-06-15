@@ -79,11 +79,98 @@ The file list widget defines four rendition tags to display labels for different
 kinds of Unix file types:
 .PP
 .nf
-.ta 1i
+.ta 14m
 \fBregular\fP	Regular files
 \fBspecial\fP	Special files (devices, pipes, etc.)
 \fBdirectory\fP	Directories
 \fBsymlink\fP	Symbolic links
+.fi
 .PP
 By default, labels of symbolic links are rendered in italic and special
 files in bold.
+.SS FileList Widget Translations
+.IP "Activate()"
+Activates the selected item. Default bindings are:
+
+.nf
+.ta 20m
+<Key>Return:	Select() Activate()
+<Key>osfActivate:	Select() Activate()
+.fi
+.IP "DirectoryUp()"
+Change to parent directory.\(dg Default binding:
+
+.nf
+.ta 16m
+<Key>osfBackSpace:	DirectoryUp()
+.fi
+.IP "Delete()"
+Delete selected item.\(dg Default binding:
+
+.nf
+.ta 16
+<Key>osfDelete:	Delete()
+.fi
+.IP "MoveCursor(Up|Down|Left|Right|Begin|End, [Extend])"
+Moves the cursor (focus rectangle), one row or column into the direction
+specified, or to the first or last item in the list. Starts or extends a
+selection if \fBExtend\fP is specified. Default bindings are:
+
+.nf
+.ta 24m
+<Key>osfLeft:	MoveCursor(Left)
+<Key>osfRight:	MoveCursor(Right)
+<Key>osfUp:	MoveCursor(Up)
+<Key>osfDown:	MoveCursor(Down)
+<Key>osfBeginLine:	MoveCursor(Begin)
+<Key>osfEndLine:	MoveCursor(End)
+Shift<Key>osfLeft:	MoveCursor(Left, Extend)
+Shift<Key>osfRight:	MoveCursor(Right, Extend)
+Shift<Key>osfUp:	MoveCursor(Up, Extend)
+Shift<Key>osfDown:	MoveCursor(Down, Extend)
+Shift<Key>osfBeginLine:	MoveCursor(Begin, Extend)
+Shift<Key>osfEndLine:	MoveCursor(End, Extend)
+.fi
+.IP "PrimaryButton(Down|Up, [Extend])"
+Primary mouse button handler. Focuses (Down) and selects (Up) the item under
+the pointer, adds it to existing selection if \fBExtend\fP is specified.
+Activates the item on double-click. Default bindings are:
+
+.nf
+.ta 18m
+<Btn1Down>:	PrimaryButton(Down)
+<Btn1Up>:	PrimaryButton(Up) 
+Shift<Btn1Down>:	PrimaryButton(Down, Extend)
+Shift<Btn1Up>:	PrimaryButton(Up, Extend)
+Ctrl<Btn1Down>:	PrimaryButton(Down, Add)
+Ctrl<Btn1Up>:	PrimaryButton(Up, Add)
+.fi
+.IP "PrimaryButtonMotion()"
+Primary mouse button motion handler. Activates the rectangle selection mode.
+Default binding:
+
+.nf
+<Btn1Motion>:	PrimaryButtonMotion()
+.fi
+.ta 16m
+.IP "SecondaryButton()"
+Displays the context menu. Default binding:
+
+.nf
+.ta 16m
+<Btn3Down>:	SecondaryButton()
+.fi
+.IP "Select([Toggle])"
+Selects the focused item, toggles if \fBToggle\fP is specified.
+Default binding:
+
+.nf
+.ta 16m
+<Key>space:	Select(Toggle)
+.fi
+.ta 4m
+.PP
+\(dg While not being a part of widget's functionality, these translations are
+provided by the widget for the convenience of being able to assign keys that
+would interferre with text input in other widgets if used as global menu
+accelerators.

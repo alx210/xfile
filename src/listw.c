@@ -362,7 +362,7 @@ static char translations[] = {
 	"<Btn1Down>: PrimaryButton(Down) \n"
 	"<Btn1Up>: PrimaryButton(Up) \n"
 	"<Btn1Motion>: PrimaryButtonMotion() \n"
-	"<Btn3Down>: SecondaryButton(Down) \n"
+	"<Btn3Down>: SecondaryButton() \n"
 
 	"<Key>Return: Select() Activate() \n"	
 	"<Key>osfActivate: Select() Activate() \n"
