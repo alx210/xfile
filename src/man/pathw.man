@@ -7,6 +7,12 @@ of the path, above.
 The class name of the widget is \fBPathField\fP, the widget name
 \fBpathField\fP. Aside from resources described below, the widget inherits
 resources from XmManager(3).
+.PP
+Since it is a composite widget, consisting of an XmTextField for the
+text part and an XmDrawnButton for each path component, resources for
+these components can be set individually, with following exceptions:
+renderTable, shadowThickness, marginWidth, marginHeight and geometry
+resources, because these are enforced by the manager widget.
 .TP
 \fBbuttonHeight\fP \fIInteger\fP
 A value in percent that sets the vertical size of path element buttons
