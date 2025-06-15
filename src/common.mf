@@ -34,7 +34,8 @@ defaults.c: xfile.ad
 	awk -f adtoc.awk xfile.ad > $@
 
 # Manpage
-MANUAL = man/intro.man man/gui.man man/db.man man/res.man man/footer.man
+MANUAL = man/intro.man man/gui.man man/db.man man/appres.man \
+	man/listw.man man/pathw.man man/progw.man man/footer.man
 xfile.1: $(MANUAL)
 	cat $(MANUAL) > xfile.1
 
