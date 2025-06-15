@@ -77,7 +77,6 @@ struct app_inst_data {
 	
 	/* current location, selection and stats */
 	char *location;
-	struct file_list_sel cur_sel;
 
 	unsigned int nfiles_read;
 	unsigned int nfiles_shown;

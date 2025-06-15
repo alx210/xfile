@@ -89,33 +89,35 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 	char *token;
 	char *user_param = NULL;
 	unsigned int n = 0;
+	struct file_list_selection *cur_sel =
+			file_list_get_selection(app_inst.wlist);
 	
-	if(app_inst.cur_sel.count > 1) {
+	if(cur_sel->count > 1) {
 		unsigned int i;
 		size_t cat_len = 0;
 		char **esc_names;
 		
-		esc_names = calloc(app_inst.cur_sel.count, sizeof(char*));
+		esc_names = calloc(cur_sel->count, sizeof(char*));
 		
-		for(i = 0; i < app_inst.cur_sel.count; i++) {
-			escape_string(app_inst.cur_sel.names[i], &esc_names[i]);
+		for(i = 0; i < cur_sel->count; i++) {
+			escape_string(cur_sel->names[i], &esc_names[i]);
 			cat_len += strlen(esc_names[i] ?
-				esc_names[i] : app_inst.cur_sel.names[i]) + 3;
+				esc_names[i] : cur_sel->names[i]) + 3;
 		}
 
 		files = malloc(cat_len);
 		files[0] = '\0';
 		
-		for(i = 0; i < app_inst.cur_sel.count; i++) {
+		for(i = 0; i < cur_sel->count; i++) {
 			strcat(files, esc_names[i] ?
-				esc_names[i] : app_inst.cur_sel.names[i]);
+				esc_names[i] : cur_sel->names[i]);
 			strcat(files, " ");
 			if(esc_names[i]) free(esc_names[i]);
 		}
 		files[strlen(files) - 1] = '\0';
 		free(esc_names);
-	} else if(app_inst.cur_sel.count == 1) {
-		files = strdup(app_inst.cur_sel.names[0]);
+	} else if(cur_sel->count == 1) {
+		files = strdup(cur_sel->names[0]);
 	} else {
 		files = strdup("");
 	}

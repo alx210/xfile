@@ -17,6 +17,9 @@ struct fsize {
 	unsigned int exp;
 };
 
+/* Initializes fsize struct to zero */
+void init_fsize(struct fsize *fs);
+
 /* Adds size to fs */
 void add_fsize(struct fsize *fs, unsigned long size);
 

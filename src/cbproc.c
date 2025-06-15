@@ -35,8 +35,8 @@
 static void open_dir_proc(Widget, XtPointer, XtPointer);
 static void new_window_proc(Widget, XtPointer, XtPointer);
 static void pass_to_proc(Widget, XtPointer, XtPointer);
-static void exec_string_proc(Widget, XtPointer, XtPointer);
-static void run_exec_proc(Widget, XtPointer, XtPointer);
+static void run_action_proc(Widget, XtPointer, XtPointer);
+static void run_exfile_proc(Widget, XtPointer, XtPointer);
 static void mount_proc(Widget, XtPointer, XtPointer);
 static void umount_proc(Widget, XtPointer, XtPointer);
 static void action_status_timer_cb(XtPointer, XtIntervalId*);
@@ -80,8 +80,13 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	size_t cmd_len;
 	int rv;
 	static char *last_input = NULL;
+	struct file_list_selection *cur_sel = 
+		file_list_get_selection(app_inst.wlist);
 	
-	dbg_assert(app_inst.cur_sel.count == 1);
+	if(!cur_sel->count) {
+		stderr_msg("%s invalid selection\n", __FUNCTION__);
+		return;
+	}
 	
 	input = input_string_dlg(app_inst.wshell, "Pass To",
 		"Specify a command to run on the file",
@@ -97,11 +102,9 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 			"Error accessing working directory.\n%s", strerror(errno));
 		return;
 	}
-	cmd_len = strlen(input) + strlen(path) +
-		strlen(app_inst.cur_sel.item.name) + 3;
+	cmd_len = strlen(input) + strlen(path) + strlen(cur_sel->item.name) + 3;
 	cmd = malloc(cmd_len);
-	snprintf(cmd, cmd_len, "%s %s/%s", input, path,
-		app_inst.cur_sel.item.name);
+	snprintf(cmd, cmd_len, "%s %s/%s", input, path,	cur_sel->item.name);
 	free(path);
 	free(input);
 
@@ -118,8 +121,9 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
  * Context menu callback.
  * Expands and executes a command string pointed in callback data.
  */
-static void exec_string_proc(Widget w, XtPointer pclient, XtPointer pcall)
+static void run_action_proc(Widget w, XtPointer pclient, XtPointer pcall)
 {
+	struct file_list_selection *cur_sel;
 	struct env_var_rec vars[4] = { NULL };
 	char *cmd = (char*)pclient;
 	char *name;
@@ -128,9 +132,13 @@ static void exec_string_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	char *esc_str;
 	int rv;
 
-	dbg_assert(app_inst.cur_sel.count == 1);
+	cur_sel = file_list_get_selection(app_inst.wlist);
+	if(!cur_sel->count) {
+		stderr_msg("%s invalid selection\n", __FUNCTION__);
+		return;
+	}
 	
-	name = strdup(app_inst.cur_sel.item.name);
+	name = strdup(cur_sel->item.name);
 	path = get_working_dir();
 	if(!name || !path) {
 		message_box(app_inst.wshell, MB_ERROR, APP_TITLE, strerror(errno));
@@ -165,9 +173,9 @@ static void exec_string_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	vars[0].value = name;
 	vars[1].name = ENV_FPATH;
 	vars[1].value = path;
-	if(DB_DEFINED(app_inst.cur_sel.item.db_type)) {
+	if(DB_DEFINED(cur_sel->item.db_type)) {
 		struct file_type_rec *ft;
-		ft = db_get_record(&app_inst.type_db, app_inst.cur_sel.item.db_type);
+		ft = db_get_record(&app_inst.type_db, cur_sel->item.db_type);
 		vars[2].name = ENV_FMIME;
 		vars[2].value = ft->mime;
 	}
@@ -242,14 +250,19 @@ static void umount_proc(Widget w, XtPointer pclient, XtPointer pcall)
  * application, hence no terminal is spawned, neither is the user asked
  * for parameters.
  */
-static void run_exec_proc(Widget w, XtPointer pclient, XtPointer pcall)
+static void run_exfile_proc(Widget w, XtPointer pclient, XtPointer pcall)
 {
+	struct file_list_selection *cur_sel;
 	char *path;
 	size_t fqn_len;
 	char *fqn;
 	int rv = 0;
 	
-	dbg_assert(app_inst.cur_sel.count == 1);
+	cur_sel = file_list_get_selection(app_inst.wlist);
+	if(!cur_sel->count) {
+		stderr_msg("%s invalid selection\n", __FUNCTION__);
+		return;
+	}
 	
 	path = realpath(app_inst.location, NULL);
 	if(!path) {
@@ -258,9 +271,9 @@ static void run_exec_proc(Widget w, XtPointer pclient, XtPointer pcall)
 		return;
 	}
 
-	fqn_len = strlen(path) + strlen(app_inst.cur_sel.item.name) + 2;
+	fqn_len = strlen(path) + strlen(cur_sel->item.name) + 2;
 	fqn = malloc(fqn_len);
-	snprintf(fqn, fqn_len, "%s/%s", path, app_inst.cur_sel.item.name);
+	snprintf(fqn, fqn_len, "%s/%s", path, cur_sel->item.name);
 
 	set_action_status_text("Executing", fqn);
 	rv = spawn_exe(fqn);
@@ -271,17 +284,14 @@ static void run_exec_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Error executing \'%s\'\n%s.",
-			app_inst.cur_sel.item.name, strerror(rv));
+			cur_sel->item.name, strerror(rv));
 	}
 }
 
 /* set_action_status_text timer callback */
 static void action_status_timer_cb(XtPointer closure, XtIntervalId *iid)
 {
-	if(app_inst.cur_sel.count)
-		set_sel_status_text();
-	else
-		set_default_status_text();
+	show_selection_stats();
 }
 
 /* Temporarily sets status-bar text message */
@@ -303,9 +313,7 @@ static void set_action_status_text(const char *action, const char *cmd)
  */
 void activate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
-	struct file_list_sel *cbd = (struct file_list_sel*)pcall;
-	
-	app_inst.cur_sel = *cbd;
+	struct file_list_selection *cbd = (struct file_list_selection*)pcall;
 	
 	if(S_ISDIR(cbd->item.mode)) {
 		set_location(cbd->item.name, False);
@@ -314,10 +322,10 @@ void activate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 		rec = db_get_record(&app_inst.type_db, cbd->item.db_type);
 		if(rec && rec->nactions) {
-			exec_string_proc(w, rec->actions[0].command, NULL);
+			run_action_proc(w, rec->actions[0].command, NULL);
 		} else {
 			if(DB_ISTEXT(cbd->item.db_type))
-				exec_string_proc(w, ENV_DEF_TEXT_CMD, NULL);
+				run_action_proc(w, ENV_DEF_TEXT_CMD, NULL);
 			else
 				pass_to_proc(w, NULL, NULL);
 		}
@@ -331,12 +339,10 @@ void activate_cb(Widget w, XtPointer pclient, XtPointer pcall)
  */
 void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
-	struct file_list_sel *cbd = (struct file_list_sel*)pcall;
+	struct file_list_selection *cbd = (struct file_list_selection*)pcall;
 	struct ctx_menu_item *cmi = NULL;
 	short ui_flags = UIF_DIR;
 	
-	app_inst.cur_sel = *cbd;
-
 	if(cbd->count) {
 		if(cbd->initial)
 			grab_selection();
@@ -344,7 +350,7 @@ void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		ungrab_selection();
 	}
 
-	set_sel_status_text();
+	show_selection_stats();
 	
 	if(cbd->count == 1) {
 		struct file_type_rec *ft = NULL;
@@ -362,13 +368,13 @@ void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 			
 			for(i = 0; i < ft->nactions; i++) {
 				cmi[i].label = ft->actions[i].title;
-				cmi[i].callback = exec_string_proc;
+				cmi[i].callback = run_action_proc;
 				cmi[i].cb_data = ft->actions[i].command;
 			}
 
 			if(is_exec) {
 				cmi[i].label = "E&xecute";
-				cmi[i].callback = run_exec_proc;
+				cmi[i].callback = run_exfile_proc;
 				cmi[i].cb_data = NULL;
 				i++;
 			}
@@ -385,7 +391,7 @@ void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 			struct ctx_menu_item def_text_act[] = {
 				{
 				.label = "&Open",
-				.callback = exec_string_proc,
+				.callback = run_action_proc,
 				.cb_data = ENV_DEF_TEXT_CMD
 				},
 				{
@@ -395,7 +401,7 @@ void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 				},
 				{
 				.label = "E&xecute",
-				.callback = run_exec_proc,
+				.callback = run_exfile_proc,
 				.cb_data = NULL
 				}
 			};
@@ -408,7 +414,7 @@ void sel_change_cb(Widget w, XtPointer pclient, XtPointer pcall)
 				},
 				{
 				.label = "E&xecute",
-				.callback = run_exec_proc,
+				.callback = run_exfile_proc,
 				.cb_data = NULL
 				}
 			};
@@ -519,9 +525,16 @@ void make_file_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 void copy_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
+	struct file_list_selection *cur_sel;
 	static char *last_dest = NULL;
 	char *dest;
 	int rv;
+	
+	cur_sel = file_list_get_selection(app_inst.wlist);
+	if(!cur_sel->count) {
+		stderr_msg("%s invalid selection\n", __FUNCTION__);
+		return;
+	}
 	
 	if(!last_dest || access(last_dest, R_OK|X_OK)) {
 		if(last_dest) free(last_dest);
@@ -533,8 +546,12 @@ void copy_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	if(!dest) return;
 	
-	if(!app_inst.cur_sel.count) {
+	/* List contents may have changed meanwhile */
+	if(!cur_sel->count) {
 		free(dest);
+		message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+			"Could not complete requested action.\n"
+			"Initial selection is no longer valid.");
 		return;
 	}
 	
@@ -542,7 +559,7 @@ void copy_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	if(last_dest) free(last_dest);
 	last_dest = dest;
 	
-	rv = copy_files(NULL, app_inst.cur_sel.names, app_inst.cur_sel.count, dest);
+	rv = copy_files(NULL, cur_sel->names, cur_sel->count, dest);
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Could not complete requested action.\n%s.",
@@ -561,9 +578,16 @@ void copy_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
+	struct file_list_selection *cur_sel;
 	static char *last_dest = NULL;
 	char *dest;
 	int rv;
+
+	cur_sel = file_list_get_selection(app_inst.wlist);
+	if(!cur_sel->count) {
+		stderr_msg("%s invalid selection\n", __FUNCTION__);
+		return;
+	}
 	
 	if(!last_dest || access(last_dest, R_OK|X_OK)) {
 		if(last_dest) free(last_dest);
@@ -575,7 +599,7 @@ void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	if(!dest) return;
 
-	if(!app_inst.cur_sel.count) {
+	if(!cur_sel->count) {
 		free(dest);
 		return;
 	}
@@ -584,7 +608,7 @@ void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	if(last_dest) free(last_dest);
 	last_dest = dest;
 	
-	rv = move_files(NULL, app_inst.cur_sel.names, app_inst.cur_sel.count, dest);
+	rv = move_files(NULL, cur_sel->names, cur_sel->count, dest);
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Could not complete requested action.\n%s.",
@@ -603,12 +627,17 @@ void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 void rename_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
+	struct file_list_selection *list_sel;
 	char *cursel;
 	char *target;
 	
-	dbg_assert(app_inst.cur_sel.count == 1);
+	list_sel = file_list_get_selection(app_inst.wlist);
+	if(!list_sel->count) {
+		stderr_msg("%s invalid selection\n", __FUNCTION__);
+		return;
+	}
 	
-	cursel = strdup(app_inst.cur_sel.item.name);
+	cursel = strdup(list_sel->item.name);
 	
 	target = input_string_dlg(app_inst.wshell,
 		"Rename", "Specify new file name",
@@ -631,27 +660,34 @@ void rename_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 void delete_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
+	struct file_list_selection *cur_sel;
 	struct stat st;
 	unsigned int i;
 	int rv;
 	Boolean have_subdirs = False;
+
+	cur_sel = file_list_get_selection(app_inst.wlist);
+	if(!cur_sel->count) {
+		stderr_msg("%s invalid selection\n", __FUNCTION__);
+		return;
+	}
 	
-	for(i = 0; i < app_inst.cur_sel.count; i++) {
-		if(!lstat(app_inst.cur_sel.names[i], &st) &&
+	for(i = 0; i < cur_sel->count; i++) {
+		if(!lstat(cur_sel->names[i], &st) &&
 			S_ISDIR(st.st_mode)) have_subdirs = True;
 	}
 	
 	
 	if( (app_inst.confirm_rm == CONFIRM_ALWAYS) ||
 		(app_inst.confirm_rm == CONFIRM_MULTI &&
-			( (app_inst.cur_sel.count > 3) || have_subdirs) ) ) {
+			( (cur_sel->count > 3) || have_subdirs) ) ) {
 		rv = va_message_box(app_inst.wshell, MB_QUESTION, APP_TITLE,
-			"Deleting %d %s%s.\nProceed?", app_inst.cur_sel.count,
-			((app_inst.cur_sel.count > 1) ? "items" : "item"),
+			"Deleting %d %s%s.\nAre you sure you want to proceed?",
+			cur_sel->count, ((cur_sel->count > 1) ? "items" : "item"),
 			(have_subdirs ? ", recursing into sub-directories" : ""), NULL);
-		if(rv != MBR_CONFIRM || !app_inst.cur_sel.count) return;
+		if(rv != MBR_CONFIRM || !cur_sel->count) return;
 	}
-	rv = delete_files(NULL, app_inst.cur_sel.names, app_inst.cur_sel.count);
+	rv = delete_files(NULL, cur_sel->names, cur_sel->count);
 	
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
@@ -662,13 +698,18 @@ void delete_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
+	struct file_list_selection *list_sel;
 	char *link;
 	char *target;
 	char *cursel;
 	
-	dbg_assert(app_inst.cur_sel.count == 1);
+	list_sel = file_list_get_selection(app_inst.wlist);
+	if(!list_sel->count) {
+		stderr_msg("%s invalid selection\n", __FUNCTION__);
+		return;
+	}
 	
-	cursel = strdup(app_inst.cur_sel.item.name);
+	cursel = strdup(list_sel->item.name);
 	
 	link = input_string_dlg(app_inst.wshell, "Link To",
 		"Specify a name for the symbolic link.\n"
@@ -705,10 +746,15 @@ void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 void duplicate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	int rv;
+	struct file_list_selection *cur_sel =
+		file_list_get_selection(app_inst.wlist);
+
+	if(!cur_sel->count) {
+		stderr_msg("%s invalid selection\n", __FUNCTION__);
+		return;
+	}
 	
-	if(!app_inst.cur_sel.count)	return;
-	
-	rv = dup_files(NULL, app_inst.cur_sel.names, app_inst.cur_sel.count);
+	rv = dup_files(NULL, cur_sel->names, cur_sel->count);
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Could not complete requested action.\n%s.",
@@ -718,10 +764,15 @@ void duplicate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 void attributes_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
-	dbg_assert(app_inst.cur_sel.count);
+	struct file_list_selection *cur_sel =
+		file_list_get_selection(app_inst.wlist);
 
-	attrib_dlg(app_inst.wshell, app_inst.cur_sel.names,
-		app_inst.cur_sel.count);
+	if(!cur_sel->count) {
+		stderr_msg("%s invalid selection\n", __FUNCTION__);
+		return;
+	}
+
+	attrib_dlg(app_inst.wshell, cur_sel->names, cur_sel->count);
 }
 
 void select_all_cb(Widget w, XtPointer pclient, XtPointer pcall)

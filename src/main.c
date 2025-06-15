@@ -243,11 +243,7 @@ int main(int argc, char **argv)
 	memset(&app_inst, 0, sizeof(struct app_inst_data));
 	
 	/* Store real binary name for forks */
-	path = realpath(argv[0], NULL);
-	if(path)
-		app_inst.bin_name = path;
-	else
-		app_inst.bin_name = argv[0];
+	app_inst.bin_name = argv[0];
 
 	XtSetLanguageProc(NULL, NULL, NULL);
 

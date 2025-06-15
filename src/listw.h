@@ -30,12 +30,12 @@ struct file_list_item {
 	unsigned int user_flags;	
 };
 
-struct file_list_sel {
+struct file_list_selection {
 	Boolean initial; /* False if change is due to update or removal of items */
 	unsigned int count;
 	char **names;
 	struct fsize size_total;
-	struct file_list_item item; /* active item */
+	struct file_list_item item; /* focused item */
 };
 
 /* Enumerated resources */
@@ -157,12 +157,10 @@ void file_list_invert_selection(Widget);
 unsigned int file_list_count(Widget);
 
 /*
- * Retrieves current selection data; sel may be NULL.
- * Names in the list point to the internal storage and must not be modified,
- * they remain valid until list contents are changed.
- * Returns True if at least one item is selected, False otherwise.
+ * Retrieves current selection data, or NULL if no selection.
+ * Returned data must not be modified or freed.
  */
-Boolean file_list_get_selection(Widget, struct file_list_sel *sel);
+struct file_list_selection* file_list_get_selection(Widget);
 
 /*
  * Makes items in the list visible. Adding and removing items is less

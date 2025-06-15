@@ -1769,8 +1769,6 @@ static void initialize(Widget wreq, Widget wnew,
 	fl->file_list.icon_height_max = 0;
 	fl->file_list.item_height_max = 0;
 	fl->file_list.text_height_max = 0;
-	fl->file_list.sel_count = 0;
-	fl->file_list.sel_names = NULL;
 	fl->file_list.dblclk_timeout = None;
 	fl->file_list.autoscrl_timeout = None;
 	fl->file_list.autoscrl_vec = 0;
@@ -1781,6 +1779,8 @@ static void initialize(Widget wreq, Widget wnew,
 	fl->file_list.in_sb_update = False;
 	fl->file_list.ptr_last_valid = False;
 	fl->file_list.highlight_sel = False;
+	memset(&fl->file_list.cur_sel, 0,
+		sizeof(struct file_list_selection));
 
 	if(fl->file_list.shorten && (fl->file_list.shorten < SHORTEN_LEN_MIN)) {
 		WARNING(wnew, "shortenLabels length too short, using default!");
@@ -1952,18 +1952,6 @@ static void destroy(Widget w)
 {
 	struct file_list_part *fl = FL_PART(w);
 
-	if(fl->items) {
-		unsigned int i;
-		
-		for(i = 0; i < fl->num_items; i++) {
-			free_item(&fl->items[i]);
-		}
-		free(fl->items);
-		fl->items = NULL;
-	}
-	
-	if(fl->sel_names) free(fl->sel_names);
-
 	if(fl->autoscrl_timeout != None) {
 		fl->autoscrl_vec = 0;
 		XtRemoveTimeOut(fl->autoscrl_timeout);
@@ -1975,6 +1963,19 @@ static void destroy(Widget w)
 		fl->lookup_timeout = None;
 	}
 
+	if(fl->items) {
+		unsigned int i;
+		
+		for(i = 0; i < fl->num_items; i++) {
+			free_item(&fl->items[i]);
+		}
+		free(fl->items);
+		fl->items = NULL;
+	}
+	fl->num_items = 0;
+	
+	if(fl->cur_sel.names) free(fl->cur_sel.names);
+	fl->cur_sel.count = 0;
 
 	XtReleaseGC(w, fl->label_gc);
 	XtReleaseGC(w, fl->icon_gc);
@@ -2367,7 +2368,7 @@ static void secondary_button(Widget w, XEvent *evt,
 	}
 	XmProcessTraversal(w, XmTRAVERSE_CURRENT);
 
-	if(fl->sel_count < 2) {
+	if(fl->cur_sel.count < 2) {
 		select_at_xy(w, evt->xbutton.x + fl->xoff,
 			evt->xbutton.y + fl->yoff, False);
 	}
@@ -2564,27 +2565,27 @@ static void default_action_handler(Widget w, unsigned int mod_mask)
 
 	if(fl->num_items && fl->default_action_cb) {
 		unsigned int i = get_cursor(w);
-	
-	 	struct file_list_sel cbd = {
-			.count = 1,
-			.names = fl->sel_names,
-			.item.name = fl->items[i].name,
-			.item.title = fl->items[i].title,
-			.item.db_type = fl->items[i].db_type,
-			.item.size = fl->items[i].size,
-			.item.mode = fl->items[i].mode,
-			.item.uid = fl->items[i].uid,
-			.item.gid = fl->items[i].gid,
-			.item.ctime = fl->items[i].ctime,
-			.item.mtime = fl->items[i].mtime,
-			.item.is_symlink = fl->items[i].is_symlink,
-			.item.icon = fl->items[i].icon_image,
-			.item.icon_mask = fl->items[i].icon_mask,
-			.item.user_flags = fl->items[i].user_flags
-		};
-		add_fsize(&cbd.size_total, fl->items[i].size);
+		
+		fl->cur_sel.count = 1;
+		fl->cur_sel.item.name = fl->items[i].name;
+		fl->cur_sel.item.title = fl->items[i].title;
+		fl->cur_sel.item.db_type = fl->items[i].db_type;
+		fl->cur_sel.item.size = fl->items[i].size;
+		fl->cur_sel.item.mode = fl->items[i].mode;
+		fl->cur_sel.item.uid = fl->items[i].uid;
+		fl->cur_sel.item.gid = fl->items[i].gid;
+		fl->cur_sel.item.ctime = fl->items[i].ctime;
+		fl->cur_sel.item.mtime = fl->items[i].mtime;
+		fl->cur_sel.item.is_symlink = fl->items[i].is_symlink;
+		fl->cur_sel.item.icon = fl->items[i].icon_image;
+		fl->cur_sel.item.icon_mask = fl->items[i].icon_mask;
+		fl->cur_sel.item.user_flags = fl->items[i].user_flags;
+		
+		init_fsize(&fl->cur_sel.size_total);
+		add_fsize(&fl->cur_sel.size_total, fl->items[i].size);
 				
-		XtCallCallbackList(w, fl->default_action_cb, (XtPointer)&cbd);
+		XtCallCallbackList(w, fl->default_action_cb,
+			(XtPointer)&fl->cur_sel);
 	}
 }
 
@@ -2603,57 +2604,76 @@ static void delete(Widget w, XEvent *evt, String *params, Cardinal *nparams)
 {
 	struct file_list_part *fl = FL_PART(w);
 
-	if(fl->sel_count && fl->delete_cb)
+	if(fl->cur_sel.count && fl->delete_cb)
 		XtCallCallbackList(w, fl->delete_cb, (XtPointer)NULL);
 }
 
 /*
- * Called whenever selection changes. Updates sel_names and sel_count
- * fields of the widget and calls user callbacks.
+ * Called whenever selection changes. Updates cur_sel fields of
+ * the widget and calls user callbacks.
  */
 static void sel_change_handler(Widget w, Boolean initial)
 {
 	struct file_list_part *fl = FL_PART(w);
-	struct file_list_sel cbd = { 0 };
 	unsigned int i, count = 0;
 	
 	for(i = 0; i < fl->num_items; i++) {
 		if(fl->items[i].selected) count++;
 	}
+	
+	init_fsize(&fl->cur_sel.size_total);
 
 	if(count) {
 		unsigned int j;
 		
-		if(count > fl->sel_count) {
+		if(count > fl->cur_sel.count) {
 			char **ptr;
 
-			ptr = realloc(fl->sel_names, sizeof(char*) * count);
+			ptr = realloc(fl->cur_sel.names, sizeof(char*) * count);
 			if(!ptr) {
-				free(fl->sel_names);
-				fl->sel_names = NULL;
-				fl->sel_count = 0;
+				free(fl->cur_sel.names);
+				fl->cur_sel.names = NULL;
+				fl->cur_sel.count = 0;
 				WARNING(w, "Failed to allocate memory for selection");
 				return;
 			}
-			fl->sel_names = ptr;
+			fl->cur_sel.names = ptr;
 		}
 
 		for(i = 0, j = 0; i < fl->num_items; i++) {
 			if(fl->items[i].selected) {
-				fl->sel_names[j++] = fl->items[i].name;
+				fl->cur_sel.names[j++] = fl->items[i].name;
+				add_fsize(&fl->cur_sel.size_total, fl->items[i].size);
 				draw_item(w, i, True);
 			}
 		}
 	
-		fl->sel_count = count;
-		file_list_get_selection(w, &cbd);
+		fl->cur_sel.count = count;
+
 	} else {
-		fl->sel_count = 0;
+		fl->cur_sel.count = 0;
 	}
 
 	if(fl->sel_change_cb) {
-		cbd.initial = initial;
-		XtCallCallbackList(w, fl->sel_change_cb, &cbd);
+		if(fl->cur_sel.count) {
+			unsigned int i = get_cursor(w);
+			fl->cur_sel.item.name = fl->items[i].name;
+			fl->cur_sel.item.title = fl->items[i].title;
+			fl->cur_sel.item.db_type = fl->items[i].db_type;
+			fl->cur_sel.item.size = fl->items[i].size;
+			fl->cur_sel.item.mode = fl->items[i].mode;
+			fl->cur_sel.item.uid = fl->items[i].uid;
+			fl->cur_sel.item.gid = fl->items[i].gid;
+			fl->cur_sel.item.ctime = fl->items[i].ctime;
+			fl->cur_sel.item.mtime = fl->items[i].mtime;
+			fl->cur_sel.item.is_symlink = fl->items[i].is_symlink;
+			fl->cur_sel.item.icon = fl->items[i].icon_image;
+			fl->cur_sel.item.icon_mask = fl->items[i].icon_mask;
+			fl->cur_sel.item.user_flags = fl->items[i].user_flags;
+		}
+
+		fl->cur_sel.initial = initial;
+		XtCallCallbackList(w, fl->sel_change_cb, &fl->cur_sel);
 	}
 }
 
@@ -2668,7 +2688,7 @@ void file_list_highlight_selection(Widget w, Boolean on)
 	
 	fl->highlight_sel = on;
 
-	if(fl->sel_count) {
+	if(fl->cur_sel.count) {
 		int i;
 
 		for(i = 0; i < fl->num_items; i++) {
@@ -2846,10 +2866,9 @@ int file_list_remove(Widget w, const char *name)
 		fl->icon_height_max = 0;
 		fl->item_height_max = 0;
 		fl->text_height_max = 0;
-		fl->sel_count = 0;
 		memset(fl->item_width_max, 0, sizeof(fl->item_width_max));
-		if(fl->sel_names) free(fl->sel_names);
-		fl->sel_names = NULL;
+		if(fl->cur_sel.names) free(fl->cur_sel.names);
+		memset(&fl->cur_sel, 0, sizeof(struct file_list_selection));
 	}
 	
 	/* recompute layout and redraw if contents are shown */
@@ -2982,15 +3001,6 @@ void file_list_show_contents(Widget w, Boolean show)
 void file_list_remove_all(Widget w)
 {
 	struct file_list_part *fl = FL_PART(w);
-	int i;
-	Boolean selected = False;
-	
-	if(!fl->num_items) return;
-	
-	for(i = 0; i < fl->num_items; i++) {
-		selected |= fl->items[i].selected;
-		free_item(&fl->items[i]);
-	}
 
 	fl->num_items = 0;
 	fl->cursor = 0;
@@ -2999,64 +3009,45 @@ void file_list_remove_all(Widget w)
 	fl->icon_height_max = 0;
 	fl->item_height_max = 0;
 	fl->text_height_max = 0;
-	fl->sel_count = 0;
 	fl->list_width = 0;
 	fl->list_height = 0;
 	memset(fl->item_width_max, 0, sizeof(fl->item_width_max));
 	memset(fl->field_widths, 0, sizeof(fl->field_widths));
-	if(fl->sel_names) free(fl->sel_names);
-	fl->sel_names = NULL;
+	if(fl->cur_sel.names) free(fl->cur_sel.names);
+	memset(&fl->cur_sel, 0, sizeof(struct file_list_selection));
 	
 	update_sbar_range(w, CORE_WIDTH(w), CORE_HEIGHT(w));
 	update_sbar_visibility(w, CORE_WIDTH(w), CORE_HEIGHT(w));
 	
 	redraw_all(w);
-	if(selected) sel_change_handler(w, False);
 }
 
-Boolean file_list_get_selection(Widget w, struct file_list_sel *sel)
+struct file_list_selection* file_list_get_selection(Widget w)
 {
 	struct file_list_part *fl = FL_PART(w);
-	struct fsize fs = { 0 };
-	unsigned int i = 0;
-			
-	if(fl->sel_count > 1) {
-		for(i = 0; i < fl->num_items; i++) {
-			if(fl->items[i].selected)
-				add_fsize(&fs, fl->items[i].size);
-		}
+	
+	if(fl->num_items && fl->cur_sel.count) {
+		unsigned int i = get_cursor(w);
 
-		sel->count = fl->sel_count;
-		sel->size_total = fs;
-		sel->names = (fl->sel_count) ? fl->sel_names : NULL;
-
-		i = get_cursor(w);
-
-	} else if(fl->sel_count == 1) {
-		for(i = 0; i < fl->num_items; i++) {
-			if(fl->items[i].selected) break;
-		}
-
-		sel->count = 1;
-		sel->names = fl->sel_names;
-		add_fsize(&sel->size_total, fl->items[i].size);
-	} else return False;
-
-	sel->item.name = fl->items[i].name;
-	sel->item.title = fl->items[i].title;
-	sel->item.db_type = fl->items[i].db_type;
-	sel->item.size = fl->items[i].size;
-	sel->item.mode = fl->items[i].mode;
-	sel->item.uid = fl->items[i].uid;
-	sel->item.gid = fl->items[i].gid;
-	sel->item.ctime = fl->items[i].ctime;
-	sel->item.mtime = fl->items[i].mtime;
-	sel->item.is_symlink = fl->items[i].is_symlink;
-	sel->item.icon = fl->items[i].icon_image;
-	sel->item.icon_mask = fl->items[i].icon_mask;
-	sel->item.user_flags = fl->items[i].user_flags;	
-
-	return True;
+		fl->cur_sel.item.name = fl->items[i].name;
+		fl->cur_sel.item.title = fl->items[i].title;
+		fl->cur_sel.item.db_type = fl->items[i].db_type;
+		fl->cur_sel.item.size = fl->items[i].size;
+		fl->cur_sel.item.mode = fl->items[i].mode;
+		fl->cur_sel.item.uid = fl->items[i].uid;
+		fl->cur_sel.item.gid = fl->items[i].gid;
+		fl->cur_sel.item.ctime = fl->items[i].ctime;
+		fl->cur_sel.item.mtime = fl->items[i].mtime;
+		fl->cur_sel.item.is_symlink = fl->items[i].is_symlink;
+		fl->cur_sel.item.icon = fl->items[i].icon_image;
+		fl->cur_sel.item.icon_mask = fl->items[i].icon_mask;
+		fl->cur_sel.item.user_flags = fl->items[i].user_flags;
+		
+	} else {
+		memset(&fl->cur_sel.item, 0, sizeof(struct file_list_item));
+	}
+	
+	return &fl->cur_sel;
 }
 
 unsigned int file_list_count(Widget w)

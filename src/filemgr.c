@@ -252,7 +252,7 @@ void update_context_menus(const struct ctx_menu_item *items,
 /*
  * Sets detault (directory contents) status text
  */
-void set_default_status_text(void)
+void show_directory_stats(void)
 {
 	char sz_size[SIZE_CS_MAX];
 	char *item_noun = (app_inst.nfiles_shown > 1) ? "items" : "item";
@@ -275,21 +275,22 @@ void set_default_status_text(void)
 	}
 }
 
-void set_sel_status_text(void)
+void show_selection_stats(void)
 {
 	char sz_size[SIZE_CS_MAX];
 	char sz_mode[MODE_CS_MAX];
+	struct file_list_selection *cur_sel =
+		file_list_get_selection(app_inst.wlist);
 			
-	if(app_inst.cur_sel.count > 1) {
+	if(cur_sel->count > 1) {
 		set_status_text("%s in %u items selected",
-			get_fsize_string(&app_inst.cur_sel.size_total, sz_size),
-			app_inst.cur_sel.count);
-	} else if(app_inst.cur_sel.count == 1) {
+			get_fsize_string(&cur_sel->size_total, sz_size), cur_sel->count);
+	} else if(cur_sel->count == 1) {
 		char *sz_owner;
 		char *disp_name;
 		struct passwd *pw;
 		struct group *gr;
-		const struct file_list_item *fli = &app_inst.cur_sel.item;
+		const struct file_list_item *fli = &cur_sel->item;
 
 		disp_name = mbs_make_displayable(fli->name);
 
@@ -315,7 +316,7 @@ void set_sel_status_text(void)
 		free(disp_name);
 		free(sz_owner);
 	} else {
-		set_default_status_text();
+		show_directory_stats();
 	}
 }
 
@@ -380,8 +381,7 @@ static void xt_read_proc_sig_handler(XtPointer p, XtSignalId *id)
  */
 static void reset_context_data(void)
 {
-	memset(&app_inst.cur_sel, 0, sizeof(struct file_list_sel));
-	memset(&app_inst.size_shown, 0, sizeof(struct fsize));
+	init_fsize(&app_inst.size_shown);
 	app_inst.nfiles_read = 0;
 	app_inst.nfiles_shown = 0;
 	app_inst.nfiles_hidden = 0;
@@ -391,7 +391,7 @@ static void reset_context_data(void)
 	
 	rp_data.init_done = False;
 
-	set_default_status_text();
+	show_directory_stats();
 	set_ui_sensitivity(0);
 	update_shell_title(NULL);
 }
@@ -410,8 +410,7 @@ static int read_directory(void)
 	if(rp_data.pid) stop_read_proc();
 
 	/* reset global context data */
-	memset(&app_inst.cur_sel, 0, sizeof(struct file_list_sel));
-	memset(&app_inst.size_shown, 0, sizeof(struct fsize));
+	init_fsize(&app_inst.size_shown);
 	app_inst.nfiles_read = 0;
 	app_inst.nfiles_shown = 0;
 	app_inst.nfiles_hidden = 0;
@@ -548,12 +547,8 @@ static void reader_callback_proc(XtPointer cd, int *pfd, XtInputId *iid)
 				update_shell_title(app_inst.location);
 			}
 
-			if(changed) {
-				if(app_inst.cur_sel.count)
-					set_sel_status_text();
-				else
-					set_default_status_text();
-			}
+			if(changed) show_selection_stats();
+
 		} break;
 		
 		case MSG_UPDATE:

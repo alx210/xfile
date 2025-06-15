@@ -171,9 +171,7 @@ struct file_list_part {
 	Boolean highlight_sel;
 	Boolean has_focus;
 
-	/* shared selection data */
-	unsigned int sel_count;
-	char **sel_names;
+	struct file_list_selection cur_sel;
 
 	/* pointer state */
 	int ptr_last_x;

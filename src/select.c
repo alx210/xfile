@@ -83,8 +83,11 @@ static void lose_selection_proc(Widget w, Atom *sel)
 
 	if(app_inst.location) {
 		short flags = UIF_DIR;
-		if(app_inst.cur_sel.count) flags |= UIF_SEL;
-		if(app_inst.cur_sel.count == 1) flags |= UIF_SINGLE;
+		struct file_list_selection *cur_sel =
+			file_list_get_selection(app_inst.wlist);
+		
+		if(cur_sel->count) flags |= UIF_SEL;
+		if(cur_sel->count == 1) flags |= UIF_SINGLE;
 		
 		set_ui_sensitivity(flags);
 	}
@@ -104,7 +107,10 @@ static Boolean convert_selection_proc(Widget w,
 	static Atom XA_UTF8_STRING = None;
 	static Atom XA_TARGETS = None;
 	static Atom XA_FILE_LIST = None;
+	struct file_list_selection *cur_sel;
 
+	cur_sel = file_list_get_selection(app_inst.wlist);
+	
 	if(initial) {
 		initial = False;
 		
@@ -136,8 +142,8 @@ static Boolean convert_selection_proc(Widget w,
 		unsigned long len = 0;
 		char *data;
 		
-		for(i = 0; i < app_inst.cur_sel.count; i++) {
-			len += strlen(app_inst.cur_sel.names[i]) + 1;
+		for(i = 0; i < cur_sel->count; i++) {
+			len += strlen(cur_sel->names[i]) + 1;
 		}
 		
 		data = XtMalloc(len + 1); /* Xt will XtFree this when done */
@@ -145,8 +151,8 @@ static Boolean convert_selection_proc(Widget w,
 		
 		data[0] = '\0';
 		
-		for(i = 0; i <  app_inst.cur_sel.count; i++) {
-			strcat(data, app_inst.cur_sel.names[i]);
+		for(i = 0; i <  cur_sel->count; i++) {
+			strcat(data, cur_sel->names[i]);
 			strcat(data, " ");
 		}
 		data[len - 1] = '\0';
@@ -173,8 +179,8 @@ static Boolean convert_selection_proc(Widget w,
 		if(!path) return False;
 		
 		len = strlen(path) + 1;
-		for(i = 0; i < app_inst.cur_sel.count; i++) {
-			len += strlen(app_inst.cur_sel.names[i]) + 1;
+		for(i = 0; i < cur_sel->count; i++) {
+			len += strlen(cur_sel->names[i]) + 1;
 		}
 		
 		data = XtMalloc(len + 1); /* Xt will XtFree this when done */
@@ -182,9 +188,9 @@ static Boolean convert_selection_proc(Widget w,
 		strcpy(data, path);
 		pos = data + strlen(path) + 1;
 		
-		for(i = 0; i <  app_inst.cur_sel.count; i++) {
-			strcpy(pos, app_inst.cur_sel.names[i]);
-			pos += strlen(app_inst.cur_sel.names[i]);
+		for(i = 0; i <  cur_sel->count; i++) {
+			strcpy(pos, cur_sel->names[i]);
+			pos += strlen(cur_sel->names[i]);
 			*pos = '\0';
 			pos++;
 		}

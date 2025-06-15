@@ -141,6 +141,13 @@ void add_fsize(struct fsize *fs, unsigned long size)
 	fs->factor = pow(FS_KILO, fs->exp);
 }
 
+void init_fsize(struct fsize *fs)
+{
+	fs->size = 0;
+	fs->factor = 0;
+	fs->exp = 0;
+}
+
 char* get_size_string(unsigned long size, char buffer[SIZE_CS_MAX])
 {
 	struct fsize fs = { 0 };

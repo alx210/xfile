@@ -17,11 +17,12 @@ int set_location(const char *path, Boolean absolute);
 /* Rereads current directory */
 int reread(void);
 
-/* Sets status line to current directory stats */
-void set_default_status_text(void);
+/* Sets status line to current selection stat. Falls back to
+ * show_directory_stats if there is no active selection */
+void show_selection_stats(void);
 
-/* Sets status line to current selection stats */
-void set_sel_status_text(void);
+/* Sets status line to direcotry stats */
+void show_directory_stats(void);
 
 /* Updates file manager context menus */
 void update_context_menus(const struct ctx_menu_item *items,
