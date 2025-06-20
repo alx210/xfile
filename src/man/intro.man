@@ -1,31 +1,35 @@
 .TH XFILE 1
 .SH NAME
-xfile \- graphical file manager\.
+xfile \- graphical file manager.
 .SH SYNOPSIS
 xfile [OPTIONS] [DIRECTORY]
 .PP
-xfile-open FILENAME\.\.\.
+xfile-open FILENAME...
 .SH DESCRIPTION
 .PP
 XFile is a file manager for Unix systems running X11\.
 .SS Options
 .TP
 \fB+/-a\fP
-Ignore/show file names starting with a dot\. 
+Ignore/show file names starting with a dot.
 .TP
 \fB-f\fP <glob pattern>
 Hide files matching glob pattern specified\. Prefix the pattern with the
 ! character to negate\.
 .TP
-\fb-l\fP
-Invert sort direction (see sortDirection resource)\.
+\fB-l\fP
+Toggle view mode (see viewMode resource).
+.TP
+\fB-r\fP
+Invert sort direction (see sortDirection resource).
 .TP
 \fB-s\fP(n|s|t|f|x)
-Specify sort order: \fBn\fPame, \fBs\fPize, \fBt\fPime, \fBf\fPile type, suffi\fBx\fP\.
+Specify sort order: \fBn\fPame, \fBs\fPize, \fBt\fPime,
+\fBf\fPile type, suffi\fBx\fP.
 .SS Arguments
-XFile will display current working directory if invoked without arguments\.
+XFile will display current working directory if invoked without arguments.
 .PP
 If invoked as xfile-open (through a symbolic link), XFile will match each file
 name specified against the file type database, run the default action if
-defined, and finally quit\. 
+defined, and finally quit. 
  
