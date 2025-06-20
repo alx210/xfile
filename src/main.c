@@ -1078,7 +1078,7 @@ void update_shell_title(const char *path)
 void set_ui_sensitivity(short flags)
 {
 	unsigned int i;
-	
+
 	char *sel_ops[] = {
 		"*attributes",
 		"*copyTo",
@@ -1093,6 +1093,10 @@ void set_ui_sensitivity(short flags)
 		"*makeFile",
 		"*goUp",
 		"*reread",
+		"*detailed",
+		"*showAll",
+		"*sortOrderMenu",
+		"*sortByMenu",
 		"*selectAll",
 		"*invertSelection",
 		"*deselect",
@@ -1119,10 +1123,10 @@ void set_ui_sensitivity(short flags)
 		enable_menu_item(app_inst.wmctx, single_ops[i], (flags & UIF_SINGLE));
 	}
 	
-	if(is_selection_owner()) {
+	if(is_selection_owner() || !(flags & UIF_DIR)) {
 		enable_menu_item(app_inst.wmedit, "*copyHere", False);
 		enable_menu_item(app_inst.wmedit, "*moveHere", False);
-	} else {
+	} else if(flags & UIF_DIR) {
 		enable_menu_item(app_inst.wmedit, "*copyHere", True);
 		enable_menu_item(app_inst.wmedit, "*moveHere", True);
 	}
