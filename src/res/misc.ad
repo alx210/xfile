@@ -5,7 +5,13 @@
 ! Make Cancel the default button in confirmation dialogs
 *confirmationDialog.defaultButtonType: DIALOG_CANCEL_BUTTON
 
-! Some CDE 2.0 defaults
+! Some CDE 2.0 defaults for the directory selection dialog
 *XmFileSelectionBox.fileFilterStyle: XmFILTER_HIDDEN_FILES
 *XmFileSelectionBox.pathMode: XmPATH_MODE_RELATIVE
 *XmFileSelectionBox.resizePolicy: XmRESIZE_GROW
+
+! Initial mount and file-copy/move/attributes dialog widths
+! Set to a reasonable value to avoid them being resized in progress
+! Note that these dialogs are standalone (not XFile shell descendants)
+xfileProgressDialog.minWidth: 360
+xfileMountDialog.minWidth: 300

@@ -36,6 +36,9 @@ Boolean add_delete_window_handler(Widget w,
  */
 void set_label_string(Widget wlabel, const char *psz);
 
+/* Returns average character width for the ASCII set */
+Dimension get_average_char_width(XmRenderTable rt);
+
 /* Builds a window manager icon and mask from bitmap data */
 #define create_wm_icon(dpy, name, image, mask) \
 	__create_wm_icon(dpy, name##_bits, name##_m_bits,\

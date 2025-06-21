@@ -312,7 +312,6 @@ static int create_progress_ui(struct fsproc_data *d)
 	XtSetArg(args[n], XmNhorizontalSpacing, 8); n++;
 	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 	XtSetArg(args[n], XmNresizePolicy, XmRESIZE_GROW); n++;
-	XtSetArg(args[n], XmNwidth, 360); n++;
 	wform = XmCreateForm(d->wshell, "main", args, n);
 
 	if(label_pix[0] == None) {
@@ -802,7 +801,7 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 	} else {
 		wpd->copy_buffer = NULL;
 	}
-	
+
 	for(i = 0; i < wpd->num_srcs; i++) {
 		char csrc[strlen(cwd) + strlen(wpd->srcs[i]) + 2];
 		char *ctitle = wpd->dsts ?
