@@ -26,8 +26,6 @@ struct req_data {
 	Boolean move;
 };
 
-#define CS_FILE_LIST "XFILE_LIST"
-
 static Boolean owns_primary = False;
 
 /* Forward declarations */
