@@ -67,6 +67,9 @@
 /* Default duplicate suffix */
 #define DEF_DUP_SUFFIX ".copy"
 
+/* Selection file list atom name */
+#define CS_FILE_LIST "XFILE_LIST"
+
 /* Fallback X resources */
 extern const char *xfile_ad[]; /* in fallback.c */
 

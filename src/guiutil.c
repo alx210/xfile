@@ -260,6 +260,33 @@ void set_label_string(Widget wlabel, const char *psz)
 }
 
 /*
+ * Returns average character width for the ASCII set.
+ * Since min/max bounds for unicode fonts don't bear
+ * much meaning, unless we average LANG's range. 
+ */
+Dimension get_average_char_width(XmRenderTable rt)
+{
+	static char chrs[96] = { '\0' };
+	XmString xms;
+	Dimension width;
+	Dimension height;
+	
+	if(chrs[0] == '\0') {
+		char i;
+
+		for(i = 32; i < 127; i++) {
+			chrs[i - 32] = i;
+		}
+		chrs[i - 32] = '\0';
+	}
+	xms = XmStringCreateLocalized(chrs);
+	XmStringExtent(rt, xms, &width, &height);
+	XmStringFree(xms);
+	
+	return (width / 96);
+}
+
+/*
  * Builds a window manager icon and mask from bitmap data
  * This is invoked with the create_wm_icon macro
  */

@@ -136,7 +136,7 @@ int create_path(const char *path, mode_t mode)
 	
 	if(!stat(path, &st)) {
 		if(S_ISDIR(st.st_mode))
-			return 0;
+			return EEXIST;
 		else
 			return ENOTDIR;
 	}
@@ -144,18 +144,22 @@ int create_path(const char *path, mode_t mode)
 	sz = strdup(path);
 	if(!sz) return errno;
 	
-	cp = malloc(strlen(path) + 1);
+	cp = malloc(strlen(path) + 3);
 	if(!cp) {
 		free(sz);
 		return errno;
 	}
 	
-	cp[0] = '\0';
+	if(path[0] == '/') {
+		cp[0] = '/';
+		cp[1] = '\0';
+	} else {
+		cp[0] = '\0';
+	}
 	t = strtok(sz, "/");
 	if(!t) t = sz;
 	
 	do {
-		strcat(cp, "/");
 		strcat(cp, t);
 		if(stat(cp, &st) == -1) {
 			if(errno == ENOENT) {
@@ -171,6 +175,7 @@ int create_path(const char *path, mode_t mode)
 			rv = ENOTDIR;
 			break;
 		}
+		strcat(cp, "/");
 	} while( (t = strtok(NULL, "/")) );
 	
 	free(sz);

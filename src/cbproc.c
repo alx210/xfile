@@ -492,14 +492,15 @@ void make_dir_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	char *input;
 	mode_t dir_mode = (S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH);
+	int rv = 0;
 	
 	input = input_string_dlg(app_inst.wshell, "Make Directory",
-		"Specify new directory name", NULL, NULL, ISF_PRESELECT);
+		"Specify new directory name or path to create", NULL, NULL, 0);
 	if(!input) return;
 	
-	if(mkdir(input, dir_mode) == -1) {
+	if( (rv = create_path(input, dir_mode)) != 0) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
-			"Cannot create directory.\n%s.", strerror(errno), NULL);
+			"Cannot create directory.\n%s.", strerror(rv), NULL);
 	} else {
 		force_update();
 	}
