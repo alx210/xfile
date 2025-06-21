@@ -805,6 +805,8 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 	
 	for(i = 0; i < wpd->num_srcs; i++) {
 		char csrc[strlen(cwd) + strlen(wpd->srcs[i]) + 2];
+		char *ctitle = wpd->dsts ?
+			wpd->dsts[i] : get_path_tail(wpd->srcs[i]);
 		int rv = 0;
 
 		build_path(csrc, cwd, wpd->srcs[i], NULL);
@@ -848,10 +850,9 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 			case WP_COPY:
 
 			if(S_ISDIR(st_src.st_mode)) {
-				char *src_title = wpd->dsts ? wpd->dsts[i] : wpd->srcs[i];
-				char dest_fqn[strlen(cdest) + strlen(src_title) + 2];
+				char dest_fqn[strlen(cdest) + strlen(ctitle) + 2];
 
-				build_path(dest_fqn, cdest, src_title, NULL);
+				build_path(dest_fqn, cdest, ctitle, NULL);
 
 				if(!lstat(dest_fqn, &st_dest) &&
 					st_src.st_dev == st_dest.st_dev &&
@@ -864,19 +865,17 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 
 				rv = wp_copy_tree(wpd, csrc, dest_fqn, move);
 			} else if(S_ISREG(st_src.st_mode)) {
-				char *src_title = wpd->dsts ? wpd->dsts[i] : wpd->srcs[i];
-				char dest_fqn[strlen(cdest) + strlen(src_title) + 2];
+				char dest_fqn[strlen(cdest) + strlen(ctitle) + 2];
 
-				build_path(dest_fqn, cdest, src_title, NULL);
+				build_path(dest_fqn, cdest, ctitle, NULL);
 				wp_post_astat(wpd, move ? "Moving" : "Copying", csrc, cdest);
 				rv = wp_copy_file(wpd, csrc, dest_fqn, move);
 
 			} else if(S_ISLNK(st_src.st_mode)) {
-				char *src_title = wpd->dsts ? wpd->dsts[i] : wpd->srcs[i];
-				char dest_fqn[strlen(cdest) + strlen(src_title) + 2];
+				char dest_fqn[strlen(cdest) + strlen(ctitle) + 2];
 				char *link_tgt;
 
-				build_path(dest_fqn, cdest, src_title, NULL);
+				build_path(dest_fqn, cdest, ctitle, NULL);
 				if( (rv = get_link_target(csrc, &link_tgt)) ) break;
 
 				wp_post_astat(wpd, "Symlinking", link_tgt, dest_fqn);

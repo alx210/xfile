@@ -8,7 +8,10 @@
 #define FSPROC_H
 
 /* The wd parameter specifies the working directory for the forked
- * work process, and may be NULL, in which case it's inherited. */
+ * work process, and may be NULL, in which case it's inherited. 
+ * Names in srcs may contain path components, but must be always
+ * relative to wd.
+ */
 
 /* Recursively copies files and directories from srcs[] to dest */
 int copy_files(const char *wd, char* const *srcs,
