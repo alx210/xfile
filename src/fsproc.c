@@ -2034,7 +2034,9 @@ static int wp_check_create_path(struct wp_data *wpd,
 	int ev;
 	retry_create_path:
 
-	if( (ev = create_path(path, mode)) ) {
+	if( (ev = create_path(path, mode)) == EEXIST) ev = 0;
+
+	if(ev) {
 		int reply;
 		reply = wp_post_msg(wpd, FBT_RETRY_IGNORE,
 					wp_error_string("Error creating",
