@@ -24,6 +24,12 @@ Boolean is_mapped(Widget wshell);
 void raise_and_focus(Widget wshell);
 
 /*
+ * Sets shell's title and icon name using EWMH if available, or normal hints
+ * otherwise. Either title or icon_name may be NULL, if no change desired.
+ */
+void set_shell_title(Widget wshell, const char *title, const char *icon_name);
+
+/*
  * Adds the WM_DELETE_WINDOW window manager protocol callback to a shell.
  * Returns True on success.
  */

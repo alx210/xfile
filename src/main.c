@@ -1030,8 +1030,8 @@ void update_shell_title(const char *path)
 	char *p;
 
 	if(!path) {
-		XtVaSetValues(app_inst.wshell, XmNtitle,
-			app_inst.shell_title, XmNiconName, app_inst.shell_title, NULL);
+		set_shell_title(app_inst.wshell,
+			app_inst.shell_title, app_inst.shell_title);
 		return;	
 	}
 
@@ -1060,13 +1060,11 @@ void update_shell_title(const char *path)
 		buffer = malloc(len);
 
 		snprintf(buffer, len, "%s - %s", cd, app_inst.shell_title);
-
-		XtVaSetValues(app_inst.wshell, XmNtitle,
-			buffer, XmNiconName, buffer, NULL);
+		
+		set_shell_title(app_inst.wshell, buffer, buffer);
 		free(buffer);
 	} else {
-		XtVaSetValues(app_inst.wshell, XmNtitle,
-			cd, XmNiconName, cd, NULL);
+		set_shell_title(app_inst.wshell, cd, cd);
 	}
 
 	free(cd);	

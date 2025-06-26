@@ -206,6 +206,46 @@ void raise_and_focus(Widget w)
 }
 
 /*
+ * Sets shell's title and icon name using EWMH if available, or normal hints
+ * otherwise. Either title or icon_name may be NULL, if no change desired.
+ */
+void set_shell_title(Widget wshell, const char *title, const char *icon_name)
+{
+	Atom XaNET_WM_NAME;
+	Atom XaNET_WM_ICON_NAME;
+	Atom XaUTF8_STRING;
+	Display *dpy = XtDisplay(wshell);
+	Cardinal n = 0;
+	Arg args[2];
+
+	/* These will be defined by a EWMH compliant window manager */
+	XaNET_WM_NAME = XInternAtom(dpy, "_NET_WM_NAME", True);
+	XaNET_WM_ICON_NAME = XInternAtom(dpy, "_NET_WM_ICON_NAME", True);
+	XaUTF8_STRING = XInternAtom(dpy, "UTF8_STRING", True);
+
+	
+	if(title && XaUTF8_STRING && XaNET_WM_NAME) {
+		XChangeProperty(dpy, XtWindow(wshell), XaNET_WM_NAME,
+			XaUTF8_STRING, 8, PropModeReplace, 
+			(const unsigned char*)title, strlen(title));
+	} else if(title) {
+		XtSetArg(args[n], XmNtitle, title);
+		n++;
+	}
+
+	if(icon_name && XaUTF8_STRING && XaNET_WM_ICON_NAME) {
+		XChangeProperty(dpy, XtWindow(wshell), XaNET_WM_ICON_NAME,
+			XaUTF8_STRING, 8, PropModeReplace,
+			(const unsigned char*)icon_name, strlen(icon_name));
+	} else if(icon_name) {
+		XtSetArg(args[n], XmNiconName, icon_name);
+		n++;
+	}
+
+	if(n) XtSetValues(wshell, args, n);
+}
+
+/*
  * Adds the WM_DELETE_WINDOW window manager protocol callback to a shell
  */
 Boolean add_delete_window_handler(Widget w,
