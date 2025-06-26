@@ -69,7 +69,7 @@
 #define FB_VALID_ID(id) ((id) >= 0 && (id) <= 3)
 
 /* Controls when path/file names get abbreviated */
-#define PROG_FNAME_MAX	32
+#define PROG_FNAME_MAX	40
 
 #define RPERM (S_IRUSR|S_IRGRP|S_IROTH)
 #define WPERM (S_IWUSR|S_IWGRP|S_IWOTH)
@@ -309,6 +309,8 @@ static int create_progress_ui(struct fsproc_data *d)
 	add_delete_window_handler(d->wshell, window_close_cb, (XtPointer)d);
 
 	n = 0;
+	XtSetArg(args[n], XmNmarginWidth, 10); n++;
+	XtSetArg(args[n], XmNmarginHeight, 10); n++;
 	XtSetArg(args[n], XmNhorizontalSpacing, 8); n++;
 	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 	XtSetArg(args[n], XmNresizePolicy, XmRESIZE_GROW); n++;
@@ -351,6 +353,8 @@ static int create_progress_ui(struct fsproc_data *d)
 	xms = XmStringCreateLocalized("Cancel");
 
 	XtSetArg(args[n], XmNlabelString, xms); n++;
+	XtSetArg(args[n], XmNmarginWidth, 4); n++;
+	XtSetArg(args[n], XmNmarginHeight, 4); n++;
 	XtSetArg(args[n], XmNshowAsDefault, True); n++;
 	XtSetArg(args[n], XmNsensitive, True); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
@@ -485,12 +489,15 @@ static void feedback_dialog(struct fsproc_data *d, int type, const char *msg)
 		char* const cont_skip_sz[] = {
 			"Proceed", "Skip", "Skip All", "Cancel"
 		};
-
+		
+		n = 0;
 		xms = XmStringCreateLocalized(APP_TITLE);
 		XtSetArg(args[n], XmNdeleteResponse, XmDO_NOTHING); n++;
 		XtSetArg(args[n], XmNdialogTitle, xms); n++;
 		XtSetArg(args[n], XmNnoResize, True); n++;
 		XtSetArg(args[n], XmNautoUnmanage, True); n++;
+		XtSetArg(args[n], XmNmarginWidth, 10); n++;
+		XtSetArg(args[n], XmNmarginHeight, 10); n++;
 		XtSetArg(args[n], XmNhorizontalSpacing, 8); n++;
 		XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 		XtSetArg(args[n], XmNfractionBase, 4); n++;
@@ -544,6 +551,8 @@ static void feedback_dialog(struct fsproc_data *d, int type, const char *msg)
 			XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
 			XtSetArg(args[n], XmNtopWidget, wsep); n++;
 			XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+			XtSetArg(args[n], XmNmarginWidth, 4); n++;
+			XtSetArg(args[n], XmNmarginHeight, 4); n++;
 			snprintf(btn_name, XtNumber(btn_name), "button%ud", i + 1);
 			d->wfbinput[i] = XmCreatePushButton(d->wfbdlg,
 				btn_name, args, n);

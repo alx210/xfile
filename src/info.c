@@ -57,6 +57,8 @@ void display_dbinfo_dialog(Widget wparent)
 	wdlg = XmCreateDialogShell(wparent, "Type Database Info", args, n);
 
 	n = 0;
+	XtSetArg(args[n], XmNmarginWidth, 10); n++;
+	XtSetArg(args[n], XmNmarginHeight, 10); n++;
 	XtSetArg(args[n], XmNhorizontalSpacing, 8); n++;
 	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 	XtSetArg(args[n], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); n++;
@@ -109,6 +111,8 @@ void display_dbinfo_dialog(Widget wparent)
 
 	n = 0;
 	xms = XmStringCreateLocalized("Close");
+	XtSetArg(args[n], XmNmarginWidth, 4); n++;
+	XtSetArg(args[n], XmNmarginHeight, 4); n++;
 	XtSetArg(args[n], XmNlabelString, xms); n++;
 	XtSetArg(args[n], XmNshowAsDefault, True); n++;
 	XtSetArg(args[n], XmNsensitive, True); n++;
@@ -200,6 +204,8 @@ void display_about_dialog(Widget wparent)
 	wdlg = XmCreateDialogShell(wparent, "About", args, n);
 
 	n = 0;
+	XtSetArg(args[n], XmNmarginWidth, 10); n++;
+	XtSetArg(args[n], XmNmarginHeight, 10); n++;
 	XtSetArg(args[n], XmNhorizontalSpacing, 8); n++;
 	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 	XtSetArg(args[n], XmNnoResize, True); n++;
@@ -238,6 +244,8 @@ void display_about_dialog(Widget wparent)
 
 	n = 0;
 	xms = XmStringCreateLocalized("Close");
+	XtSetArg(args[n], XmNmarginWidth, 4); n++;
+	XtSetArg(args[n], XmNmarginHeight, 4); n++;
 	XtSetArg(args[n], XmNlabelString, xms); n++;
 	XtSetArg(args[n], XmNshowAsDefault, True); n++;
 	XtSetArg(args[n], XmNsensitive, True); n++;

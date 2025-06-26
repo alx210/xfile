@@ -185,10 +185,11 @@ static struct mount_proc_data* init_mount_proc(
 
 	n = 0;
 	XtSetArg(args[n], XmNautoUnmanage, True); n++;
+	XtSetArg(args[n], XmNmarginWidth, 10); n++;
+	XtSetArg(args[n], XmNmarginHeight, 10); n++;
 	XtSetArg(args[n], XmNhorizontalSpacing, 8); n++;
 	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 	XtSetArg(args[n], XmNresizePolicy, XmRESIZE_GROW); n++;
-
 	wform = XmCreateForm(mp->wfbdlg, "main", args, n);
 
 	if(!mount_icon) {
@@ -222,6 +223,8 @@ static struct mount_proc_data* init_mount_proc(
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
 	XtSetArg(args[n], XmNtopWidget, mp->wfbmsg); n++;
 	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNmarginWidth, 4); n++;
+	XtSetArg(args[n], XmNmarginHeight, 4); n++;
 	mp->wfbcancel = XmCreatePushButton(wform, "cancelButton", args, n);
 	XmStringFree(xms);
 
