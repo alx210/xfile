@@ -22,15 +22,16 @@ Actions defined in the file type database appear first in File/Context menus,
 in the order they were defined. First action in the list is the default -
 that is, it's being run whenever an item in the list is activated.
 .SS Tools Menu
-User defined commands may be added to the \fBTools\fP drop-down menu using
-following X resource:
+XFile features a drop-down menu for user defined tools. The \fBTools\fP
+menu will be displayed once content is added to it using X resources as
+follows:
 .PP
 XFile\.tools\.<tool name>: <command>
 .PP
 The command string may contain following context dependent variables:
 .PP
 .nf
-.ta .5i
+.ta 4m
 %n	Selected file name(s).
 %p	Current directory (CWD).
 %u	User specified parameters (an input dialog will be shown).
@@ -38,9 +39,19 @@ The command string may contain following context dependent variables:
 .PP
 Environment variables may also be specified using \fBsh\fP syntax.
 .PP
-To set standard Motif resources, such as label string, mnemonic and
-accelerators, menu item widgets in the Tools menu may be referred to as
-XFile\.mainMenu\.toolsMenu\.\fI<tool name>\fP\.
+To set standard Motif resources, such as label string, mnemonic, position and
+accelerators, menu item widgets (see XmPushButtonGadget(3)) in the Tools menu
+may be referred to as XFile\.mainMenu\.toolsMenu\.\fI<tool name>\fP\.
+Most relevant resources are listed below.
+.PP
+.nf
+.ta 16m
+labelString	\fIString\fP
+mnemonic	\fICharacter\fP
+acceleratorText	\fIString\fP
+accelerator	\fIKeySym\fP
+positionIndex	\fIInteger\fP
+.fi
 .SS Pasting Selections
 The primary X selection is utilized for file transfer\. When one or more
 files are selected in an XFile window, these may be pasted in another with

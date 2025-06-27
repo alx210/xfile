@@ -38,7 +38,6 @@ void sort_by_suffix_cb(Widget, XtPointer, XtPointer);
 void sort_ascending_cb(Widget, XtPointer, XtPointer);
 void sort_descending_cb(Widget, XtPointer, XtPointer);
 void set_filter_cb(Widget, XtPointer, XtPointer);
-void exec_terminal_cb(Widget, XtPointer, XtPointer);
 void dir_up_cb(Widget, XtPointer, XtPointer);
 void reread_cb(Widget, XtPointer, XtPointer);
 void path_change_cb(Widget, XtPointer, XtPointer);

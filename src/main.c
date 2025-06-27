@@ -158,12 +158,6 @@ int main(int argc, char **argv)
 		XtRImmediate,(XtPointer)NULL
 	},
 	{
-		"terminal", "Terminal",
-		XtRString, sizeof(String),
-		XtOffsetOf(struct app_resources, terminal),
-		XtRImmediate,(XtPointer)"xterm"
-	},
-	{
 		"mediaDirectory", "MediaDirectory",
 		XtRString, sizeof(String),
 		XtOffsetOf(struct app_resources, media_dir),
@@ -631,8 +625,6 @@ static void create_main_menus(void)
 		{IT_END },
 
 		{IT_CASCADE, "toolsMenu", "&Tools", NULL, NULL},
-		{IT_PUSH, "terminal", "&Terminal", exec_terminal_cb, NULL},
-		/*{IT_PUSH, "search", "&Search", NULL},*/
 		{IT_END },
 		
 		{IT_CASCADE, "windowMenu", "&Window", NULL, NULL},
@@ -680,19 +672,22 @@ static void create_main_menus(void)
 		wtools = get_menu_item(app_inst.wmenu, "*toolsMenu");
 		dbg_assert(wtools);
 
-		tool_menu = calloc(nuser_tools + 1, sizeof(struct menu_item));
-		tool_menu[0].type = IT_SEPARATOR;
+		tool_menu = calloc(nuser_tools, sizeof(struct menu_item));
 		
 		for(i = 0; i < nuser_tools; i++) {
-			tool_menu[i + 1].type = IT_PUSH;
-			tool_menu[i + 1].name = user_tools[i].name;
-			tool_menu[i + 1].callback = user_tool_cbproc;
-			tool_menu[i + 1].cb_data = &user_tools[i];
+			tool_menu[i].type = IT_PUSH;
+			tool_menu[i].name = user_tools[i].name;
+			tool_menu[i].callback = user_tool_cbproc;
+			tool_menu[i].cb_data = &user_tools[i];
 		}
 		
-		add_menu_items(wtools, tool_menu, nuser_tools + 1);
+		add_menu_items(wtools, tool_menu, nuser_tools);
 		
 		free(tool_menu);		
+	} else {
+		Widget wtools = get_menu_item(app_inst.wmenu, "*toolsMenuCascade");
+		dbg_assert(wtools);
+		XtUnmanageChild(wtools);
 	}
 }
 

@@ -32,7 +32,6 @@ struct app_resources {
 	String sort_by;
 	String filter;
 	String def_path;
-	String terminal;
 	String icon_size;
 	String mount_cmd;
 	String umount_cmd;

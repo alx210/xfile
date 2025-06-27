@@ -6,7 +6,6 @@ XFile.appNameInTitle: False
 XFile.fullPathInTitle: False
 XFile.confirmRemoval: always
 XFile.showAll: False
-XFile.terminal: xterm
 XFile.userMounts: True
 XFile.mountCommand: mount
 XFile.unmountCommand: umount
@@ -16,22 +15,14 @@ XFile.unmountCommand: umount
 ! XFile.mediaUnmountCommand: udevil umount
 ! XFile.mediaMountCommand: udevil mount
 
-!! EXAMPLE: tools menu entry (browse CWD with XImaging)
-! XFile.tools.ximaging: ximaging %p
-!! The widget inherits tool's name, hence its resources may be set as follows
-! XFile*toolsMenu.ximaging.labelString: XImaging
-! XFile*toolsMenu.ximaging.mnemonic: X
-! XFile*toolsMenu.ximaging.acceleratorText: F9
-! XFile*toolsMenu.ximaging.accelerator: <Key>F9
-
-!! EXAMPLE: tools menu entry (file search with prompt for pattern)
-! XFile.tools.find: xterm -hold -e find %p -name %u
-!! The widget inherits tool's name, hence its resources may be set as follows
-! XFile*toolsMenu.find.labelString: Find...
-! XFile*toolsMenu.find.mnemonic: F
-! XFile*toolsMenu.find.acceleratorText: F3
-! XFile*toolsMenu.find.accelerator: <Key>F3
-
+!! Add xterm to the Tools menu
+XFile.tools.terminal: xterm
+XFile*toolsMenu.terminal.labelString: Terminal
+XFile*toolsMenu.terminal.mnemonic: T
+XFile*toolsMenu.terminal.acceleratorText: F12
+XFile*toolsMenu.terminal.accelerator: <Key>F12
+!! Make sure it remains the first menu item
+XFile*toolsMenu.terminal.positionIndex: 0
 
 !-----------------------------------------------------------------------------
 ! Environment variables used by the file type database

@@ -971,18 +971,6 @@ void set_filter_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	reread();
 }
 
-void exec_terminal_cb(Widget w, XtPointer pclient, XtPointer pcall)
-{
-	int rv;
-	char *term_cmd = app_res.terminal ? app_res.terminal : "xterm";
-	
-	rv = spawn_command(term_cmd);
-	if(rv) {
-		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
-			"Error executing \'%s\'\n%s.", term_cmd, strerror(rv));
-	}
-}
-
 void reread_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	reread();
