@@ -23,6 +23,10 @@ Shell Script {
 		0 #!/bin/csh
 		0 #!/bin/ksh
 		0 #!/bin/bash
+		0 #! /bin/sh
+		0 #! /bin/csh
+		0 #! /bin/ksh
+		0 #! /bin/bash
 	}
 	match_name {
 		*.sh
@@ -37,6 +41,8 @@ Script {
 	match_content {
 		0 #!/bin/awk
 		0 #!/bin/perl
+		0 #! /bin/awk
+		0 #! /bin/perl
 	}
 	match_name {
 		*.awk
