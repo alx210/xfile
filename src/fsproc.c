@@ -188,6 +188,7 @@ static int wp_sym_link(struct wp_data*,
 	const char *target, const char *link);
 static char* wp_error_string(const char *verb, const char *src_name,
 	const char *dest_name, const char *errstr);
+static Boolean wp_check_same(const char *csrc, const char *cdest);
 static void wp_sigpipe_handler(int);
 
 /*
@@ -862,12 +863,10 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 
 				build_path(dest_fqn, cdest, ctitle, NULL);
 
-				if(!lstat(dest_fqn, &st_dest) &&
-					st_src.st_dev == st_dest.st_dev &&
-					st_src.st_ino == st_dest.st_ino) {
+				if(wp_check_same(csrc, cdest)) {
 					wp_post_msg(wpd, FBT_SKIP_CANCEL,
-						wp_error_string("Error writing", cdest, NULL,
-						"Source and destination are same!"));
+						wp_error_string(move ? "Error moving" : "Error copying",
+						csrc, NULL, "Source and destination are same!"));
 					continue;
 				}
 
@@ -2245,6 +2244,38 @@ static char* wp_error_string(const char *verb, const char *csrc_name,
 		
 	return buffer;
 }
+
+/*
+ * Returns True if dest is same as src or is its sub-directory
+ * Both paths must be FQN and exist.
+ */
+static Boolean wp_check_same(const char *csrc, const char *cdest)
+{
+	char *src = realpath(csrc, NULL);
+	char *dest = realpath(cdest, NULL);
+	
+	if(src && dest) {
+		size_t src_len = strlen(src);
+		size_t dest_len = strlen(dest);
+
+		if(src_len == dest_len) {
+			if(!strcmp(src, dest)) return True;
+		} else if(src_len < dest_len) {
+			if( (dest[src_len] == '/') &&
+				!strncmp(src, dest, src_len) )
+					return True;
+		}
+	} else {
+		/* shouldn't normally happen */
+		exit(EXIT_FAILURE);
+	}
+
+	if(src) free(src);
+	if(dest) free(dest);
+	
+	return False;
+}
+
 
 /*
  * WP's SIGPIPE handler
