@@ -188,7 +188,6 @@ int set_location(const char *path, Boolean absolute)
 		return err;
 	}
 	
-	dbg_trace("changing to: %s\n", psz);
 	if(chdir(psz)) {
 		read_error_msg(psz, strerror(errno), True);
 		free(psz);
@@ -706,9 +705,6 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 	
 	has_mpts = (has_fstab_entries(cur_path) ? True : False);
 
-	dbg_trace("%s: %s mount points\n", cur_path,
-		(has_mpts ? "has" : "doesn't have"));
-	
 	if(!(dir = opendir(cur_path))){
 		dbg_printf("%d: can't opendir cwd\n", getpid());
 		return RP_ENOACC;
@@ -952,8 +948,6 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 					is_mounted = (path_mounted(fqn) ? True : False);
 				}
 				msg.db_index = DB_UNKNOWN;
-				dbg_trace("%s: mounted %s\n",
-					ent->d_name, is_mounted ? "True" : "False");
 			} else {
 				msg.db_index = DB_UNKNOWN;
 			}

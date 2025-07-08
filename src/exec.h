@@ -49,13 +49,13 @@ int split_arguments(char *cmd_spec, char ***argv_ret, size_t *argc_ret);
  * Takes a command string and vfork-execvs it.
  * Returns zero on success, errno otherwise.
  */
-int spawn_command(const char *cmd_spec);
+int spawn_cs_command(const char *cmd_spec);
 
 /*
  * Runs an executable file in a separate process with arguments specified.
  * Returns zero on success, errno otherwise.
  */
-int spawn_command_args(const char *cmd, char * const *args, size_t nargs);
+int spawn_command(const char *cmd, char * const *args, size_t nargs);
 
 /*
  * Runs an executable file (must be FQN) in a separate process.

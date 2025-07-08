@@ -804,9 +804,9 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 		cdest = realpath(wpd->dest, NULL);
 		if(!cdest) exit(EXIT_FAILURE);
 		
-		wpd->copy_buffer_size = st_dest.st_blksize * COPY_BUFFER_NBLOCKS;
+		wpd->copy_buffer_size = (st_dest.st_blksize ?
+			st_dest.st_blksize : 512) * COPY_BUFFER_NBLOCKS;
 		wpd->copy_buffer = malloc(wpd->copy_buffer_size);
-		dbg_trace("Copy buffer: %ld KB\n", wpd->copy_buffer_size / 1024);
 		if(!wpd->copy_buffer) return errno;
 	} else {
 		wpd->copy_buffer = NULL;
@@ -1280,7 +1280,6 @@ static int wp_copy_tree(struct wp_data *wpd,
 						(st.st_ino != li->inode) );
 					/* hard link to file that was copied already... */
 					if(li) {
-						dbg_trace("hardlink: %s -> %s\n", li->name, dest_fqn);
 						errv = wp_hard_link(wpd, li->name, dest_fqn);
 						free(src_fqn);
 						free(dest_fqn);
@@ -1570,8 +1569,6 @@ static int wp_sym_link(struct wp_data *wpd,
 {
 	static Boolean ignore_err = False;
 	retry_link:
-	
-	dbg_trace("symlink: %s -> %s\n", link, target);
 	
 	if( (symlink(target, link) == -1) && !ignore_err) {
 

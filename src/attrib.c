@@ -707,10 +707,6 @@ static void apply_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	uid_t uid = 0;
 	mode_t fmode_mask = 0xfff;
 	mode_t dmode_mask = 0xfff;
-	
-	#ifdef DEBUG
-	char mode_sz[MODE_CS_MAX];
-	#endif
 
 	/* always mix in file mode mask, since we only provide RWX toggles */
 	dlg_data->dmode_mask |= 0xe000;
@@ -740,10 +736,6 @@ static void apply_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	if(dlg_data->nfiles > 1) fmode_mask = dlg_data->fmode_mask;
 	
-	dbg_trace("mode : %s\n", get_mode_string(dlg_data->mode, mode_sz));
-	dbg_trace("fmask: %s\n", get_mode_string(fmode_mask, mode_sz));
-	dbg_trace("dmask: %s\n", get_mode_string(dmode_mask, mode_sz));
-
 	/* forks off a process */
 	set_attributes(NULL, dlg_data->files, dlg_data->nfiles, gid, uid,
 		dlg_data->mode, dlg_data->mode,	fmode_mask, dmode_mask, att_flags);

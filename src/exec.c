@@ -103,8 +103,6 @@ int expand_env_vars(const char *in, struct env_var_rec *vars, char **out)
 				memcpy(buf, s, p - s);
 				buf[p - s] = '\0';
 				
-				dbg_trace("svar: %s\n", buf);
-				
 				s--;
 				memmove(s, p + 1, strlen(p));
 				
@@ -131,8 +129,6 @@ int expand_env_vars(const char *in, struct env_var_rec *vars, char **out)
 				}
 				memcpy(buf, s, p - s);
 				buf[p - s] = '\0';
-
-				dbg_trace("var: %s\n", buf);
 
 				memmove(s , p, strlen(p) + 1);
 				
@@ -380,7 +376,7 @@ int split_arguments(char *cmd_spec, char ***argv_ret, size_t *argc_ret)
  * Splits cmd_spec into separate arguments (see split_arguments)
  * and vfork-execvs it. Returns zero on success, errno otherwise.
  */
-int spawn_command(const char *cmd_spec)
+int spawn_cs_command(const char *cmd_spec)
 {
 	pid_t pid;
 	char *str;
@@ -413,7 +409,7 @@ int spawn_command(const char *cmd_spec)
  * Runs an executable file in a separate process with arguments specified.
  * Returns zero on success, errno otherwise.
  */
-int spawn_command_args(const char *cmd, char * const *args, size_t nargs)
+int spawn_command(const char *cmd, char * const *args, size_t nargs)
 {
 	pid_t pid;
 	volatile int errval = 0;

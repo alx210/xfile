@@ -923,7 +923,7 @@ static void xfile_open(int argc, char **argv)
 			continue;
 		} else if(S_ISDIR(st.st_mode)) {
 			char *arg = argv[i];
-			rv = spawn_command_args(APP_NAME, &arg, 1);
+			rv = spawn_command(APP_NAME, &arg, 1);
 			if(rv) {
 				stderr_msg("Failed execute \'%s %s\': %s.",
 					app_inst.bin_name, arg, strerror(rv));
@@ -965,7 +965,7 @@ static void xfile_open(int argc, char **argv)
 
 		rv = expand_env_vars(action, vars, &exp_cmd);
 		if(!rv) {
-			rv = spawn_command(exp_cmd);
+			rv = spawn_cs_command(exp_cmd);
 			if(rv) {
 				stderr_msg("Error executing \'%s\': %s\n",
 					exp_cmd, strerror(rv));
@@ -1276,7 +1276,7 @@ void fork_xfile(const char *path, Boolean inherit_ui)
 	argv[argc] = (char*)path;
 	argc++;
 
-	errval = spawn_command_args(app_inst.bin_name, argv, argc);
+	errval = spawn_command(app_inst.bin_name, argv, argc);
 	if(errval) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Failed to create new %s instance.\n%s",

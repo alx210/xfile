@@ -164,7 +164,7 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 		return;
 	}
 	dbg_trace("TOOL(%s): [%s]\n", tool->name, exp_cmd);
-	rv = spawn_command(exp_cmd);
+	rv = spawn_cs_command(exp_cmd);
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Error executing tool command %s:\n"

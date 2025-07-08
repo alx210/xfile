@@ -109,7 +109,7 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	free(input);
 
 	set_action_status_text("Executing", cmd);
-	rv = spawn_command(cmd);
+	rv = spawn_cs_command(cmd);
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Error executing action command:\n%s\n%s", cmd, strerror(rv));
@@ -185,11 +185,13 @@ static void run_action_proc(Widget w, XtPointer pclient, XtPointer pcall)
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Error parsing action command string:\n"
 			"%s\n%s.", cmd, strerror(rv));
+		free(name);
+		free(path);
 		return;
 	}
 	
 	set_action_status_text("Executing", exp_cmd);
-	rv = spawn_command(exp_cmd);
+	rv = spawn_cs_command(exp_cmd);
 	if(rv) {
 		unescape_string(exp_cmd);
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
