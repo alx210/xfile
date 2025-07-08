@@ -305,8 +305,9 @@ int split_arguments(char *cmd_spec, char ***argv_ret, size_t *argc_ret)
 		if(*p == '\"' || *p == '\''){
 			if(pc == '\\'){
 				/* literal " or ' */
+				pc = *p;
 				memmove(p - 1, p, strlen(p) + 1);
-			}else{
+			} else {
 				/* quotation marks; remove them, ignoring blanks within */
 				memmove(p, p + 1, strlen(p));
 
