@@ -111,13 +111,13 @@ int expand_env_vars(const char *in, struct env_var_rec *vars, char **out)
 				p = s;
 			} else { 
 				/* implicit scope $...
-				 * (eventually terminated by a space, dot or slash) */
+				 * (eventually terminated by a space, dot, quote, or slash) */
 				p[0] = '\0';
 				p++;
 				s = p;
 				
-				while(*p && *p != ' ' &&
-					*p != '\t' && *p != '.' && *p != '/') p++;
+				while(*p && *p != ' ' && *p != '\"' && *p != '\'' &&
+					*p != '\t' && *p != '.' && *p != '\\' && *p != '/') p++;
 				
 				if(!(p - s)) {
 					res = EINVAL;
