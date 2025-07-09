@@ -783,6 +783,20 @@ void select_all_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	file_list_select_all(app_inst.wlist);
 }
 
+void reselect_cb(Widget w, XtPointer pclient, XtPointer pcall)
+{
+	struct file_list_selection *cur_sel =
+		file_list_get_selection(app_inst.wlist);
+	
+	if(cur_sel->count && !is_selection_owner()) {
+		short ui_flags = UIF_DIR | UIF_SEL |
+			((cur_sel->count == 1) ? UIF_SINGLE : 0);
+		
+		grab_selection();
+		set_ui_sensitivity(ui_flags);
+	}
+}
+
 void deselect_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	file_list_deselect(app_inst.wlist);

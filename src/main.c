@@ -591,6 +591,7 @@ static void create_main_menus(void)
 		{IT_PUSH, "selectAll","&Select All", select_all_cb, NULL},
 		{IT_PUSH, "selectPattern","Select &Pattern...",
 			select_pattern_cb, NULL},
+		{IT_PUSH, "reselect","&Reselect", reselect_cb, NULL},
 		{IT_PUSH, "deselect", "&Deselect", deselect_cb, NULL},
 		{IT_PUSH, "invertSelection", "&Invert Selection",
 			invert_selection_cb, NULL},
@@ -1119,9 +1120,12 @@ void set_ui_sensitivity(short flags)
 	if(is_selection_owner() || !(flags & UIF_DIR)) {
 		enable_menu_item(app_inst.wmedit, "*copyHere", False);
 		enable_menu_item(app_inst.wmedit, "*moveHere", False);
+		enable_menu_item(app_inst.wmedit, "*reselect", False);
 	} else if(flags & UIF_DIR) {
 		enable_menu_item(app_inst.wmedit, "*copyHere", True);
 		enable_menu_item(app_inst.wmedit, "*moveHere", True);
+		if(flags & UIF_SEL)
+			enable_menu_item(app_inst.wmedit, "*reselect", True);
 	}
 
 }

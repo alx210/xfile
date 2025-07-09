@@ -23,6 +23,7 @@ void rename_cb(Widget, XtPointer, XtPointer);
 void delete_cb(Widget, XtPointer, XtPointer);
 void attributes_cb(Widget, XtPointer, XtPointer);
 void select_all_cb(Widget, XtPointer, XtPointer);
+void reselect_cb(Widget, XtPointer, XtPointer);
 void deselect_cb(Widget, XtPointer, XtPointer);
 void invert_selection_cb(Widget, XtPointer, XtPointer);
 void select_pattern_cb(Widget, XtPointer, XtPointer);
