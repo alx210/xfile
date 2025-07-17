@@ -709,10 +709,15 @@ static int probe_contents(const char *fname)
 	
 	nc = fread(buf, 1, PROBE_NCHRS, fin);
 	fclose(fin);
-	if(nc == 0)
+	if(nc == 0) {
 		return DB_TEXT;
-	else if(nc < 4)
-		return DB_UNKNOWN;
+	} else if(nc < 4) {
+		for(n = 0; n < nc; n++) {
+			if((buf[n] < 32) || (buf[n] > 127))
+				return DB_BINARY;
+		}
+		return DB_TEXT;				
+	}
 	
 	if(nc % 4) nc -= (nc % 4);
 	
