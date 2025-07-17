@@ -1382,9 +1382,10 @@ static int wp_copy_file(struct wp_data *wpd,
 			fb_type = FBT_SKIP_CANCEL;
 			msg = "Destination exists and is a directory!";
 		} else if(S_ISLNK(st_dest.st_mode)) {
-			fb_type = FBT_SKIP_CANCEL;
+			fb_type = FBT_CONTINUE_SKIP;
 			msg = "Destination file exists and is a symbolic link.\n"
-					"No attempt will be made to write through it.";
+					"No attempt will be made to write through it.\n"
+					"Proceed and overwrite the symbolic link?";
 		} else if(S_ISREG(st_dest.st_mode)) {
 			if(st_src.st_dev == st_dest.st_dev &&
 				st_src.st_ino == st_dest.st_ino) {
