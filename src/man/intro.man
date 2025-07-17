@@ -1,13 +1,13 @@
 .TH XFILE 1
 .SH NAME
-xfile \- graphical file manager.
+xfile - graphical file manager.
 .SH SYNOPSIS
 xfile [OPTIONS] [DIRECTORY]
 .PP
 xfile-open FILENAME...
 .SH DESCRIPTION
 .PP
-XFile is a file manager for Unix systems running X11\.
+XFile is a file manager for Unix systems running X11.
 .SS Options
 .TP
 \fB+/-a\fP
@@ -15,7 +15,7 @@ Ignore/show file names starting with a dot.
 .TP
 \fB-f\fP <glob pattern>
 Hide files matching glob pattern specified\. Prefix the pattern with the
-! character to negate\.
+! character to negate.
 .TP
 \fB-l\fP
 Toggle view mode (see viewMode resource).

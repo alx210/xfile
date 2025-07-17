@@ -172,5 +172,5 @@ Default binding:
 .PP
 \(dg While not being a part of widget's functionality, these translations are
 provided by the widget for the convenience of being able to assign keys that
-would interferre with text input in other widgets if used as global menu
+would interfere with text input in other widgets if used as global menu
 accelerators.

@@ -44,12 +44,12 @@ Environment variables in \fBsh\fP syntax will be expanded accordingly.
 This resource is not set by default.
 .TP
 \fBmediaMountCommand\fP
-Specifies a mount daemon specific command to mount mount\-points within
+Specifies a mount daemon specific command to mount mount-points within
 the daemon managed media directory (see \fBmediaDirectory\fP). This resource
 is not set by default.
 .TP
 \fBmediaUnmountCommand\fP
-Specifies a mount daemon specific command to unmount mount\-points within
+Specifies a mount daemon specific command to unmount mount-points within
 the daemon managed media directory (see \fBmediaDirectory\fP). This resource
 is not set by default.
 .TP

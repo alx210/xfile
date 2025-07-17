@@ -1,14 +1,14 @@
 .SH USER INTERFACE
 .SS Directory View
-By default, icon size is deduced from label font height\. This can be controlled
-with the iconSize resource. Custom icons may be installed in \.xfile/icons user's
-home sub-directory (see also the FILES section)\. If an icon specified in the
-type database cannot be found, a built-in, generic icon will be used instead\.
+By default, icon size is deduced from label font height. This can be controlled
+with the iconSize resource. Custom icons may be installed in .xfile/icons user's
+home sub-directory (see also the FILES section). If an icon specified in the
+type database cannot be found, a built-in, generic icon will be used instead.
 .PP
 Typing into the directory view will select the next matching file name.
 Incremental search will be reset after a few seconds, or when
 the key bound to osfCancel is pressed (see the FileList widget
-\fBlookupTimeout\fP resource)\.
+\fBlookupTimeout\fP resource).
 .SS Mount Points
 For mount points, Mount/Unmount action will be displayed in the context menu.
 Depending on system configuration, alternate un/mount command may
@@ -16,7 +16,7 @@ be specified (see mountCommand, unmountCommand), or disabled (see userMounts).
 .PP
 XFile may be configured to utilize a user mount daemon that manages a "media"
 directory (see mediaDirectory, mediaMountCommand, mediaUnmountCommand X
-resources)\.
+resources).
 .SS File/Context Menu
 Actions defined in the file type database appear first in File/Context menus,
 in the order they were defined. First action in the list is the default -
@@ -26,7 +26,7 @@ XFile features a drop-down menu for user defined tools. The \fBTools\fP
 menu will be displayed once content is added to it using X resources as
 follows:
 .PP
-XFile\.tools\.<tool name>: <command>
+XFile.tools.<tool name>: <command>
 .PP
 The command string may contain following context dependent variables:
 .PP
@@ -41,7 +41,7 @@ Environment variables may also be specified using \fBsh\fP syntax.
 .PP
 To set standard Motif resources, such as label string, mnemonic, position and
 accelerators, menu item widgets (see XmPushButtonGadget(3)) in the Tools menu
-may be referred to as XFile\.mainMenu\.toolsMenu\.\fI<tool name>\fP\.
+may be referred to as XFile.mainMenu.toolsMenu.\fI<tool name>\fP.
 Most relevant resources are listed below.
 .PP
 .nf
@@ -53,10 +53,10 @@ accelerator	\fIKeySym\fP
 positionIndex	\fIInteger\fP
 .fi
 .SS Pasting Selections
-The primary X selection is utilized for file transfer\. When one or more
+The primary X selection is utilized for file transfer. When one or more
 files are selected in an XFile window, these may be pasted in another with
 the \fBEdit > Copy Here\fP and \fBEdit > Move Here\fP menu commands.
 .PP
 XFile owned selection may also be pasted as a list of space separated
-file names in an application/widget that requests plain\-text data, such
-as terminal or text editor\.
+file names in an application/widget that requests plain-text data, such
+as terminal or text editor.
