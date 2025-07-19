@@ -1525,10 +1525,21 @@ static int wp_copy_file(struct wp_data *wpd,
 		}
 		if(rw != rest) res = errno;
 	}
+
+	close(fin);
+
+	if(!res && move) {
+		wp_delete_file(wpd, src);
+	}
 	
 	if(res) {
 		const char *msg = read_err ? "Error reading" : "Error writing";
 		const char *name = read_err ? src : dest;
+		
+		/* wp_post_msg will not return if cancelled,
+		 * so make sure to clean up before calling it */
+		unlink(dest);
+		
 		reply = wp_post_msg(wpd, FBT_SKIP_CANCEL,
 			wp_error_string(msg, name, NULL, strerror(res)) );
 		if(reply == FB_SKIP_IGNORE_ALL) {
@@ -1543,15 +1554,8 @@ static int wp_copy_file(struct wp_data *wpd,
 			NULL, strerror(res)) );
 		if(reply == FB_SKIP_IGNORE_ALL) wpd->ignore_write_err = True;
 	}
-	
-	close(fin);
-	close(fout);
 
-	if(res)	{
-		unlink(dest);
-	} else if(move) {
-		wp_delete_file(wpd, src);
-	}
+	close(fout);
 	
 	skip_copying:
 
