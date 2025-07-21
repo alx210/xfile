@@ -89,7 +89,7 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 	}
 	
 	input = input_string_dlg(app_inst.wshell, "Pass To",
-		"Specify a command to run on the file",
+		"Specify a command to pass the file to",
 		last_input, "command", ISF_PRESELECT);
 	if(!input) return;
 	
