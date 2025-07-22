@@ -16,6 +16,7 @@
 #include "debug.h"
 
 /* Forward declarations */
+static Bool escape_string(const char *string, char **result);
 static Bool xrm_enum_cb(XrmDatabase *rdb, XrmBindingList bindings,
 	XrmQuarkList quarks, XrmRepresentation *type,
 	XrmValue *value, XPointer closure);
@@ -117,7 +118,8 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 		files[strlen(files) - 1] = '\0';
 		free(esc_names);
 	} else if(cur_sel->count == 1) {
-		files = strdup(cur_sel->names[0]);
+		if(!escape_string(cur_sel->names[0], &files))
+			files = strdup(cur_sel->names[0]);
 	} else {
 		files = strdup("");
 	}
@@ -175,3 +177,56 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 	free(path);
 }
 
+/*
+ * Checks the string specified for special characters and escapes them
+ * with the \ character. Puts the string in quotes if it contains blanks.
+ * Returns True and the modified string allocated from the heap in result.
+ */
+static Bool escape_string(const char *string, char **result)
+{
+	char spec_chrs[] = "\"\'\\";
+	char blnk_chrs[] = " \n\t";
+	char *sp = (char*) string;
+	char *dp;
+	size_t count = 0;
+	char *res;
+	int quote = 0;
+
+	while(*sp != '\0') {
+		if(strchr(spec_chrs, *sp)) count++;
+		if(strchr(blnk_chrs, *sp)) quote = 1;
+		sp++;
+	}
+	if(!count && !quote) return False;
+	
+	res = malloc(strlen(string) + count + 3);
+	if(!res) return False;
+	
+	sp = (char*)string;
+	dp = res;
+	
+	if(quote) {
+		*dp = '\"';
+		dp++;
+	}
+	
+	while(*sp != '\0') {
+		if(strchr(spec_chrs, *sp)) {
+			*dp = '\\';
+			dp++;
+		}
+		*dp = *sp;
+		sp++;
+		dp++;
+	}
+	
+	if(quote) {
+		*dp = '\"';
+		dp++;
+	}
+	
+	*dp = '\0';
+	*result = res;
+	dbg_trace("%s\n", res);
+	return True;
+}

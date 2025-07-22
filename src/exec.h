@@ -26,17 +26,6 @@ struct env_var_rec {
 int expand_env_vars(const char *in, struct env_var_rec *vars, char **out);
 
 /*
- * Checks the string specified for special characters and escapes them
- * with the \ character. Returns with zero and a new string allocated
- * from the heap in result, ENOENT if no special characters found,
- * ENOMEM on error.
- */
-int escape_string(const char *string, char **result);
-
-/* Does the opposite of escape_string, modifying the string specified */
-void unescape_string(char *str);
-
-/*
  * Splits cmd_spec into separate arguments, cmd_spec will be modified in
  * process and pointers into it placed in argv_ret, terminated with NULL.
  * Quotation marks and escape character \ are threated same way as by sh(1).

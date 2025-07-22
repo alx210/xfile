@@ -902,19 +902,14 @@ static int get_best_icon_size(void)
 static void xfile_open(int argc, char **argv)
 {
 	int errors = 0;
-	struct env_var_rec vars[4] = { NULL };
 	int i;
 	if(!load_db()) exit(EXIT_FAILURE);
 	
 	for(i = 1; i < argc; i++) {
-		struct file_type_rec *ft;
+		struct file_type_rec *ft = NULL;
 		struct stat st;
 		int db_type;
-		char *name = NULL;
-		char *path = NULL;
 		char *action = NULL;
-		char *exp_cmd;
-		char *esc_str;
 		int rv;
 		
 		if(stat(argv[i], &st) == -1) {
@@ -936,51 +931,16 @@ static void xfile_open(int argc, char **argv)
 		db_type = db_match(argv[i], &app_inst.type_db);
 		if(DB_DEFINED(db_type)) {
 			ft = db_get_record(&app_inst.type_db, db_type);
-			vars[2].name = ENV_FMIME;
-			vars[2].value = ft->mime;
 			if(ft->nactions) action = ft->actions[0].command;
 		} else if(DB_ISTEXT(db_type)) {
 			action = ENV_DEF_TEXT_CMD;
 		}
-		
-		if(!action) {
-			stderr_msg("Unknown file type "
-				"or no actions defined for \'%s'.\n", argv[i]);
-			errors++;
-			continue;
-		}
-		
-		if(escape_string(argv[i], &name))
-			name = strdup(argv[i]);
-		
-		path = get_working_dir();
-		if(!escape_string(path, &esc_str)) {
-			free(path);
-			path = esc_str;
-		}
-
-		vars[0].name = ENV_FNAME;
-		vars[0].value = name;
-		vars[1].name = ENV_FPATH;
-		vars[1].value = path;
-
-		rv = expand_env_vars(action, vars, &exp_cmd);
-		if(!rv) {
-			rv = spawn_cs_command(exp_cmd);
-			if(rv) {
-				stderr_msg("Error executing \'%s\': %s\n",
-					exp_cmd, strerror(rv));
-				errors++;
-			}
+		if(action) {
+			errors += run_action(argv[i], action, ft);
 		} else {
-			stderr_msg("Error parsing command string \'%s\': %s.\n",
-				action, strerror(rv));
+			stderr_msg("No default action found for \"%s\"\n", argv[i]);
 			errors++;
 		}
-
-		free(exp_cmd);
-		free(path);
-		free(name);
 	}
 	if(errors && argc > 2)
 		stderr_msg("Exiting with error status due to previous errors.\n");

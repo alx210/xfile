@@ -41,6 +41,7 @@ static void mount_proc(Widget, XtPointer, XtPointer);
 static void umount_proc(Widget, XtPointer, XtPointer);
 static void action_status_timer_cb(XtPointer, XtIntervalId*);
 static void set_action_status_text(const char*, const char*);
+int run_action(const char*, const char*, const struct file_type_rec*);
 
 /*
  * Context menu callback.
@@ -119,89 +120,25 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 
 /*
  * Context menu callback.
- * Expands and executes a command string pointed in callback data.
+ * Runs action pointed to in callback data.
  */
 static void run_action_proc(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	struct file_list_selection *cur_sel;
-	struct env_var_rec vars[4] = { NULL };
-	char *cmd = (char*)pclient;
-	char *name;
-	char *path;
-	char *exp_cmd;
-	char *esc_str;
-	int rv;
+	char *action = (char*)pclient;
+	struct file_type_rec *ft = NULL;
 
 	cur_sel = file_list_get_selection(app_inst.wlist);
 	if(!cur_sel->count) {
 		stderr_msg("%s invalid selection\n", __FUNCTION__);
 		return;
 	}
-	
-	name = strdup(cur_sel->item.name);
-	path = get_working_dir();
-	if(!name || !path) {
-		message_box(app_inst.wshell, MB_ERROR, APP_TITLE, strerror(errno));
-		if(name) free(name);
-		if(path) free(path);
-		return;
-	}
-	
-	rv = escape_string(name, &esc_str);
-	if(rv == ENOMEM) {
-		message_box(app_inst.wshell, MB_ERROR, APP_TITLE, strerror(rv));
-		free(name);
-		free(path);
-		return;
-	} else if(!rv) {
-		free(name);
-		name = esc_str;
-	}
-	
-	rv = escape_string(path, &esc_str);
-	if(rv == ENOMEM) {
-		message_box(app_inst.wshell, MB_ERROR, APP_TITLE, strerror(rv));
-		free(path);
-		free(name);
-		return;
-	} else if(!rv) {
-		free(path);
-		path = esc_str;
-	}
-	
-	vars[0].name = ENV_FNAME;
-	vars[0].value = name;
-	vars[1].name = ENV_FPATH;
-	vars[1].value = path;
+		
 	if(DB_DEFINED(cur_sel->item.db_type)) {
-		struct file_type_rec *ft;
 		ft = db_get_record(&app_inst.type_db, cur_sel->item.db_type);
-		vars[2].name = ENV_FMIME;
-		vars[2].value = ft->mime;
-	}
-
-	rv = expand_env_vars(cmd, vars, &exp_cmd);
-	if(rv) {
-		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
-			"Error parsing action command string:\n"
-			"%s\n%s.", cmd, strerror(rv));
-		free(name);
-		free(path);
-		return;
 	}
 	
-	set_action_status_text("Executing", exp_cmd);
-	rv = spawn_cs_command(exp_cmd);
-	if(rv) {
-		unescape_string(exp_cmd);
-		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
-			"Error executing action command:\n%s\n%s.",
-			exp_cmd, strerror(rv));
-	}
-
-	free(path);
-	free(name);
-	free(exp_cmd);
+	run_action(cur_sel->item.name, action, ft);
 }
 
 /* Mount/unmount context menu callbacks */
@@ -299,11 +236,7 @@ static void action_status_timer_cb(XtPointer closure, XtIntervalId *iid)
 /* Temporarily sets status-bar text message */
 static void set_action_status_text(const char *action, const char *cmd)
 {
-	char *str = strdup(cmd);
-	
-	unescape_string(str);
-	set_status_text("%s: %s", action, str);
-	free(str);
+	set_status_text("%s: %s", action, cmd);
 
 	XtAppAddTimeOut(app_inst.context, EXEC_STATUS_TIMEOUT,
 		action_status_timer_cb, NULL);
@@ -1086,4 +1019,146 @@ void sub_shell_destroy_cb(Widget w, XtPointer client, XtPointer call)
 		dbg_trace("exit flag set in %s\n", __FUNCTION__);
 		XtAppSetExitFlag(app_inst.context);
 	}
+}
+
+/*
+ * Expands and executes an action string.
+ * This routine may either be invoked from a GUI callback, or with no GUI
+ * at all by xfile_open(). Any error messages are reported using a message
+ * box if app_inst.wmain is valid, or to stderr otherwise.
+ */
+int run_action(const char *file_name, const char *action_str,
+	const struct file_type_rec *db_rec)
+{
+	struct env_var_rec vars[4] = { NULL };
+	char *path;
+	char *exp_act;
+	char **argv;
+	size_t argc, len, i;
+	int rv = 0;
+
+	path = get_working_dir();
+	if(!path) {
+		char *err_sz = "Cannot access the working directory.";
+		if(app_inst.wmain)
+			message_box(app_inst.wshell, MB_ERROR, APP_TITLE, err_sz);
+		else
+			stderr_msg("%s\n", err_sz);
+		return ENOENT;
+	}
+
+	/* Expand the command string, but not any context components yet.
+	 * These get substituted back for later expansion, since we don't
+	 * want to have file and path names inserted prior to split_arguments(),
+	 * as these may contain spaces (and contemporarily, other special chars) */
+	vars[0].name = ENV_FNAME;
+	vars[0].value = "%{" ENV_FNAME "}";
+	vars[1].name = ENV_FPATH;
+	vars[1].value = "%{" ENV_FPATH "}";
+	vars[2].name = ENV_FMIME;
+	vars[2].value = "%{" ENV_FMIME "}";
+	
+	rv = expand_env_vars(action_str, vars, &exp_act);
+	if(rv) {
+		if(app_inst.wmain)
+			va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+				"Error in variable substitution:\n%s\n%s.",
+				action_str, strerror(rv));
+		else
+			stderr_msg("Error in variable substitution: %s. %s.\n",
+				action_str, strerror(rv));
+		
+		free(path);
+		return rv;
+	}
+
+	rv = split_arguments(exp_act, &argv, &argc);
+	if(rv || (argc < 2)) {
+		if(rv) {
+			if(app_inst.wmain)
+				va_message_box(app_inst.wshell,	MB_ERROR, APP_TITLE,
+					"Error parsing action command string:\n%s\n%s.",
+					action_str, strerror(rv));
+			else
+				stderr_msg("Error parsing action command string: %s.%s.\n",
+					action_str, strerror(rv));
+		} else {
+			if(app_inst.wmain)
+				va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE, 
+					"Action \"%s\" contains no command arguments.", action_str);
+			else
+				stderr_msg("Action \"%s\" contains "
+					"no command arguments.\n", action_str);
+		}
+		free(path);
+		free(exp_act);
+		return rv;		
+	}
+
+	/* now that we have an argv array, expand any context variables in it */
+	vars[0].name = ENV_FNAME;
+	vars[0].value = (char*)file_name;
+	vars[1].name = ENV_FPATH;
+	vars[1].value = (char*)path;
+	vars[2].name = ENV_FMIME;
+	vars[2].value = (db_rec && db_rec->mime) ? db_rec->mime : "";
+	
+	for(i = 0; i < argc; i++) {
+		/* pointers in argv currently index exp_act 
+		 * so they don't need to be freed...*/
+		rv = expand_env_vars(argv[i], vars, argv + i);
+		if(rv) {
+			/* ...but the ones expand_env_vars has returned do */
+			while(i) { i--;	free(argv[i]); }
+			
+			if(app_inst.wmain)
+				va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+					"Error in variable substitution:\n%s\n%s.",
+					action_str, strerror(rv));
+			else
+				stderr_msg("Error in variable substitution: %s. %s.\n",
+					action_str, strerror(rv));
+
+			free(path);
+			free(argv);
+			free(exp_act);
+			return rv;		
+		}
+	}
+	free(exp_act);
+	
+	/* set the status text to indicate what's being run */
+	if(app_inst.wmain) {
+		for(i = 0, len = 0; i < argc; i++)
+			len += strlen(argv[i]) + 1;
+
+		if( (exp_act = malloc(len + 1)) ) {
+			*exp_act = '\0';
+
+			for(i = 0; i < argc; i++) {
+				strcat(exp_act, argv[i]);
+				strcat(exp_act, " ");
+			}
+			set_action_status_text("Executing", exp_act);
+			free(exp_act);
+		}
+	}
+
+	/* run the composed command */
+	rv = spawn_command(argv[0], argv + 1, argc - 1);
+	if(rv) {
+		if(app_inst.wmain)
+			va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+				"Failed to execute \"%s\".\n%s.", argv[0], strerror(rv));
+		else
+			stderr_msg("Failed to execute \"%s\". %s.\n",
+				argv[0], strerror(rv));
+	}
+	
+	for(i = 0; i < argc; i++) free(argv[i]);
+
+	free(argv);
+	free(path);
+	
+	return rv;
 }

@@ -50,4 +50,7 @@ void about_cb(Widget, XtPointer, XtPointer);
 void dbinfo_cb(Widget, XtPointer, XtPointer);
 void sub_shell_destroy_cb(Widget, XtPointer, XtPointer);
 
+int run_action(const char *file_name, const char *action_str,
+	const struct file_type_rec *db_rec);
+
 #endif /* CBPROC_H */

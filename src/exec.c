@@ -208,67 +208,9 @@ static inline int is_space(char c)
 }
 
 /*
- * Checks the string specified for special characters and escapes them
- * with the \ character. Returns with zero and a new string allocated
- * from the heap in result, ENOENT if no special characters found,
- * ENOMEM on error.
- */
-int escape_string(const char *string, char **result)
-{
-	char esc_chrs[] = "\"\' \n\t\\";
-	char *sp = (char*) string;
-	char *dp;
-	size_t count = 0;
-	char *res;	
-
-	while(*sp != '\0') {
-		if(strchr(esc_chrs, *sp)) count++;
-		sp++;
-	}
-	if(!count) return ENOENT;
-	
-	res = malloc(strlen(string) + count + 1);
-	if(!res) return ENOMEM;
-	
-	sp = (char*)string;
-	dp = res;
-	
-	while(*sp != '\0') {
-		if(strchr(esc_chrs, *sp)) {
-			*dp = '\\';
-			dp++;
-		}
-		*dp = *sp;
-		sp++;
-		dp++;
-	}
-	*dp = '\0';
-	*result = res;
-	
-	dbg_trace("%s: %s --> %s\n", __FUNCTION__, string, res);
-
-	return 0;
-}
-
-/*
- * Does the opposite of escape_string, modifying the string specified
- */
-void unescape_string(char *str)
-{
-	char *p = str;
-	
-	while(*p) {
-		if(*p == '\\')
-			memmove(p, p + 1, strlen(p));
-
-		p++;
-	}
-}
-
-/*
  * Splits cmd_spec into separate arguments, cmd_spec will be modified in
  * process and pointers into it placed in argv, terminated with NULL.
- * Quotation marks and escape character \ are threated same way as by sh(1).
+ * Quotation marks and escape character \ are threated similar to sh.
  * Returns zero on success, errno otherwise. Memory for the argv array is
  * allocated from heap and must be freed.
  */
@@ -296,6 +238,7 @@ int split_arguments(char *cmd_spec, char ***argv_ret, size_t *argc_ret)
 			/* remove escaped \ and reset state */
 			memmove(p - 1, p, strlen(p) + 1);
 			pc = 0;
+			continue;
 		} 
 		
 		if(*p == '\"' || *p == '\''){
@@ -303,6 +246,7 @@ int split_arguments(char *cmd_spec, char ***argv_ret, size_t *argc_ret)
 				/* literal " or ' */
 				pc = *p;
 				memmove(p - 1, p, strlen(p) + 1);
+				continue;
 			} else {
 				/* quotation marks; remove them, ignoring blanks within */
 				memmove(p, p + 1, strlen(p));
@@ -318,17 +262,17 @@ int split_arguments(char *cmd_spec, char ***argv_ret, size_t *argc_ret)
 					}
 					pc = *p;
 					p++;
-
+					
 					if(*p == '\\' && pc == '\\') {
 						memmove(p - 1, p, strlen(p) + 1);
 						pc = 0;
+						goto do_quotes;
 					} 
 				}
 				/* escaped " or '  within quotes */
 				if(pc == '\\') {
 					memmove(p - 1, p, strlen(p) + 1);
-					pc = *p;
-					p++;
+					pc = 0;
 					goto do_quotes;
 				}
 				/* closing */
@@ -350,13 +294,15 @@ int split_arguments(char *cmd_spec, char ***argv_ret, size_t *argc_ret)
 			*p = '\0';
 			argv[argc] = t;
 			
-			dbg_trace("argv[%d]: %s\n",argc,argv[argc]);
+			dbg_printf("argv[%d]: %s\n",argc,argv[argc]);
 			
 			t = NULL;
 			argc++;
 		} else if(pc == '\\' && is_space(*p)) {
 			/* escaped blank; remove the \ */
 			memmove(p - 1, p, strlen(p) + 1);
+			pc = 0;
+			continue;
 		}
 		
 		pc = *p;
