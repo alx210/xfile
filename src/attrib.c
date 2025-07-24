@@ -50,6 +50,7 @@
 enum attrib_gadgets {
 	GID_NAME,
 	GID_TYPE,
+	GID_LTGT,
 	GID_SIZE,
 	GID_CTIME,
 	GID_MTIME,
@@ -58,7 +59,7 @@ enum attrib_gadgets {
 };
 
 static const char *attrib_sz[] = {
-	"Name:", "Type:", "Size:",
+	"Name:", "Type:", "Target:", "Size:",
 	"Created:", "Modified:", "Accessed:"
 };
 
@@ -92,6 +93,7 @@ static const mode_t mask_bits[] = {
 struct attrib_dlg_data {
 	Widget wdlg;
 	Widget wattrib[NUM_ATT_GAD];
+	Widget wlabel[NUM_ATT_GAD];
 	Widget wmode[NUM_MODE_GAD];
 	Widget wmode_mask[NUM_MASK_GAD];
 	Widget wowner;
@@ -186,7 +188,7 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 	if(dlg_data->nfiles == 1) {
 		struct tm tm_file;
 		char *file_name = dlg_data->files[0];
-		char *link_name = NULL;
+		char *link_tgt = NULL;
 		char *owner;
 		char *psz;
 		char sz_time[TIME_BUFSIZ];
@@ -196,20 +198,29 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 		unsigned int i, j, m;
 	
 		if(!lstat(file_name, &lst) && ( (lst.st_mode & S_IFMT) == S_IFLNK) ) {
-			char *buf;
-			if(!get_link_target(file_name, &buf)) {
-				link_name = malloc(strlen(file_name) + strlen(buf) + 4);
-				sprintf(link_name, "%s (%s)", file_name, buf);
-				free(buf);
+			int rv;
+			if( (rv = get_link_target(file_name, &link_tgt)) ) {
+				va_message_box(wp, MB_ERROR_NB, APP_TITLE,
+					"Cannot read link \"%s\".\n%s.",
+					file_name, strerror(rv));
+
+				XtDestroyWidget(dlg_data->wdlg);
+				free_dlg_data(dlg_data);
+				return;
 			}
 			is_symlink = True;
 		}
 
-		if(lstat(file_name, &st) == -1) {
+		if(lstat(is_symlink ? link_tgt : file_name, &st) == -1) {
+			char *msg_fmt = is_symlink ?
+				"Cannot stat link target \"%s\".\n%s." :
+				"Cannot stat file \"%s\".\n%s.";
+
+			va_message_box(wp, MB_ERROR_NB, APP_TITLE, msg_fmt,
+				is_symlink ? link_tgt : file_name, strerror(errno));
+
 			XtDestroyWidget(dlg_data->wdlg);
 			free_dlg_data(dlg_data);
-			va_message_box(wp, MB_ERROR_NB, APP_TITLE,
-				"Cannot stat: %s.\n%s.", file_name, strerror(errno));
 			return;
 		}
 		
@@ -219,10 +230,19 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 		/* attributes */
 		add_fsize(&dlg_data->size_total, st.st_size);
 		
-		psz = mbs_make_displayable(link_name ? link_name : file_name);
-		if(link_name) free(link_name);
+		psz = mbs_make_displayable(file_name);
 		set_label_string(dlg_data->wattrib[GID_NAME], psz);
 		free(psz);
+		
+		if(is_symlink) {
+			psz = mbs_make_displayable(link_tgt);
+			set_label_string(dlg_data->wattrib[GID_LTGT], psz);
+			free(psz);
+			free(link_tgt);
+		} else {
+			XtUnmanageChild(dlg_data->wlabel[GID_LTGT]);
+			XtUnmanageChild(dlg_data->wattrib[GID_LTGT]);
+		}
 
 		set_label_string(dlg_data->wattrib[GID_SIZE],
 			get_size_string(st.st_size, sz_size));
@@ -352,7 +372,6 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 	Widget wtmp;
 	Widget wapply;
 	Widget wcancel;
-	Widget wlabel[NUM_ATT_GAD];
 	Widget wtop;
 	XmString xms;
 	XtCallbackRec cbr[2] = { NULL };
@@ -362,9 +381,9 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 		(dlg_data->nfiles > 1) ? "Multi Selection Attributes" : "Attributes");
 	XtSetArg(args[n], XmNdialogTitle, xms); n++;
 	XtSetArg(args[n], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); n++;
-	XtSetArg(args[n], XmNmarginWidth, 8); n++;
-	XtSetArg(args[n], XmNmarginHeight, 8); n++;
-	XtSetArg(args[n], XmNverticalSpacing, 2); n++;
+	XtSetArg(args[n], XmNmarginWidth, 10); n++;
+	XtSetArg(args[n], XmNmarginHeight, 10); n++;
+	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
 	XtSetArg(args[n], XmNautoUnmanage, False); n++;
 	XtSetArg(args[n], XmNdeleteResponse, XmUNMAP); n++;
 	XtSetArg(args[n], XmNunmapCallback, cbr); n++;
@@ -402,7 +421,7 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 		xms = XmStringCreateLocalized((char*)attrib_sz[i]);
 		XtSetArg(args[n], XmNmarginHeight, 2); n++;
 		XtSetArg(args[n], XmNlabelString, xms); n++;
-		wlabel[i] = XmCreateLabelGadget(wlabel_rc, "label", args, n);
+		dlg_data->wlabel[i] = XmCreateLabelGadget(wlabel_rc, "label", args, n);
 		XmStringFree(xms);
 		
 		n = 0;
@@ -412,10 +431,10 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 	}
 	if(dlg_data->nfiles > 1) {
 		XtManageChild(dlg_data->wattrib[GID_SIZE]);
-		XtManageChild(wlabel[GID_SIZE]);
+		XtManageChild(dlg_data->wlabel[GID_SIZE]);
 	} else {
 		XtManageChildren(dlg_data->wattrib, NUM_ATT_GAD);
-		XtManageChildren(wlabel, NUM_ATT_GAD);
+		XtManageChildren(dlg_data->wlabel, NUM_ATT_GAD);
 	}
 	
 	set_label_string(dlg_data->wattrib[GID_SIZE], "(computing)");
