@@ -67,17 +67,17 @@ char *strip_path(char *path)
 	while(*p) {
 		if(*p == '/') {
 			if(p[1] == '/') {
-				char *s = p;
+				char *s = p + 1;
 				
 				while(s[1] && s[1] == '/') s++;
 				
-				if(s[1] == '\0') {
+				if(s[1] == '\0' && p != path) {
 					*p = '\0';
 					break;
 				} else {
 					memcpy(p, s, strlen(s) + 1);
 				}
-			} else if(p[1] == '\0') {
+			} else if(p[1] == '\0' && p != path) {
 				*p = '\0';
 				break;
 			}
