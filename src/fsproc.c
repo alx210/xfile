@@ -687,11 +687,18 @@ static void progress_cb(XtPointer cd, int *pfd, XtInputId *iid)
 			msg[msg_len] = '\0';
 
 			if(fb_type == FBT_FATAL) {
-				if(d->wp_pid)
+				int reply = FB_CANCEL;
+				
+				if(d->wp_pid) {
+					XtMapWidget(d->wshell);
 					message_box(d->wshell, MB_ERROR, "Error", msg);
-				else
+				} else {
 					stderr_msg("%s: %s", "Error", msg);
+				}
+				/* since we don't use feedback_dialog */
+				write(d->reply_out_fd, &reply, sizeof(int));
 			} else {
+				/* will write reply_out_fd in feedback_cb */
 				feedback_dialog(d, fb_type, msg);
 			}
 
@@ -2090,7 +2097,7 @@ static int wp_post_msg(struct wp_data *wpd, int fb_type, const char *msg)
 		stderr_msg("Subprocess %lu received invalid response from"
 			" the GUI process; exiting!\n", pid);
 		exit(EXIT_FAILURE);
-	} else if(oid == FB_CANCEL) {
+	} else if(fb_type == FBT_FATAL || oid == FB_CANCEL) {
 		exit(EXIT_SUCCESS);
 	}
 
