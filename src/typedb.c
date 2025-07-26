@@ -713,7 +713,7 @@ static int probe_contents(const char *fname)
 		return DB_TEXT;
 	} else if(nc < 4) {
 		for(n = 0; n < nc; n++) {
-			if((buf[n] < 32) || (buf[n] > 127))
+			if(!isprint(buf[n]) && !isspace(buf[n]))
 				return DB_BINARY;
 		}
 		return DB_TEXT;				
