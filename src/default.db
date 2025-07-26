@@ -228,9 +228,8 @@ C++ Header {
 Assembler Source {
 	icon asm
 	match_name {
-		*.m
+		*.[msS]
 		*.asm
-		*.inc
 	}
 	action &Open: %textEditor %n
 }
