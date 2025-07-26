@@ -7,7 +7,7 @@ using arrow keys with the \fBCtrl\fP modifier depressed, only the focus
 rectangle is moved, allowing to add focused items to the selected set
 by pressing the \fBSpacebar\fP key.
 .PP
-\fBEnter\fP executes the default action for the selected item. \fBSpacebar\fB
+\fBEnter\fP executes the default action for the selected item. \fBSpacebar\fP
 toggles the selection. \fBBackspace\fP changes to the parent directory.
 .PP
 Typing into the directory view will select the next matching file name.
@@ -16,9 +16,18 @@ the key bound to \fBosfCancel\fP (typically \fBEsc\fP) is pressed
 (see the FileList widget \fBlookupTimeout\fP resource).
 .PP
 By default, icon size is deduced from label font height. This can be controlled
-with the iconSize resource. Custom icons may be installed in .xfile/icons user's
-home sub-directory (see also the FILES section). If an icon specified in the
-type database cannot be found, a built-in, generic icon will be used instead.
+with the iconSize resource. Custom icons may be installed in .xfile/icons
+user's home sub-directory (see also the \fBFILES\fP section). If an icon
+specified in the type database cannot be found, a built-in, generic icon will
+be used instead.
+.SS Pasting Selections
+The primary X selection is utilized for file transfer. When one or more
+files are selected in an XFile window, these may be pasted in another with
+the \fBEdit > Copy Here\fP and \fBEdit > Move Here\fP menu commands.
+.PP
+XFile owned selection may also be pasted as a list of space separated
+file names in an application/widget that requests plain-text data, such
+as terminal or text editor.
 .SS Mount Points
 For mount points, Mount/Unmount action will be displayed in the context menu.
 Depending on system configuration, alternate un/mount command may
@@ -62,11 +71,3 @@ acceleratorText	\fIString\fP
 accelerator	\fIKeySym\fP
 positionIndex	\fIInteger\fP
 .fi
-.SS Pasting Selections
-The primary X selection is utilized for file transfer. When one or more
-files are selected in an XFile window, these may be pasted in another with
-the \fBEdit > Copy Here\fP and \fBEdit > Move Here\fP menu commands.
-.PP
-XFile owned selection may also be pasted as a list of space separated
-file names in an application/widget that requests plain-text data, such
-as terminal or text editor.
