@@ -26,8 +26,6 @@
 *editMenu.selectPattern.accelerator: Ctrl<Key>g
 *editMenu.reselect.acceleratorText: Ctrl+Shift+R
 *editMenu.reselect.accelerator: Ctrl Shift<Key>r
-*editMenu.deselect.acceleratorText: Ctrl+Shift+A
-*editMenu.deselect.accelerator: Ctrl Shift<Key>a
 *editMenu.copyHere.acceleratorText: Ctrl+Insert
 *editMenu.copyHere.accelerator: Ctrl<Key>Insert
 *editMenu.moveHere.acceleratorText: Ctrl+Shift+Insert
