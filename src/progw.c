@@ -349,10 +349,10 @@ static void initialize(Widget wreq, Widget wnew,
 	
 	get_pref_dimensions(wnew, &pref_width, &pref_height);
 
-	if((CORE_WIDTH(wreq) == 0))
+	if(CORE_WIDTH(wreq) == 0)
 		CORE_WIDTH(wnew) = pref_width;
 	
-	if((CORE_HEIGHT(wreq) == 0))
+	if(CORE_HEIGHT(wreq) == 0)
 		CORE_HEIGHT(wnew) = pref_height;
 
 	if(p->value == PROG_INTER) {
