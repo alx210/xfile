@@ -37,6 +37,8 @@ static Boolean set_values(Widget, Widget, Widget, ArgList, Cardinal*);
 static void default_render_table(Widget, int, XrmValue*);
 static void default_shadow_thickness(Widget, int, XrmValue*);
 static void comp_button_cb(Widget, XtPointer, XtPointer);
+static void up_button_expose_cb(Widget, XtPointer, XtPointer);
+static void up_button_cb(Widget, XtPointer, XtPointer);
 static void input_activate_cb(Widget, XtPointer, XtPointer);
 static void input_focus_cb(Widget, XtPointer, XtPointer);
 static void input_unfocus_cb(Widget, XtPointer, XtPointer);
@@ -44,6 +46,7 @@ static void set_path_from_component(Widget, unsigned int);
 static Boolean notify_client(Widget, const char*);
 static void update_visuals(Widget, const char*);
 static void set_display_string(Widget, const char*, Boolean);
+static char *strip_path(char*);
 
 /* Widget resources */
 #define RFO(fld) XtOffsetOf(struct path_field_rec, fld)
@@ -99,6 +102,15 @@ static XtResource resources[] = {
 		XmRBoolean,
 		sizeof(Boolean),
 		RFO(path_field.compact_path),
+		XmRImmediate,
+		(XtPointer)True
+	},
+	{
+		XfNshowUpButton,
+		XfCShowUpButton,
+		XmRBoolean,
+		sizeof(Boolean),
+		RFO(path_field.show_dirup),
 		XmRImmediate,
 		(XtPointer)True
 	},
@@ -177,12 +189,23 @@ WidgetClass pathFieldWidgetClass = (WidgetClass) &pathFieldWidgetClassRec;
 #define CORE_WIDTH(w) (((struct path_field_rec*)w)->core.width)
 #define CORE_HEIGHT(w) (((struct path_field_rec*)w)->core.height)
 
+/* Up-arrow icon vertices */
+static struct vector2d arrow_verts[] = {
+	{0.0, -0.36}, {0.22, -0.12}, {0.0, -0.12}, {0.0, 0.22},
+	{0.48, 0.22}, {0.48, 0.36}, {0.0, 0.36}, {-0.12, 0.22},
+	{-0.12, -0.12}, {-0.36, -0.12}, {-0.12, -0.36}
+};
+
 static void comp_button_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	unsigned int *id = (unsigned int*)pclient;
 	set_path_from_component(XtParent(w), *id);
 }
 
+/*
+ * Called when path input text field is activated (Return key, usually).
+ * Notifies the client and updates the current path if valid.
+ */
 static void input_activate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	Widget wparent = XtParent(w);
@@ -190,6 +213,7 @@ static void input_activate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	char *new_path = XmTextFieldGetString(w);
 
 	if(notify_client(wparent, new_path)) {
+		strip_path(new_path);
 		path_field_set_location(wparent, new_path, False);
 		XtFree(new_path);	
 	} else if(wp->tmp_path) {
@@ -197,6 +221,7 @@ static void input_activate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	}
 	
 	wp->editing = False;
+	if(wp->show_dirup) XtSetSensitive(wp->wdirup, True);
 	
 	/* assuming the next widget is whatever this path box sets path for
 	 * (the file list widget, most likely) */
@@ -204,7 +229,11 @@ static void input_activate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		
 }
 
-
+/*
+ * Called whenever the path input text field receives focus.
+ * Stores current path string to a temporary buffer, and sets
+ * all other gadgets insensitive.
+ */
 static void input_focus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	Arg args[1];
@@ -219,7 +248,8 @@ static void input_focus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	}
 
 	wp->editing = True;
-
+	if(wp->show_dirup) XtSetSensitive(wp->wdirup, False);
+	
 	draw_outline((Widget)pclient);
 
 	XtSetArg(args[0], XmNcursorPositionVisible, True);
@@ -228,6 +258,11 @@ static void input_focus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	XtFree(cur_path);
 }
 
+/*
+ * Called whenever the path input text field is unfocused.
+ * Restores path string saved in input_focus_cb, and sets
+ * other gadgets sensitive.
+ */
 static void input_unfocus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	Arg args[2];
@@ -237,14 +272,15 @@ static void input_unfocus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	if(wp->tmp_path) {
 		char *cur_path = XmTextFieldGetString(w);
 
-		if(strcmp(wp->tmp_path, cur_path))
+		if(strcmp(wp->tmp_path, cur_path)) 
 			XmTextFieldSetString(w, wp->tmp_path);
 
 		XtFree(cur_path);
 	}
 
 	wp->editing = False;
-
+	if(wp->show_dirup) XtSetSensitive(wp->wdirup, True);
+	
 	for(i = 0; i < wp->ncomp; i++) {
 		((XmDrawnButtonRec*)wp->wcomp[i])->drawnbutton.armed = False;
 		((XmDrawnButtonRec*)wp->wcomp[i])->drawnbutton.click_count = 0;
@@ -258,7 +294,93 @@ static void input_unfocus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	XtSetValues(w, args, 1);
 }
 
+/*
+ * Renders the up-arrow graphic in the directory up button
+ */
+static void up_button_expose_cb(Widget w, XtPointer closure, XtPointer cdata)
+{
+	XmDrawnButtonCallbackStruct *cbs = (XmDrawnButtonCallbackStruct*)cdata;
+	CorePart *core = &((XmDrawnButtonRec*)w)->core;
+	XmPrimitivePart *prim = &((XmDrawnButtonRec*)w)->primitive;
+	XmLabelPart *label = &((XmDrawnButtonRec*)w)->label;
+	struct path_field_part *wp = PART(closure);
+	
+	Position shadow = (prim->highlight_thickness > prim->shadow_thickness) ?
+		prim->highlight_thickness : prim->shadow_thickness;
+	Position margin = (label->margin_width > label->margin_height) ?
+		label->margin_width : label->margin_height;
+	size_t npts = XtNumber(arrow_verts) + 1;
 
+	if((cbs->reason != XmCR_EXPOSE) ||	
+			(core->width <= (shadow + margin) * 2) ||
+			(core->height <= (shadow + margin) * 2) ) return;
+	
+	/* Allocate a buffer and transform arrow vertices into button's
+	 * coordinate space, if not done yet; arrow_trpts will be freed
+	 * and set to NULL on resize. */
+	if(!wp->arrow_trpts) {
+		float scale;
+		float xorg;
+		float yorg;
+		int i;
+
+		wp->arrow_trpts = (XPoint*)XtMalloc(sizeof(XPoint) * npts);
+		if(!wp->arrow_trpts) {
+			WARNING((Widget)closure, "Memory allocation error!\n");
+			return;
+		}
+		scale = ((core->width < core->height) ?
+			core->width : core->height) - (shadow + margin) * 2;
+
+		xorg = core->width / 2;
+		yorg = core->height / 2;
+
+		for(i = 0; i < XtNumber(arrow_verts); i++) {
+			wp->arrow_trpts[i].x = arrow_verts[i].x * scale + xorg;
+			wp->arrow_trpts[i].y = arrow_verts[i].y * scale + yorg;
+		}
+		wp->arrow_trpts[npts - 1] = wp->arrow_trpts[0];
+	}
+	
+	XFillPolygon(XtDisplay(w), cbs->window,
+		(core->sensitive ? label->normal_GC : label->insensitive_GC),
+		wp->arrow_trpts, npts, Convex, CoordModeOrigin);
+}
+
+
+/* Called when directory up button is pressed */
+static void up_button_cb(Widget w, XtPointer pclient, XtPointer cdata)
+{
+	struct path_field_part *wp = PART(pclient);
+
+	if(wp->ncomp > 0) {
+		set_path_from_component((Widget)pclient, wp->ncomp - 1);
+	} else if(wp->compact_path) {
+		char *path = XmTextFieldGetString(wp->winput);
+		char *ptr;
+		
+		if(strcmp(path, "~")) {
+			XtFree(path);
+			return;
+		}
+		XtFree(path);
+		
+		path = XtNewString(wp->home);
+		if(!path) {
+			WARNING(pclient, "Memory allocation error!\n");
+			return;
+		}
+		
+		ptr = strrchr(path, '/');
+		if(ptr && (ptr != path)) {
+			*ptr = '\0';
+			path_field_set_location((Widget)pclient, path, True);
+		}
+		XtFree(path);
+	}
+}
+
+/* Returns path widget height */
 static Dimension compute_height(Widget w)
 {
 	struct path_field_part *wp = PART(w);
@@ -270,6 +392,7 @@ static Dimension compute_height(Widget w)
 	return wanted_height;
 }
 
+/* Returns path widget's usable area */
 static void compute_client_area(Widget w, Position *x, Position *y,
 	Dimension *width, Dimension *height)
 {
@@ -304,12 +427,17 @@ static void initialize(Widget wreq, Widget wnew,
 	Arg args[12];
 	Cardinal n;
 	int fheight, fascent, fdescent;
+	char *home;
 	XtCallbackRec input_activate_cbr[] =
 		{ {input_activate_cb, (XtPointer)wnew }, { NULL, NULL } };
 	XtCallbackRec input_focus_cbr[] =
 		{ {input_focus_cb, (XtPointer)wnew }, { NULL, NULL } };
 	XtCallbackRec input_unfocus_cbr[] =
 		{ {input_unfocus_cb, (XtPointer)wnew }, { NULL, NULL } };
+	XtCallbackRec up_button_activate_cbr[] =
+		{ {up_button_cb, (XtPointer)wnew }, { NULL, NULL } };
+	XtCallbackRec up_button_expose_cbr[] =
+		{ {up_button_expose_cb, (XtPointer)wnew }, { NULL, NULL } };
 	
 	
 	wp->editing = False;
@@ -318,12 +446,23 @@ static void initialize(Widget wreq, Widget wnew,
 	wp->ncomp_max = 0;
 	wp->wcomp = NULL;
 	wp->comp_ids = NULL;
-	wp->home = getenv("HOME");
-	if(wp->home) wp->real_home = realpath(wp->home, NULL);
+	wp->home = NULL;
+	wp->arrow_trpts = NULL;
+	
+	home = getenv("HOME");
+	if(home) {
+		wp->home = XtNewString(home);
+		if(wp->home) {
+			strip_path(wp->home);
+			wp->real_home = realpath(wp->home, NULL);
+		}
+	}
+	
 	if(!wp->home || !wp->real_home) {
 		WARNING(wnew, "Invalid HOME path");
 		wp->compact_path = False;
 	}
+	
 	wr->manager.shadow_thickness = wp->shadow_thickness;
 	
 	XmRenderTableGetDefaultFontExtents(wp->text_rt,
@@ -343,13 +482,23 @@ static void initialize(Widget wreq, Widget wnew,
 	XtSetArg(args[n], XmNmarginHeight, wp->margin_height); n++;
 	XtSetArg(args[n], XmNrenderTable, wp->text_rt); n++;
 	XtSetArg(args[n], XmNshadowThickness, 0); n++;
-	
 	wp->winput = XmCreateTextField(wnew, "pathInput", args, n);
+	
+	n = 0;
+	XtSetArg(args[n], XmNpushButtonEnabled, True); n++;
+	XtSetArg(args[n], XmNhighlightThickness, 0); n++;
+	XtSetArg(args[n], XmNlabelType, XmPIXMAP); n++;
+	XtSetArg(args[n], XmNtraversalOn, False); n++;
+	XtSetArg(args[n], XmNsensitive, False); n++;
+	XtSetArg(args[n], XmNactivateCallback, up_button_activate_cbr); n++;
+	XtSetArg(args[n], XmNexposeCallback, up_button_expose_cbr); n++;
+	wp->wdirup = XmCreateDrawnButton(wnew, "upButton", args, n);
 	
 	XtSetArg(args[0], XmNhighlightThickness, &wp->highlight_thickness);
 	XtGetValues(wp->winput, args, 1);
 
-	XtResizeWidget(wnew, 50, compute_height(wnew), 0);	
+	XtResizeWidget(wnew, 50, compute_height(wnew), 0);
+	if(wp->show_dirup) XtManageChild(wp->wdirup);
 	XtManageChild(wp->winput);
 }
 
@@ -357,11 +506,28 @@ static void resize(Widget w)
 {
 	struct path_field_part *wp = PART(w);
 	Position cx, cy;
-	Dimension cw, ch;
+	Dimension cw, ch, ub_width = 0;
 
 	compute_client_area(w, &cx, &cy, &cw, &ch);
+	
+	if(wp->show_dirup) {
+		Dimension ub_x;
+		
+		if(wp->arrow_trpts) {
+			/* so it will be recomputed in up_button_exposure_cb */
+			XtFree((char*)wp->arrow_trpts);
+			wp->arrow_trpts = NULL;
+		}
+		
+		ub_width =((float)wp->font_height * DIRUP_WIDTH_FACTOR);
+		ub_x = ((cx + cw) > ub_width) ? (cx + cw) - ub_width : 0;
+		
+		XtConfigureWidget(wp->wdirup, ub_x, cy + wp->btn_height,
+			ub_width, ch - wp->btn_height, 0);
+	}
+	
 	XtConfigureWidget(wp->winput, cx, cy + wp->btn_height,
-		cw, ch - wp->btn_height, 0);
+		cw - ub_width, ch - wp->btn_height, 0);
 }
 
 static XtGeometryResult query_geometry(Widget w,
@@ -375,6 +541,18 @@ static XtGeometryResult query_geometry(Widget w,
 static Boolean set_values(Widget wcur, Widget wreq,
 	Widget wset, ArgList args, Cardinal *nargs)
 {
+	struct path_field_part *wp_cur = PART(wcur);
+	struct path_field_part *wp_set = PART(wset);
+
+	if(wp_cur->show_dirup != wp_set->show_dirup) {
+		if(wp_set->show_dirup)
+			XtManageChild(wp_set->wdirup);
+		else
+			XtUnmanageChild(wp_set->wdirup);
+
+		resize(wset);
+	}
+
 	return True;
 }
 
@@ -433,6 +611,8 @@ static void destroy(Widget w)
 	if(wp->sz_comp) XtFree((char*)wp->sz_comp);
 	if(wp->comp_ids) XtFree((char*)wp->comp_ids);
 	if(wp->tmp_path) XtFree(wp->tmp_path);
+	if(wp->home) XtFree(wp->home);
+	if(wp->arrow_trpts) XtFree((char*)wp->arrow_trpts);
 
 	wp->ncomp = 0;
 	wp->ncomp_max = 0;
@@ -606,6 +786,20 @@ static void update_visuals(Widget w, const char *path)
 	}
 	wp->comp_width = bx;
 	wp->ncomp = nc;
+
+	if(wp->show_dirup) {
+		if(nc == 0) {
+			if(!wp->compact_path ||
+				(wp->compact_path && strcmp(path, "~"))) {
+					XtSetSensitive(wp->wdirup, False);
+			} else if(wp->compact_path) {
+				XtSetSensitive(wp->wdirup, True);
+			}
+		} else {
+			XtSetSensitive(wp->wdirup, True);
+		}
+	}
+	
 	draw_outline(w);
 }
 
@@ -719,46 +913,87 @@ static void default_shadow_thickness(Widget w, int offset, XrmValue *pv)
 	pv->size = sizeof(Dimension);
 }
 
+/*
+ * Removes / from the end of the string and any doubles within
+ */
+static char *strip_path(char *path)
+{
+	char *p = path;
+	
+	while(*p) {
+		if(*p == '/') {
+			if(p[1] == '/') {
+				char *s = p + 1;
+				
+				while(s[1] && s[1] == '/') s++;
+				
+				if(s[1] == '\0' && p != path) {
+					*p = '\0';
+					break;
+				} else {
+					memcpy(p, s, strlen(s) + 1);
+				}
+			} else if(p[1] == '\0' && p != path) {
+				*p = '\0';
+				break;
+			}
+		}
+		p++;
+	}
+	return path;
+}
+
+
 
 /*
  * Public routines
  */
-int path_field_set_location(Widget w, const char *location, Boolean notify)
+int path_field_set_location(Widget w, const char *loc, Boolean notify)
 {
 	struct path_field_part *wp = PART(w);
 	char *subst_path = NULL;
+	char *new_path;
 	
 	/* Make sure we're not heading into an infinite callback loop */
 	if(wp->processing_callbacks && notify) {
 		WARNING(w, "Can't set location from a notify callback!");
 		return EINVAL;
 	}
-
+	
+	new_path = XtNewString(loc);
+	if(!new_path) return ENOMEM;
+	strip_path(new_path);
+	
 	/* replace $HOME part with a ~ if requested */
 	if(wp->compact_path) {
-		if(!strncmp(location, wp->home, strlen(wp->home)) )
+		if(!strncmp(new_path, wp->home, strlen(wp->home)) )
 			subst_path = wp->home;
-		else if (!strncmp(location, wp->real_home, strlen(wp->real_home)) )
+		else if (!strncmp(new_path, wp->real_home, strlen(wp->real_home)) )
 			subst_path = wp->real_home;
 	}
 	
 	if(subst_path) {
 		char *path, *p;
 
-		path = XtMalloc(strlen(location));
-		p = (char*) location + strlen(subst_path);
+		path = XtMalloc(strlen(new_path));
+		p = (char*) new_path + strlen(subst_path);
 		sprintf(path, "~%s", p);
 		
 		if(notify && !notify_client(w, path)) {
 			XtFree(path);
+			XtFree(new_path);
 			return EINVAL;
 		}
 		set_display_string(w, path, True);
 		XtFree(path);
 	} else {
-		if(notify && !notify_client(w, location)) return EINVAL;
-		set_display_string(w, (char*)location, True);
+		if(notify && !notify_client(w, new_path)) {
+			XtFree(new_path);
+			return EINVAL;
+		}
+		set_display_string(w, (char*)new_path, True);
 	}
+	XtFree(new_path);
 	return 0;
 }
 

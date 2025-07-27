@@ -18,6 +18,15 @@
 #define DEF_THIN_SHADOW 1
 #define DEF_THICK_SHADOW 2
 
+/* Directory Up button width relative to current font height */
+#define DIRUP_WIDTH_FACTOR 1.3
+
+/* For arrow icon data */
+struct vector2d {
+	float x;
+	float y;
+};
+
 /* Motif class instance data */
 struct path_field_class_part {
 	XtPointer extension;
@@ -38,6 +47,7 @@ struct path_field_part {
 	
 	Dimension font_height;
 	Widget winput;
+	Widget wdirup;
 	Widget *wcomp;
 	char **sz_comp;
 	unsigned int *comp_ids;
@@ -45,6 +55,7 @@ struct path_field_part {
 	unsigned int ncomp_max;
 	Boolean editing;
 	char *tmp_path;
+	XPoint *arrow_trpts;
 	
 	/* Dimensions */
 	Dimension btn_height;
@@ -57,6 +68,7 @@ struct path_field_part {
 	Dimension margin_height;
 	Dimension btn_height_pc;
 	Boolean compact_path;
+	Boolean show_dirup;
 	
 	Boolean processing_callbacks;
 	XtCallbackList change_cb;

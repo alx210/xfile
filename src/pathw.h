@@ -17,6 +17,8 @@ struct path_field_cb_data {
 #define XfCCompactPath "CompactPath"
 #define XfNbuttonHeight "buttonHeight"
 #define XfCButtonHeight "ButtonHeight"
+#define XfNshowUpButton "showUpButton"
+#define XfCShowUpButton "ShowUpButton"
 
 extern WidgetClass pathFieldWidgetClass;
 

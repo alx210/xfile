@@ -1,18 +1,20 @@
 .SS Path Field Widget Resources
 .PP
 The path field widget consists of a text field that displays the current
-working directory with an array of push buttons, each representing an element
-of the path, above.
+working directory with an array of push buttons above it, each representing
+an element of the path.
 .PP
 The class name of the widget is \fBPathField\fP, the widget name
 \fBpathField\fP. Aside from resources described below, the widget inherits
 resources from XmManager(3).
 .PP
-Since it is a composite widget, consisting of an XmTextField for the
-text part and an XmDrawnButton for each path component, resources for
-these components can be set individually, with following exceptions:
-renderTable, shadowThickness, marginWidth, marginHeight and geometry
-resources, because these are enforced by the manager widget.
+It is a composite widget consisting of an XmTextField for the text part,
+XmDrawnButton for each path component, and also XmDrawnButton for the Up button.
+Resources for these components can be set individually, with following
+exceptions: renderTable, shadowThickness, marginWidth, marginHeight and geometry
+resources, because these are enforced by the manager widget. Widget names for
+the text field and the Up button are \fIpathInput\fP and \fIupButton\fP,
+respectively. All path component buttons share the name \fIpathPart\fP.
 .TP
 \fBbuttonHeight\fP \fIInteger\fP
 A value in percent that sets the vertical size of path element buttons
@@ -21,4 +23,9 @@ Default is 100.
 .TP
 \fBcompactPath\fP \fIBoolean\fP
 If True, the $HOME part of the path will be represented by a tilde.
-Default is true.
+Default is True.
+.TP
+\fBshowUpButton\fP \fBBoolean\fP
+A push button that changes to the parent directory will be shown in the
+right corner of the path widget if this resource is set to True.
+Default value is True.
