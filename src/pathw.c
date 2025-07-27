@@ -247,6 +247,7 @@ static void input_unfocus_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 	for(i = 0; i < wp->ncomp; i++) {
 		((XmDrawnButtonRec*)wp->wcomp[i])->drawnbutton.armed = False;
+		((XmDrawnButtonRec*)wp->wcomp[i])->drawnbutton.click_count = 0;
 		XtMapWidget(wp->wcomp[i]);
 	}
 	

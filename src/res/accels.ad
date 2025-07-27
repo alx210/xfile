@@ -1,10 +1,10 @@
 !-----------------------------------------------------------------------------
 ! Accelerators
 !-----------------------------------------------------------------------------
-*fileMenu.makeDirectory.acceleratorText: F6
-*fileMenu.makeDirectory.accelerator: <Key>F6
-*fileMenu.makeFile.acceleratorText: F5
-*fileMenu.makeFile.accelerator: <Key>F5
+*fileMenu.makeDirectory.acceleratorText: Ctrl+D
+*fileMenu.makeDirectory.accelerator: Ctrl<Key>d
+*fileMenu.makeFile.acceleratorText: Ctrl+F
+*fileMenu.makeFile.accelerator: Ctrl<Key>f
 *fileMenu.copyTo.acceleratorText: F4
 *fileMenu.copyTo.accelerator: <Key>F4
 *fileMenu.moveTo.acceleratorText: F3
@@ -31,8 +31,8 @@
 *editMenu.moveHere.acceleratorText: Ctrl+Shift+Insert
 *editMenu.moveHere.accelerator: Ctrl Shift<Key>Insert
 
-*viewMenu.reread.acceleratorText: Ctrl+R
-*viewMenu.reread.accelerator: Ctrl<Key>r
+*viewMenu.reread.acceleratorText: F5
+*viewMenu.reread.accelerator: <Key>F5
 *viewMenu.detailed.acceleratorText: Ctrl+L
 *viewMenu.detailed.accelerator: Ctrl<Key>l
 *viewMenu.showAll.acceleratorText: Ctrl+.
@@ -40,13 +40,10 @@
 *viewMenu.filter.acceleratorText: Ctrl+F
 *viewMenu.filter.accelerator: Ctrl<Key>F
 
-*toolsMenu.terminal.acceleratorText: F9
-*toolsMenu.terminal.accelerator: <Key>F9
-
-*windowMenu.new.acceleratorText: Ctrl+N
-*windowMenu.new.accelerator: Ctrl<Key>n
-*windowMenu.duplicate.acceleratorText: Ctrl+D
-*windowMenu.duplicate.accelerator: Ctrl<Key>D
+*windowMenu.new.acceleratorText: F6
+*windowMenu.new.accelerator: <Key>F6
+*windowMenu.duplicate.acceleratorText: F7
+*windowMenu.duplicate.accelerator: <Key>F7
 
 ! Keys below are bound through FileList's translation table. Therefore merely
 ! the accelerator text is set here to reflect translation table bindings.
