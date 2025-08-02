@@ -44,7 +44,6 @@
 #include "select.h"
 #include "debug.h"
 
-
 /* Icon bitmaps */
 #include "xbm/cabinet.xbm"
 #include "xbm/cabinet_m.xbm"
@@ -236,9 +235,6 @@ int main(int argc, char **argv)
 
 	memset(&app_inst, 0, sizeof(struct app_inst_data));
 	
-	/* Store real binary name for forks */
-	app_inst.bin_name = argv[0];
-
 	XtSetLanguageProc(NULL, NULL, NULL);
 
 	XtToolkitInitialize();
@@ -922,7 +918,7 @@ static void xfile_open(int argc, char **argv)
 			rv = spawn_command(APP_NAME, &arg, 1);
 			if(rv) {
 				stderr_msg("Failed execute \'%s %s\': %s.",
-					app_inst.bin_name, arg, strerror(rv));
+					XFILE_BIN, arg, strerror(rv));
 				errors++;
 			}
 			continue;
@@ -1240,11 +1236,11 @@ void fork_xfile(const char *path, Boolean inherit_ui)
 	argv[argc] = (char*)path;
 	argc++;
 
-	errval = spawn_command(app_inst.bin_name, argv, argc);
+	errval = spawn_command(XFILE_BIN, argv, argc);
 	if(errval) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Failed to create new %s instance.\n%s",
-			app_inst.bin_name, strerror(errval), NULL);
+			XFILE_BIN, strerror(errval), NULL);
 	}
 }
 

@@ -11,6 +11,8 @@
 #define PREFIX "/usr"
 #endif
 
+#define XFILE_BIN "xfile"
+
 /* X resource class, name and window title */
 #define APP_CLASS "XFile"
 #define APP_NAME "xfile"

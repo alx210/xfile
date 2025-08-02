@@ -45,7 +45,6 @@ struct app_resources {
 /* Global application instance data */
 struct app_inst_data {
 	/* static instance data */
-	char *bin_name;
 	char *shell_title;
 	pid_t parent;
 
