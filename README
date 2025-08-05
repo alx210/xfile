@@ -37,9 +37,6 @@ These  may  be set in user's .Xresources (see xfile(1) FILE TYPE DATABASE
 section on variable expansion) to accommodate the environment, without
 modifying the database (e.g. XFile.variables.terminal: xterm -e).
 
-The addon directory in the distribution tarball contains some additional type
-definitions and icons.
-
 Fonts
 -----
 XFile uses different fonts to highlight properties of certain files and
