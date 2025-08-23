@@ -969,9 +969,9 @@ static Boolean calc_size_wp(XtPointer client_data)
 			dbg_assert(dlg_data->cur_path);
 			fqn = build_path(NULL, dlg_data->cur_path, ent->d_name, NULL);
 
-			if(!stat(fqn, &st)) {
+			if(!lstat(fqn, &st)) {
 				add_fsize(&dlg_data->size_total, st.st_size);
-			
+				
 				if(S_ISDIR(st.st_mode)) {
 					stk_push(dlg_data->dir_stk, fqn, strlen(fqn) + 1);
 					dlg_data->dirs_total++;
