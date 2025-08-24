@@ -1245,6 +1245,7 @@ static int wp_copy_tree(struct wp_data *wpd,
 
 				wp_post_astat(wpd, "Symlinking", link_tgt, dest_fqn);
 				errv = wp_sym_link(wpd, link_tgt, dest_fqn);
+				if(!errv) wp_delete_file(wpd, cur_fqn);
 				
 				free(dest_fqn);
 				free(link_tgt);
