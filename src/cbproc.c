@@ -77,8 +77,9 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	char *input;
 	char *path;
-	char *cmd;
-	size_t cmd_len;
+	char *fqn;
+	size_t argc;
+	char **argv;
 	int rv;
 	static char *last_input = NULL;
 	struct file_list_selection *cur_sel = 
@@ -103,19 +104,32 @@ static void pass_to_proc(Widget w, XtPointer pclient, XtPointer pcall)
 			"Error accessing working directory.\n%s", strerror(errno));
 		return;
 	}
-	cmd_len = strlen(input) + strlen(path) + strlen(cur_sel->item.name) + 3;
-	cmd = malloc(cmd_len);
-	snprintf(cmd, cmd_len, "%s %s/%s", input, path,	cur_sel->item.name);
+	fqn = malloc(strlen(path) + strlen(cur_sel->item.name) + 2);
+	sprintf(fqn, "%s/%s", path, cur_sel->item.name);
 	free(path);
-	free(input);
 
-	set_action_status_text("Executing", cmd);
-	rv = spawn_cs_command(cmd);
-	if(rv) {
+	rv = split_arguments(input, &argv, &argc);
+	if(!rv) {
+		argv = realloc(argv, (argc + 1) * sizeof(char*));
+		argv[argc] = fqn;
+		
+		set_action_status_text("Executing", argv[0]);
+
+		rv = spawn_command(*argv, argv + 1, argc);
+		if(rv) {
+			va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+				"Error executing command \"%s\"\n%s",
+				argv[0], strerror(rv));
+		}
+		free(argv);
+	} else {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
-			"Error executing action command:\n%s\n%s", cmd, strerror(rv));
+			"Error parsing command string \"%s\"\n%s",
+			last_input, strerror(rv));		
 	}
-	free(cmd);
+
+	free(input);
+	free(fqn);
 }
 
 /*
