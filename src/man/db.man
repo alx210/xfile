@@ -44,7 +44,7 @@ environment variables start with $. The sh syntax ${...} and respectively
 .PP
 Local variables are defined using X resources in form:
 .br
-XFile.variables.\fI<name>\fP: \fI<value>\fP
+XFile.variable.\fI<name>\fP: \fI<value>\fP
 .br
 .PP
 Substitute \fIname\fP with the variable name of choice, and \fIvalue\fP

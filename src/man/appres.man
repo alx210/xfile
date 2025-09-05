@@ -84,7 +84,7 @@ may be inverted using command line parameters. Default is false.
 If True, only user ($HOME/.xfile/*.db) file type database is parsed, default
 database is ignored. Default is False.
 .TP
-\fBvariables.\fP\fIname\fP \fIString\fP
+\fBvariable.\fP\fIname\fP \fIString\fP
 Defines a local environment variable used by the file type database
 (see the \fBFILE TYPE DATABASE\fP section on variable expansion) for command
 \fIString\fP expansion.
