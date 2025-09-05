@@ -188,13 +188,13 @@ void display_about_dialog(Widget wparent)
 	XmString xms;
 	
 	text_len = snprintf(NULL, 0,
-		"%s\nVersion %d.%d (%s; Motif %d.%d.%d)\n\n%s",
-		DESCRIPTION_CS, APP_VER, APP_REV, APP_BLD,
+		"%s\nVersion %d.%d.%d (%s; Motif %d.%d.%d)\n\n%s",
+		DESCRIPTION_CS, APP_VER, APP_REV, APP_UPD, APP_BLD,
 		XmVERSION, XmREVISION, XmUPDATE_LEVEL, COPYRIGHT_CS) + 1;
 	about_text = malloc(text_len);
 	snprintf(about_text, text_len,
-		"%s\nVersion %d.%d (%s; Motif %d.%d.%d)\n\n%s",
-		DESCRIPTION_CS, APP_VER, APP_REV, APP_BLD,
+		"%s\nVersion %d.%d.%d (%s; Motif %d.%d.%d)\n\n%s",
+		DESCRIPTION_CS, APP_VER, APP_REV, APP_UPD, APP_BLD,
 		XmVERSION, XmREVISION, XmUPDATE_LEVEL, COPYRIGHT_CS);
 	
 	n = 0;
