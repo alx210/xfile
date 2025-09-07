@@ -104,18 +104,21 @@ char* get_fsize_string(const struct fsize *fs, char buffer[SIZE_CS_MAX])
 		"B", "K", "M", "G", "T", "P", "E"
 	};
 	char *sz_units;
-	double dp;
 	char *fmt;
+	double dp;
+	double size = fs->size;
 
 	sz_units = sz_names[(int)fs->exp];
 	
 	/* don't show decimal part if it's near .0 */
 	dp = fs->size - trunc(fs->size);
-	if(dp > 0.1 && dp < 0.9)
+	if(dp > 0.1 && dp < 0.9) {
 		fmt = "%.1f%s";
-	else
+	} else {
+		if(dp >= 0.9) size = round(fs->size);
 		fmt = "%.0f%s";
-	snprintf(buffer, SIZE_CS_MAX, fmt, fs->size, sz_units);
+	}	
+	snprintf(buffer, SIZE_CS_MAX, fmt, size, sz_units);
 	return buffer;
 }
 
