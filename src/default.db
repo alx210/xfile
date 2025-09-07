@@ -95,10 +95,6 @@ Tarball {
 		*.tar.gz
 		*.tar.bz2
 	}
-	action {
-		&List: %terminal "tar -tf \"%n\" | less"
-		E&xtract: %terminal "tar -xf \"%n\" | less"
-	}
 }
 
 CD Image {
