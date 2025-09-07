@@ -31,7 +31,7 @@ Action to be displayed in the file context menu. Any character in the name
 may be prefixed with & to specify a mnemonic. Literal & may be specified using
 the \\ escape character.
 .PP
-NOTE: Multiple values may be specified for file name and content
+\(dg Multiple values may be specified for file name and content
 patterns, - one per line - within a scope delimited by an opening bracket {
 on the same or following line, and a closing bracket } on a separate line.
 .SS Variable Expansion
