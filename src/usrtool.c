@@ -137,7 +137,7 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 	}
 	
 	n = 0;
-	vars[n].name = "n";
+	vars[n].name = ENV_FNAME;
 	vars[n].value = files;
 	n++;
 	
@@ -145,12 +145,12 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 		free(path);
 		path = token;
 	}
-	vars[n].name = "p";
+	vars[n].name = ENV_FPATH;
 	vars[n].value = path;
 	n++;
 	
 	if(user_param) {
-		vars[n].name = "u";
+		vars[n].name = ENV_UPARM;
 		vars[n].value = user_param;
 		n++;
 	}

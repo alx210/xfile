@@ -49,6 +49,7 @@
 #define ENV_FNAME "n"
 #define ENV_FPATH "p"
 #define ENV_FMIME "m"
+#define ENV_UPARM "u"
 
 /* Default command string to exec on text files */
 #define ENV_DEF_TEXT_CMD "%textEditor %n"
