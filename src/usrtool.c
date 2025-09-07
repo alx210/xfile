@@ -30,8 +30,6 @@ static unsigned int ntools = 0;
 
 static XrmQuark name_list[3] = {NULLQUARK};
 static XrmQuark class_list[3] = {NULLQUARK};
-static XrmQuark qtitle_name;
-static XrmQuark qtitle_class;
 
 static Bool xrm_enum_cb(XrmDatabase *rdb, XrmBindingList bindings,
 	XrmQuarkList quarks, XrmRepresentation *type,
@@ -69,9 +67,6 @@ unsigned int get_user_tools(struct user_tool_rec **p)
 	XrmStringToQuarkList(TOOLS_RES_NAME, name_list);
 	XrmStringToQuarkList(TOOLS_RES_CLASS, class_list);
 
-	qtitle_name = XrmStringToQuark("title");
-	qtitle_class = XrmStringToQuark("Title");
-	
 	XrmEnumerateDatabase(rdb, name_list, class_list,
 		XrmEnumOneLevel, xrm_enum_cb, NULL);
 	
