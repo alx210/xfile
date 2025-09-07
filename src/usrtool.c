@@ -140,7 +140,11 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 	vars[n].name = "n";
 	vars[n].value = files;
 	n++;
-
+	
+	if(escape_string(path, &token)) {
+		free(path);
+		path = token;
+	}
 	vars[n].name = "p";
 	vars[n].value = path;
 	n++;
