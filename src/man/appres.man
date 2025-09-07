@@ -45,20 +45,32 @@ This resource is not set by default.
 .TP
 \fBmediaMountCommand\fP
 Specifies a mount daemon specific command to mount mount-points within
-the daemon managed media directory (see \fBmediaDirectory\fP). This resource
-is not set by default.
+the daemon managed media directory (see \fBmediaDirectory\fP).
+It is expected to take one argument (the mount point path), and return zero
+on success. If it returns non\-zero, anything it prints to \fBstderr\fP will
+be captured and displayed in a message box.
+This resource is not set by default.
 .TP
 \fBmediaUnmountCommand\fP
 Specifies a mount daemon specific command to unmount mount-points within
-the daemon managed media directory (see \fBmediaDirectory\fP). This resource
-is not set by default.
+the daemon managed media directory (see \fBmediaDirectory\fP).
+It is expected to take one argument (the mount point path), and return zero
+on success. If it returns non\-zero, anything it prints to \fBstderr\fP will
+be captured and displayed in a message box.
+This resource is not set by default.
 .TP
 \fBmountCommand\fP \fIString\fP
 Specifies the command to be used to mount entries from fstab.
-Default is "mount".
+It is expected to take one argument (the mount point path), and return zero
+on success. If it returns non\-zero, anything it prints to \fBstderr\fP will
+be captured and displayed in a message box.
+Default value is "mount".
 .TP
 \fBunmountCommand\fP \fIString\fP
 Specifies the default command to unmount mount\-points.
+It is expected to take one argument (the mount point path), and return zero
+on success. If it returns non\-zero, anything it prints to \fBstderr\fP will
+be captured and displayed in a message box.
 Default is "umount".
 .TP
 \fBuserMounts\fP \fIBoolean\fP
@@ -88,6 +100,3 @@ database is ignored. Default is False.
 Defines a local environment variable used by the file type database
 (see the \fBFILE TYPE DATABASE\fP section on variable expansion) for command
 \fIString\fP expansion.
-.TP
-\fBwmIconForeground\fP \fIColor\fP, \fBwmIconBackground\fP \fIColor\fP
-Colors to be used for rendering default window manager icons.
