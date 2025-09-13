@@ -1084,7 +1084,7 @@ static int wp_copy_tree(struct wp_data *wpd,
 		char name[1];
 	};
 	
-	wp_post_prog(wpd, 0);
+	wp_post_prog(wpd, (int)(0.5 + wpd->percent_total));
 	
 	if(move) {
 		/* try to rename first, in case we're moving on the same FS
