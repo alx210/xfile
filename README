@@ -35,7 +35,7 @@ The default database makes use of several predefined variables: terminal,
 textEditor, webBrowser, imageViewer, imageEditor, audioPlayer, videoPlayer.
 These  may  be set in user's .Xresources (see xfile(1) FILE TYPE DATABASE
 section on variable expansion) to accommodate the environment, without
-modifying the database (e.g. XFile.variables.terminal: xterm -e).
+modifying the database (e.g. XFile.variable.terminal: xterm -e).
 
 Fonts
 -----
