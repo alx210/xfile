@@ -57,9 +57,6 @@ static struct mount_proc_data* init_mount_proc(
 #define FB_MAP_TIMEOUT	500
 #define KILL_GRACE_PERIOD 100
 
-static const char sys_mount_cmd[] = "mount";
-static const char sys_umount_cmd[] = "umount";
-
 /* Feedback dialog data (initialized after fork) */
 struct mount_proc_data {
 	XtIntervalId map_iid;
@@ -460,7 +457,7 @@ int exec_mount(const char *mpt_path)
 {
 	int res = 0;
 	static struct mount_proc_data *mp;
-	char *cmd = (char*) sys_mount_cmd;
+	char *cmd = app_res.mount_cmd;
 	
 	if(app_res.media_dir &&
 		!strncmp(mpt_path, app_res.media_dir, strlen(app_res.media_dir)) ) {
@@ -486,7 +483,7 @@ int exec_umount(const char *mpt_path)
 {
 	int res = 0;
 	static struct mount_proc_data *mp;
-	char *cmd = (char*) sys_umount_cmd;
+	char *cmd = app_res.umount_cmd;
 	
 	if(app_res.media_dir &&
 		!strncmp(mpt_path, app_res.media_dir, strlen(app_res.media_dir)) ) {

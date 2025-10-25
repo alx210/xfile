@@ -7,7 +7,7 @@
 
 #define APP_VER 1
 #define APP_REV 0
-#define APP_UPD	1
+#define APP_UPD	2
 #ifdef DEBUG
 #define APP_BLD "Debug; Built " __DATE__
 #else
