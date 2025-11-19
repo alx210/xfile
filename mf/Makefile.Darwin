@@ -5,8 +5,8 @@ MANDIR = $(PREFIX)/share/man
 SHAREDIR = $(PREFIX)/share/xfile
 APPLRESDIR = $(PREFIX)/etc/X11/app-defaults
 
-INCDIRS = -I/opt/homebrew/include 
-LIBDIRS = -L/opt/homebrew/lib
+INCDIRS = -I$(HOMEBREW_PREFIX)/include 
+LIBDIRS = -L$(HOMEBREW_PREFIX)/lib
 
 CFLAGS = -O2 -Wall
 
