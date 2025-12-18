@@ -37,4 +37,10 @@ char *get_path_tail(const char *path);
  */
 int create_path(const char *path, mode_t mode);
 
+/*
+ * Decodes a percent-encoded URL string.
+ * Returns a newly allocated C string on success.
+ */
+char* decode_url(const char *url);
+
 #endif /* PATH_H */

@@ -907,24 +907,43 @@ static void xfile_open(int argc, char **argv)
 		int db_type;
 		char *action = NULL;
 		int rv;
+		char *carg;
 		
-		if(stat(argv[i], &st) == -1) {
-			stderr_msg("Error accessing \'%s\': %s.\n",
-				argv[i], strerror(errno));
+		if(!strncmp(argv[i], "file:", 5)) {
+			char *p = argv[i] + 5;
+			
+			if(*p == '\0') {
+				stderr_msg("Invalid URL \'%s\'\n", argv[i]);
+				continue;
+			}
+			
+			while(p[1] == '/') p++;
+
+			carg = decode_url(p);
+			if(!carg) {
+				stderr_msg("%s.\n", strerror(ENOMEM));
+				exit(EXIT_FAILURE);
+			}
+		} else carg = argv[i];
+		
+		if(stat(carg, &st) == -1) {
+			stderr_msg("Error accessing \'%s\'. %s.\n",
+				carg, strerror(errno));
+			if(carg != argv[i]) free(carg);
 			errors++;
 			continue;
 		} else if(S_ISDIR(st.st_mode)) {
-			char *arg = argv[i];
-			rv = spawn_command(APP_NAME, &arg, 1);
+			rv = spawn_command(APP_NAME, &carg, 1);
 			if(rv) {
-				stderr_msg("Failed execute \'%s %s\': %s.",
-					XFILE_BIN, arg, strerror(rv));
+				stderr_msg("Failed execute \'%s %s\'. %s.",
+					XFILE_BIN, carg, strerror(rv));
 				errors++;
 			}
+			if(carg != argv[i]) free(carg);
 			continue;
 		}
 		
-		db_type = db_match(argv[i], &app_inst.type_db);
+		db_type = db_match(carg, &app_inst.type_db);
 		if(DB_DEFINED(db_type)) {
 			ft = db_get_record(&app_inst.type_db, db_type);
 			if(ft->nactions) action = ft->actions[0].command;
@@ -932,11 +951,12 @@ static void xfile_open(int argc, char **argv)
 			action = ENV_DEF_TEXT_CMD;
 		}
 		if(action) {
-			errors += run_action(argv[i], action, ft);
+			errors += run_action(carg, action, ft);
 		} else {
-			stderr_msg("No default action found for \"%s\"\n", argv[i]);
+			stderr_msg("No default action found for \"%s\"\n", carg);
 			errors++;
 		}
+		if(carg != argv[i]) free(carg);
 	}
 	if(errors && argc > 2)
 		stderr_msg("Exiting with error status due to previous errors.\n");
