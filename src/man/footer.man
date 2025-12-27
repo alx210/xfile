@@ -1,6 +1,8 @@
 .SH FILES
 .PP
-User file type database files are read from the $HOME/.xfile/types/ directory.
+File type database file names must have the \fB.db\fP suffix.
+.PP
+User file type database files are read from the $HOME/.xfile/types directory.
 System file type database files are installed in PREFIX\(dg/share/xfile/types
 directory.
 .PP
