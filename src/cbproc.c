@@ -449,7 +449,8 @@ void make_dir_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	if( (rv = create_path(input, dir_mode)) != 0) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
-			"Cannot create directory.\n%s.", strerror(rv), NULL);
+			"Cannot create directory.\n%s.",
+			strerror( (rv == ENOTDIR) ? EEXIST : rv), NULL);
 	} else {
 		force_update();
 	}
