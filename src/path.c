@@ -184,3 +184,40 @@ int create_path(const char *path, mode_t mode)
 	return rv;
 }
 
+
+/*
+ * Decodes a percent-encoded URL string.
+ * Returns a newly allocated C string on success.
+ */
+char* decode_url(const char *url)
+{
+	const char *p = url;
+	char *r;
+	char *buf;
+	
+	r = buf = malloc(strlen(url) + 1);
+	
+	if(!buf) return NULL;
+	
+	while(*p) {
+
+		if(*p == '%' && p[1] && p[2]) {
+			char val[3];
+			
+			p++;
+			memcpy(val, p, 2);
+			val[2] = '\0';
+			*r = (char)strtol(val, NULL, 16);
+			
+			p++;
+		} else {
+			*r = *p;
+		}
+		
+		r++;
+		p++;
+	};
+	*r = '\0';
+
+	return buf;
+}

@@ -1,11 +1,10 @@
 .SH FILE TYPE DATABASE
 .PP
-A file type database is a plain text file comprised of one or more records.
-See \fBFILES\fP section in this manual for database file locations.
+A file type database is a plain text file, comprised of one or more records.
 .PP
 A record starts with a type name string, consisting of alpha-numeric characters
-that may contain spaces, followed by an opening bracket { on the
-same or following line, and ends with a closing bracket } on a separate line.
+and whitespace, followed by a bracketed scope, that is, an opening bracket { on
+the same or following line, ending with a closing bracket } on a separate line.
 .PP
 Within record's scope, properties and matching patterns are specified as
 name/value pairs.
@@ -21,19 +20,25 @@ Specifies MIME type. This is not used internally, but is accessible through a
 context dependent variable %m.
 .TP
 \fBmatch_name\fP \fI<glob pattern>\fP
-One or more glob patterns\(dg to match the file name against.
+One or more glob patterns to match the file name against.
 .TP
 \fBmatch_content\fP \fI#<offset>\fP \fI<data>\fP
-One or more data patterns\(dg to match file contents against.
+One or more data patterns to match file contents against.
 .TP
 \fBaction\fP \fI<name>\fP: \fI<command>\fP
 Action to be displayed in the file context menu. Any character in the name
 may be prefixed with & to specify a mnemonic. Literal & may be specified using
 the \\ escape character.
 .PP
-\(dg Multiple values may be specified for file name and content
-patterns, - one per line - within a scope delimited by an opening bracket {
-on the same or following line, and a closing bracket } on a separate line.
+Multiple values may be specified for \fBmatch_name\fP, \fBmatch_content\fP
+and \fBaction\fP fields, - one per line - within a bracketed scope that follows
+the field name.
+.PP
+If same record name is encountered more than once, the earlier definition
+is replaced. User defined database files are loaded after system\-wide ones,
+and therefore will override any eponymous records.
+.PP
+See \fBFILES\fP section in this manual, for database file locations.
 .SS Variable Expansion
 .PP
 Unix shell like variable expansion is supported in action command strings.

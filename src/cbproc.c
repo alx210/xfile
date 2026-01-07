@@ -449,7 +449,8 @@ void make_dir_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	if( (rv = create_path(input, dir_mode)) != 0) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
-			"Cannot create directory.\n%s.", strerror(rv), NULL);
+			"Cannot create directory.\n%s.",
+			strerror( (rv == ENOTDIR) ? EEXIST : rv), NULL);
 	} else {
 		force_update();
 	}
@@ -476,7 +477,6 @@ void make_file_cb(Widget w, XtPointer pclient, XtPointer pcall)
 void copy_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	struct file_list_selection *cur_sel;
-	static char *last_dest = NULL;
 	char *dest;
 	int rv;
 	
@@ -486,13 +486,13 @@ void copy_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		return;
 	}
 	
-	if(!last_dest || access(last_dest, R_OK|X_OK)) {
-		if(last_dest) free(last_dest);
-		last_dest = get_working_dir();
+	if(!app_inst.last_dest || access(app_inst.last_dest, R_OK|X_OK)) {
+		if(app_inst.last_dest) free(app_inst.last_dest);
+		app_inst.last_dest = get_working_dir();
 	}
 
 	dest = dir_select_dlg(app_inst.wshell,
-		"Select Destination", last_dest, "copyto");
+		"Select Destination", app_inst.last_dest, "copyto");
 	
 	if(!dest) return;
 	
@@ -506,8 +506,6 @@ void copy_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	}
 	
 	dest = strip_path(dest);
-	if(last_dest) free(last_dest);
-	last_dest = dest;
 	
 	rv = copy_files(NULL, cur_sel->names, cur_sel->count, dest);
 	if(rv) {
@@ -515,21 +513,15 @@ void copy_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 			"Could not complete requested action.\n%s.",
 			strerror(errno), NULL);
 	}
-	
-	dest = realpath(last_dest, NULL);
-	if(!dest) {
-		free(last_dest);
-		last_dest = NULL;
-	} else {
-		free(last_dest);
-		last_dest = dest;
-	}
+
+	if(app_inst.last_dest) free(app_inst.last_dest);	
+	app_inst.last_dest = realpath(dest, NULL);
+	free(dest);
 }
 
 void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	struct file_list_selection *cur_sel;
-	static char *last_dest = NULL;
 	char *dest;
 	int rv;
 
@@ -539,13 +531,13 @@ void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		return;
 	}
 	
-	if(!last_dest || access(last_dest, R_OK|X_OK)) {
-		if(last_dest) free(last_dest);
-		last_dest = get_working_dir();
+	if(!app_inst.last_dest || access(app_inst.last_dest, R_OK|X_OK)) {
+		if(app_inst.last_dest) free(app_inst.last_dest);
+		app_inst.last_dest = get_working_dir();
 	}
 
 	dest = dir_select_dlg(app_inst.wshell,
-		"Select Destination", last_dest, "moveto");
+		"Select Destination", app_inst.last_dest, "moveto");
 	
 	if(!dest) return;
 
@@ -555,8 +547,6 @@ void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	}
 	
 	dest = strip_path(dest);	
-	if(last_dest) free(last_dest);
-	last_dest = dest;
 	
 	rv = move_files(NULL, cur_sel->names, cur_sel->count, dest);
 	if(rv) {
@@ -565,14 +555,9 @@ void move_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 			strerror(errno), NULL);
 	}
 
-	dest = realpath(last_dest, NULL);
-	if(!dest) {
-		free(last_dest);
-		last_dest = NULL;
-	} else {
-		free(last_dest);
-		last_dest = dest;
-	}
+	if(app_inst.last_dest) free(app_inst.last_dest);
+	app_inst.last_dest = realpath(dest, NULL);
+	free(dest);
 }
 
 void rename_cb(Widget w, XtPointer pclient, XtPointer pcall)

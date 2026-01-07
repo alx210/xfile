@@ -157,6 +157,11 @@ int set_location(const char *path, Boolean absolute)
 
 	dbg_assert(path);
 	
+	if(app_inst.last_dest) {
+		free(app_inst.last_dest);
+		app_inst.last_dest = NULL;
+	}
+	
 	if(absolute) {
 		psz = strdup(path);
 

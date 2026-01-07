@@ -17,6 +17,8 @@
 #include <Xm/XmP.h>
 #include <Xm/DrawP.h>
 #include <Xm/ManagerP.h>
+
+#define PATHW_BITMAPS
 #include "pathwp.h"
 #include "debug.h"
 
@@ -189,13 +191,6 @@ WidgetClass pathFieldWidgetClass = (WidgetClass) &pathFieldWidgetClassRec;
 #define CORE_WIDTH(w) (((struct path_field_rec*)w)->core.width)
 #define CORE_HEIGHT(w) (((struct path_field_rec*)w)->core.height)
 
-/* Up-arrow icon vertices */
-static struct vector2d arrow_verts[] = {
-	{0.0, -0.36}, {0.22, -0.12}, {0.0, -0.12}, {0.0, 0.22},
-	{0.48, 0.22}, {0.48, 0.36}, {0.0, 0.36}, {-0.12, 0.22},
-	{-0.12, -0.12}, {-0.36, -0.12}, {-0.12, -0.36}
-};
-
 static void comp_button_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	unsigned int *id = (unsigned int*)pclient;
@@ -299,6 +294,8 @@ static void input_unfocus_cb(Widget w, XtPointer pclient, XtPointer pcall)
  */
 static void up_button_expose_cb(Widget w, XtPointer closure, XtPointer cdata)
 {
+	XGCValues gcv;
+	Position cx, cy;
 	XmDrawnButtonCallbackStruct *cbs = (XmDrawnButtonCallbackStruct*)cdata;
 	CorePart *core = &((XmDrawnButtonRec*)w)->core;
 	XmPrimitivePart *prim = &((XmDrawnButtonRec*)w)->primitive;
@@ -309,42 +306,63 @@ static void up_button_expose_cb(Widget w, XtPointer closure, XtPointer cdata)
 		prim->highlight_thickness : prim->shadow_thickness;
 	Position margin = (label->margin_width > label->margin_height) ?
 		label->margin_width : label->margin_height;
-	size_t npts = XtNumber(arrow_verts) + 1;
 
-	if((cbs->reason != XmCR_EXPOSE) ||	
-			(core->width <= (shadow + margin) * 2) ||
-			(core->height <= (shadow + margin) * 2) ) return;
-	
-	/* Allocate a buffer and transform arrow vertices into button's
-	 * coordinate space, if not done yet; arrow_trpts will be freed
-	 * and set to NULL on resize. */
-	if(!wp->arrow_trpts) {
-		float scale;
-		float xorg;
-		float yorg;
-		int i;
+	Dimension minor = (core->width > core->height) ? 
+			core->height : core->width;
+ 	Dimension face_size = (minor - (shadow + margin) * 2);
 
-		wp->arrow_trpts = (XPoint*)XtMalloc(sizeof(XPoint) * npts);
-		if(!wp->arrow_trpts) {
-			WARNING((Widget)closure, "Memory allocation error!\n");
+	if((cbs->reason != XmCR_EXPOSE) ||	(face_size <= 0)) return;
+
+	/* Create appropriately sized arrow pixmap, if not done yet
+	 * (it may have been deleted in resize() also) */
+	if(!wp->pm_arrow) {
+		unsigned char *bits;
+		Dimension bits_size;
+		
+		if(face_size > 22) {
+			bits = uparrow22_bits;
+			bits_size = 22;
+		} else if(face_size > 16) {
+			bits = uparrow16_bits;
+			bits_size = 16;
+		} else if(face_size > 12) {
+			bits = uparrow12_bits;
+			bits_size = 12;
+		} else if(face_size > 8) {
+			bits = uparrow8_bits;
+			bits_size = 8;
+		} else {
+			bits = uparrow5_bits;
+			bits_size = 5;
+		}
+		wp->pm_arrow = XCreatePixmapFromBitmapData(XtDisplay(w),
+			XtWindow(w), (char*)bits, bits_size, bits_size, 1, 0, 1);
+		if(!wp->pm_arrow) {
+			WARNING(w, "Failed to create button image\n");
 			return;
 		}
-		scale = ((core->width < core->height) ?
-			core->width : core->height) - (shadow + margin) * 2;
-
-		xorg = core->width / 2;
-		yorg = core->height / 2;
-
-		for(i = 0; i < XtNumber(arrow_verts); i++) {
-			wp->arrow_trpts[i].x = arrow_verts[i].x * scale + xorg;
-			wp->arrow_trpts[i].y = arrow_verts[i].y * scale + yorg;
-		}
-		wp->arrow_trpts[npts - 1] = wp->arrow_trpts[0];
+		wp->pm_arrow_size = bits_size;
 	}
 	
-	XFillPolygon(XtDisplay(w), cbs->window,
-		(core->sensitive ? label->normal_GC : label->insensitive_GC),
-		wp->arrow_trpts, npts, Convex, CoordModeOrigin);
+	cx =  (core->width - wp->pm_arrow_size) / 2;
+	cy = (core->height - wp->pm_arrow_size) / 2;
+	gcv.clip_x_origin = cx;
+	gcv.clip_y_origin = cy;
+
+	gcv.clip_mask = wp->pm_arrow;
+	XChangeGC(XtDisplay(w), wp->blit_gc,
+		GCClipXOrigin | GCClipYOrigin | GCClipMask, &gcv);
+	
+	if(core->sensitive) {
+		XCopyGC(XtDisplay(w), label->normal_GC, GCForeground, wp->blit_gc);
+		XFillRectangle(XtDisplay(w), cbs->window, wp->blit_gc,
+			cx, cy, wp->pm_arrow_size, wp->pm_arrow_size);
+	} else {
+		XCopyGC(XtDisplay(w), label->insensitive_GC,
+			GCForeground, wp->blit_gc);
+		XFillRectangle(XtDisplay(w), cbs->window, wp->blit_gc,
+			cx, cy, wp->pm_arrow_size, wp->pm_arrow_size);
+	}
 }
 
 
@@ -379,6 +397,8 @@ static void up_button_cb(Widget w, XtPointer pclient, XtPointer cdata)
 		XtFree(path);
 	}
 }
+
+
 
 /* Returns path widget height */
 static Dimension compute_height(Widget w)
@@ -428,6 +448,8 @@ static void initialize(Widget wreq, Widget wnew,
 	Cardinal n;
 	int fheight, fascent, fdescent;
 	char *home;
+	XGCValues gcv;
+	XtGCMask gc_mask;
 	XtCallbackRec input_activate_cbr[] =
 		{ {input_activate_cb, (XtPointer)wnew }, { NULL, NULL } };
 	XtCallbackRec input_focus_cbr[] =
@@ -439,7 +461,6 @@ static void initialize(Widget wreq, Widget wnew,
 	XtCallbackRec up_button_expose_cbr[] =
 		{ {up_button_expose_cb, (XtPointer)wnew }, { NULL, NULL } };
 	
-	
 	wp->editing = False;
 	wp->tmp_path = NULL;
 	wp->ncomp = 0;
@@ -447,7 +468,7 @@ static void initialize(Widget wreq, Widget wnew,
 	wp->wcomp = NULL;
 	wp->comp_ids = NULL;
 	wp->home = NULL;
-	wp->arrow_trpts = NULL;
+	wp->pm_arrow = None;
 	
 	home = getenv("HOME");
 	if(home) {
@@ -473,6 +494,10 @@ static void initialize(Widget wreq, Widget wnew,
 	wp->btn_height = (((float)wp->btn_height_pc / 100) * fheight) + 
 		wp->shadow_thickness * 2;
 
+	gcv.function = GXcopy;
+	gc_mask = GCForeground | GCClipMask | GCClipXOrigin | GCClipYOrigin;
+	wp->blit_gc = XtAllocateGC(wnew, 0, GCFunction, &gcv, gc_mask, ~gc_mask);
+	
 	n = 0;
 	XtSetArg(args[n], XmNfocusCallback, input_focus_cbr); n++;
 	XtSetArg(args[n], XmNlosingFocusCallback, input_unfocus_cbr); n++;
@@ -513,10 +538,10 @@ static void resize(Widget w)
 	if(wp->show_dirup) {
 		Dimension ub_x;
 		
-		if(wp->arrow_trpts) {
+		if(wp->pm_arrow) {
 			/* so it will be recomputed in up_button_exposure_cb */
-			XtFree((char*)wp->arrow_trpts);
-			wp->arrow_trpts = NULL;
+			XFreePixmap(XtDisplay(w), wp->pm_arrow);
+			wp->pm_arrow = None;
 		}
 		
 		ub_width =((float)wp->font_height * DIRUP_WIDTH_FACTOR);
@@ -612,12 +637,14 @@ static void destroy(Widget w)
 	if(wp->comp_ids) XtFree((char*)wp->comp_ids);
 	if(wp->tmp_path) XtFree(wp->tmp_path);
 	if(wp->home) XtFree(wp->home);
-	if(wp->arrow_trpts) XtFree((char*)wp->arrow_trpts);
+	if(wp->pm_arrow) XFreePixmap(XtDisplay(w), wp->pm_arrow);
+	if(wp->blit_gc) XtReleaseGC(w, wp->blit_gc);
 
 	wp->ncomp = 0;
 	wp->ncomp_max = 0;
 	wp->wcomp = NULL;
 	wp->comp_ids = NULL;
+	wp->pm_arrow = None;
 }
 
 /*

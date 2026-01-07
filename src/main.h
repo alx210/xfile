@@ -81,6 +81,9 @@ struct app_inst_data {
 	unsigned int nfiles_hidden;
 	struct fsize size_shown;
 	
+	/* last destination selected in copy/move to dialog */
+	char *last_dest;
+	
 	/* options */
 	int icon_size_id;
 	int confirm_rm;
