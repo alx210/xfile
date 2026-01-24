@@ -894,6 +894,7 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 
 				wp_post_astat(wpd, "Symlinking", link_tgt, dest_fqn);
 				rv = wp_sym_link(wpd, link_tgt, dest_fqn);
+				if(move && !rv) wp_delete_file(wpd, csrc);
 				free(link_tgt);
 
 			} else if(!wpd->ignore_special) {
@@ -1245,7 +1246,7 @@ static int wp_copy_tree(struct wp_data *wpd,
 
 				wp_post_astat(wpd, "Symlinking", link_tgt, dest_fqn);
 				errv = wp_sym_link(wpd, link_tgt, dest_fqn);
-				if(!errv) wp_delete_file(wpd, cur_fqn);
+				if(move && !errv) wp_delete_file(wpd, cur_fqn);
 				
 				free(dest_fqn);
 				free(link_tgt);
