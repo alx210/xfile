@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2022-2025 alx@fastestcode.org
+# Copyright (C) 2022-2026 alx@fastestcode.org
 # This software is distributed under the terms of the X/MIT license.
 # See the included COPYING file for further information.
 

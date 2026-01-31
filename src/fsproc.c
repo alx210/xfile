@@ -180,7 +180,7 @@ static int wp_chattr_tree(struct wp_data*, const char *path,
 	mode_t fmode_mask, mode_t dmode_mask, int flags);
 static int wp_chattr(struct wp_data*, const char *path,
 	uid_t uid, gid_t gid, mode_t mode, mode_t mode_mask, int flags);
-static int wp_check_create_path(struct wp_data*,
+static int wp_check_create_hier(struct wp_data*,
 	const char *path, mode_t mode);
 static int wp_hard_link(struct wp_data*, 
 	const char *from, const char *to);
@@ -1170,7 +1170,7 @@ static int wp_copy_tree(struct wp_data *wpd,
 		} else {
 			dir_mode = cd_st.st_mode;
 		}
-		wp_check_create_path(wpd, dest_dir_fqn, dir_mode);
+		wp_check_create_hier(wpd, dest_dir_fqn, dir_mode);
 		free(dest_dir_fqn);
 		
 		while( (ent = readdir(dir)) && !errv) {
@@ -1235,7 +1235,7 @@ static int wp_copy_tree(struct wp_data *wpd,
 				}
 				
 				build_path(dest_fqn, dest, &cur_path[src_len], NULL);
-				if(wp_check_create_path(wpd, dest_fqn, dir_mode)) {
+				if(wp_check_create_hier(wpd, dest_fqn, dir_mode)) {
 					free(dest_fqn);
 					free(link_tgt);
 					break;
@@ -1268,7 +1268,7 @@ static int wp_copy_tree(struct wp_data *wpd,
 				}
 				build_path(src_fqn, cur_path, ent->d_name, NULL);
 				build_path(dest_fqn, dest, &cur_path[src_len], NULL);
-				if(wp_check_create_path(wpd, dest_fqn, dir_mode)) {
+				if(wp_check_create_hier(wpd, dest_fqn, dir_mode)) {
 					free(dest_fqn);
 					free(src_fqn);
 					break;
@@ -2046,13 +2046,13 @@ static int wp_delete_file(struct wp_data *wpd, const char *path)
  * Checks if path exists and creates it component-wise
  * Returns zero on success, errno on failure to create path.
  */
-static int wp_check_create_path(struct wp_data *wpd,
+static int wp_check_create_hier(struct wp_data *wpd,
 	const char *path, mode_t mode)
 {
 	int ev;
-	retry_create_path:
+	retry_create_hier:
 
-	if( (ev = create_path(path, mode)) == EEXIST) ev = 0;
+	if( (ev = create_hier(path, mode)) == EEXIST) ev = 0;
 
 	if(ev) {
 		int reply;
@@ -2060,7 +2060,7 @@ static int wp_check_create_path(struct wp_data *wpd,
 					wp_error_string("Error creating",
 					path, NULL, strerror(errno)) );
 		if(reply ==  FB_RETRY_CONTINUE)
-			goto retry_create_path;
+			goto retry_create_hier;
 	}
 	return ev;
 }

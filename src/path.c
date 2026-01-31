@@ -126,7 +126,7 @@ char *get_path_tail(const char *path)
  * Creates directory tree by walking up all components in path specified.
  * Returns zero on success, errno otherwise.
  */
-int create_path(const char *path, mode_t mode)
+int create_hier(const char *path, mode_t mode)
 {
 	char *sz;
 	char *cp;

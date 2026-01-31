@@ -578,7 +578,7 @@ static char* get_history_fqn(const char *title)
 	
 	if(lstat(path, &st)) {
 		if(errno == ENOENT) {
-			rv = create_path(path, (S_IRUSR | S_IWUSR | S_IXUSR));
+			rv = create_hier(path, (S_IRUSR | S_IWUSR | S_IXUSR));
 			if(rv && first_try) {
 				stderr_msg("Failed to create \'%s\'. %s\n",
 					path, strerror(rv));

@@ -810,7 +810,7 @@ static Boolean load_db(void)
 		if(!db_path) return False;
 		
 		if(access(db_path, X_OK) && errno == ENOENT) {
-			if((errv = create_path(db_path, CONF_DIR_PERMS))) {
+			if((errv = create_hier(db_path, CONF_DIR_PERMS))) {
 				if(app_inst.wmain) {
 					va_message_box(app_inst.wmain, MB_ERROR, APP_TITLE,
 						"Cannot access or create RC directory \'%s\'.\n%s.",
