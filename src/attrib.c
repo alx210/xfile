@@ -54,7 +54,9 @@ enum attrib_gadgets {
 	GID_SIZE,
 	GID_CTIME,
 	GID_MTIME,
+#ifdef SHOW_ATIME
 	GID_ATIME,
+#endif /* SHOW_ATIME */
 	NUM_ATT_GAD
 };
 
@@ -258,10 +260,12 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 		strftime(sz_time, TIME_BUFSIZ, DEF_TIME_FMT, &tm_file);
 		set_label_string(dlg_data->wattrib[GID_MTIME], sz_time);
 
+#ifdef SHOW_ATIME
 		localtime_r(&st.st_atime, &tm_file);
 		strftime(sz_time, TIME_BUFSIZ, DEF_TIME_FMT, &tm_file);
 		set_label_string(dlg_data->wattrib[GID_ATIME], sz_time);
-		
+#endif /* SHOW_ATIME */
+
 		/* mode toggle gadgets */
 		for(i = 0; i < 3; i++) {
 			m = ((st.st_mode & 0x01ff) >> (( 2 - i) * 3));
