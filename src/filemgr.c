@@ -853,6 +853,7 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 		while((ent = readdir(dir))){
 			Boolean is_mpoint = False;
 			Boolean is_mounted = False;
+			Boolean dev_changed = False;
 
 			if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
 				continue;
@@ -927,30 +928,34 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 				msg.files_skipped = files_skipped;
 				msg.size_total = size_total;
 			
-			} else if(file_list[i].mtime != st.st_mtime) {
+			} else if( (file_list[i].mtime != st.st_mtime) ||
+				(S_ISDIR(st.st_mode) && (file_list[i].device != st.st_dev)) ) {
+				dbg_trace("update: \'%s\' was changed\n", ent->d_name);
 				/* file was modified */
 				file_list[i].mtime = st.st_mtime;
-				dbg_trace("update: \'%s\' was changed\n", ent->d_name);
+				if(file_list[i].device != st.st_dev) {
+					dev_changed = True;
+					file_list[i].device = st.st_dev;
+				}
 				msg.reason = MSG_UPDATE;
-			
-			} else if(S_ISDIR(st.st_mode) && file_list[i].device != st.st_dev) {
-				/* mount point change */
-				dbg_trace("update: \'%s\' device changed\n", ent->d_name);
-				file_list[i].device = st.st_dev;
-				msg.reason = MSG_UPDATE;
-				
+
 			} else continue; /* nothing changed */
 			
 			/* send add/update message */
 			if(S_ISREG(st.st_mode)) {
 				msg.db_index = db_match(ent->d_name, &app_inst.type_db);
 			} else if(S_ISDIR(st.st_mode)) {
-				if(file_list[i].is_mpoint) {
+				if(file_list[i].is_mpoint || dev_changed) {
+					char *ltgt = NULL;
 					char fqn[strlen(path) + strlen(ent->d_name) + 2];
-					sprintf(fqn, "%s/%s", path, ent->d_name);
 					
-					is_mpoint = True;
-					is_mounted = (path_mounted(fqn) ? True : False);
+					sprintf(fqn, "%s/%s", path, ent->d_name);
+					if(msg.is_symlink) get_link_target(fqn, &ltgt);
+					
+					is_mounted = (Boolean)path_mounted(ltgt ? ltgt : fqn);
+					is_mpoint = (is_mounted) ? True : file_list[i].is_mpoint;
+					
+					if(ltgt) free(ltgt);
 				}
 				msg.db_index = DB_UNKNOWN;
 			} else {
