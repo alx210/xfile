@@ -105,8 +105,8 @@ struct watch_rec {
 
 /* Local prototypes */
 static int read_directory(void);
-static int read_proc_main(pid_t, int);
-static int read_proc_watch(const char*, pid_t, int,
+static int read_proc_main(int);
+static int read_proc_watch(const char*, int,
 	struct watch_rec*, size_t, size_t, Boolean);
 static void reader_callback_proc(XtPointer, int*, XtInputId*);
 static void read_error_msg(const char*, const char*, Boolean);
@@ -407,7 +407,6 @@ static void reset_context_data(void)
 static int read_directory(void)
 {
 	pid_t pid;
-	pid_t parent_pid = getpid();
 	
 	set_status_text("Reading %s...", app_inst.location);
 
@@ -433,7 +432,7 @@ static int read_directory(void)
 		
 		close(XConnectionNumber(app_inst.display));
 		close(rp_data.in_fd);
-		res = read_proc_main(parent_pid, rp_data.out_fd);
+		res = read_proc_main(rp_data.out_fd);
 		
 		_exit(res);
 	}
@@ -685,7 +684,7 @@ static Boolean filter(const char *file_name, mode_t mode)
  * Directory reader process entry point.
  * Reads the CWD, then enters the 'watch' routine.
  */
-static int read_proc_main(pid_t parent_pid, int pipe_fd)
+static int read_proc_main(int pipe_fd)
 {
 	char *cur_path;
 	DIR *dir = NULL;
@@ -704,7 +703,8 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 	dbg_printf("%d: new read/watch process\n", getpid());
 	rsignal(SIGALRM, read_proc_sigalrm, 0);
 	rsignal(SIGTERM, read_proc_sigterm, 0);
-	
+	rsignal(SIGHUP, read_proc_sigterm, 0);
+		
 	cur_path = get_working_dir();
 	if(!cur_path) return RP_ENOMEM;
 	
@@ -817,7 +817,7 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 		return RP_IOFAIL;
 	
 	/* read_proc_watch returns on failure only */
- 	return read_proc_watch(cur_path, parent_pid, pipe_fd,
+ 	return read_proc_watch(cur_path, pipe_fd,
 		file_list, list_size, nfiles, has_mpts);
 }
 
@@ -827,7 +827,7 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
  * at regular intervals and notifies the parent process of these.
  * Returns on failure only.
  */
-static int read_proc_watch(const char *path, pid_t parent_pid,
+static int read_proc_watch(const char *path,
 	int pipe_fd, struct watch_rec *file_list,
 	size_t list_size, size_t nfiles, Boolean has_mpts)
 {
@@ -840,9 +840,9 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 	
 	nice(WATCH_PROC_NICE);
 	
-	/* Loop until signaled or reparented, watching for directory changes,
+	/* Loop until signaled, watching for directory changes,
 	 * sleeping refresh_int secs between iterations */
-	while(getppid() == parent_pid) {
+	for( ; ; ) {
 		unsigned int files_total = 0;
 		unsigned int files_skipped = 0;
 		struct fsize size_total = { 0 };
@@ -1017,7 +1017,7 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 		sleep(app_res.refresh_int);
 	}
 
-	return RP_SUCCES; /* reached if parent process exits */
+	return RP_SUCCES;
 }
 
 static void read_proc_sigalrm(int sig)
