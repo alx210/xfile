@@ -412,7 +412,7 @@ static int spawn_proc(struct mount_proc_data *mp,
 			fprintf(stderr, "%s\n", strerror(rv));
 			_exit(EXIT_FAILURE);
 		}
-		args = realloc(args, (nargs + 1) * sizeof(char*));
+		args = realloc(args, (nargs + 2) * sizeof(char*));
 		if(!args) {
 			fprintf(stderr, "%s\n", strerror(errno));
 			_exit(EXIT_FAILURE);
