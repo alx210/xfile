@@ -723,6 +723,8 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 		if(!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, ".."))
 			continue;
 		
+		memset(&msg, 0, sizeof(struct msg_data));
+		
 		if(lstat(ent->d_name, &st) == -1) {
 			msg.stat_errno = errno;
 			memset(&st, 0, sizeof(struct stat));
@@ -864,6 +866,8 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 					break;
 				}
 			}
+			
+			memset(&msg, 0, sizeof(struct msg_data));
 
 			if(lstat(ent->d_name, &st) == -1) {
 				msg.stat_errno = errno;
@@ -993,6 +997,7 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 			dbg_trace("update: \'%s\' was removed\n", file_list[i].name);
 			
 			/* send removal message */
+			memset(&msg, 0, sizeof(struct msg_data));
 			msg.reason = MSG_REMOVE;
 			msg.name_len = strlen(file_list[i].name);
 
