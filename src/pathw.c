@@ -207,14 +207,14 @@ static void input_activate_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	struct path_field_part *wp = PART(wparent);
 	char *new_path = XmTextFieldGetString(w);
 
-	if(notify_client(wparent, new_path)) {
+	if(strlen(new_path) && notify_client(wparent, new_path)) {
 		strip_path(new_path);
 		path_field_set_location(wparent, new_path, False);
-		XtFree(new_path);	
 	} else if(wp->tmp_path) {
 		XmTextFieldSetString(w, wp->tmp_path);
 	}
-	
+	XtFree(new_path);
+
 	wp->editing = False;
 	if(wp->show_dirup) XtSetSensitive(wp->wdirup, True);
 	
