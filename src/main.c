@@ -79,6 +79,8 @@ int main(int argc, char **argv)
 	Cardinal n;
 	Pixmap icon_pix = None;
 	Pixmap icon_mask = None;
+	char **saved_args;
+	int nsaved_args;
 	char *open_spec = NULL;
 	char *path;
 	int res;
@@ -232,7 +234,11 @@ int main(int argc, char **argv)
 		{"-f", "filter", XrmoptionSepArg, NULL},
 		{"-s", "sortBy", XrmoptionStickyArg, NULL}
 	};
-
+	
+	saved_args = calloc(sizeof(char*), argc + 1);
+	memcpy(saved_args, argv, sizeof(char*) * argc);
+	nsaved_args = argc;
+	
 	memset(&app_inst, 0, sizeof(struct app_inst_data));
 	
 	XtSetLanguageProc(NULL, NULL, NULL);
@@ -318,6 +324,9 @@ int main(int argc, char **argv)
 	} else app_inst.shell_title = APP_NAME;
 
 	XtRealizeWidget(app_inst.wshell);
+	XSetCommand(app_inst.display, XtWindow(app_inst.wshell),
+		saved_args, nsaved_args);
+	free(saved_args);
 	
 	if(app_inst.visual == CopyFromParent) {
 		app_inst.visual = DefaultVisual(app_inst.display,
