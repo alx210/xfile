@@ -296,10 +296,8 @@ static XtGeometryResult query_geometry(Widget w,
 		pg->width = pref_width;
 	}
 		
-	if((ig->request_mode & CWHeight) && (ig->height < pref_height)) {
-		pg->request_mode |= CWHeight;
-		pg->height = pref_height;
-	}
+	pg->request_mode |= CWHeight;
+	pg->height = pref_height;
 	
 	return XmeReplyToQueryGeometry(w, ig, pg);
 }
