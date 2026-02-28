@@ -280,8 +280,18 @@ char* input_string_dlg(Widget wparent, const char *title,
 	Widget wlabel;
 	Widget wtext;
 	Cardinal i = 0;
-	struct input_dlg_data idd = {flags, NULL, None, False, False, False };
+	/* Reset text field's Home/End translations to defaults, since the
+	 * selection box widget overrides them to control the list above,
+	 * which is rather unexpected and not very useful either */
+	static char alt_tt_src[] = 
+		":s <Key>osfEndLine: end-of-line(extend)\n"
+		":s <Key>osfBeginLine: beginning-of-line(extend)\n"
+		":<Key>osfEndLine: end-of-line()\n"
+		":<Key>osfBeginLine: beginning-of-line()\n";
+	static XtTranslations alt_tt = NULL;
 
+	struct input_dlg_data idd = {flags, NULL, None, False, False, False };
+		
 	XtSetArg(arg[i], XmNtitle, title ? title : APP_TITLE); i++;
 	XtSetArg(arg[i], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); i++;
 	XtSetArg(arg[i], XmNautoUnmanage, False); i++;
@@ -300,6 +310,8 @@ char* input_string_dlg(Widget wparent, const char *title,
 	XtUnmanageChild(XmSelectionBoxGetChild(wdlg, XmDIALOG_HELP_BUTTON));
 
 	wtext = XmSelectionBoxGetChild(wdlg, XmDIALOG_TEXT);
+	if(!alt_tt) alt_tt = XtParseTranslationTable(alt_tt_src);
+	if(alt_tt) XtOverrideTranslations(wtext, alt_tt);
 	
 	XtAddCallback(wdlg, XmNokCallback, input_dlg_cb, (XtPointer)&idd);
 	XtAddCallback(wdlg, XmNcancelCallback, input_dlg_cb, (XtPointer)&idd);
@@ -327,7 +339,7 @@ char* input_string_dlg(Widget wparent, const char *title,
 	} else {
 		wlabel = XmSelectionBoxGetChild(wdlg, XmDIALOG_SELECTION_LABEL);
 	}
-	
+		
 	xm_label_string = XmStringCreateLocalized((String)msg_str);
 	XtSetArg(arg[0], XmNlabelString, xm_label_string);
 	XtSetValues(wlabel, arg, 1);
