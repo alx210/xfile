@@ -33,15 +33,17 @@
 
 
 /* Local prototypes */
-static void msgbox_btn_cb(Widget w, XtPointer client, XtPointer call);
+static void blocking_msgbox_cb(Widget w, XtPointer client, XtPointer call);
+static void msgbox_cb(Widget w, XtPointer client, XtPointer call);
 static void input_dlg_cb(Widget w, XtPointer client, XtPointer call);
 static void input_modify_cb(Widget, XtPointer client, XtPointer call);
-static void msgbox_popup_cb(Widget w, XtPointer client, XtPointer call);
 static void dir_history_cb(Widget w, XtPointer client, XtPointer call);
 static Boolean is_blank(const char *sz);
 static char* get_history_fqn(const char *title);
 static Boolean load_history(Widget wlist, const char *name);
 static void store_history(Widget wlist, const char *name);
+static void msgbox_delete_cb(Widget w, XtPointer, XtPointer);
+static void input_dlg_delete_cb(Widget w, XtPointer, XtPointer);
 
 #define HISTORY_VISIBLE_MAX	3
 
@@ -57,7 +59,7 @@ struct input_dlg_data {
 /*
  * Displays a modal message dialog.
  */
-enum mb_result message_box(Widget parent, enum mb_type type,
+enum mb_result message_box(Widget wparent, enum mb_type type,
 	const char *msg_title, const char *msg_str)
 {
 	Widget wbox = 0;
@@ -67,22 +69,28 @@ enum mb_result message_box(Widget parent, enum mb_type type,
 	XmString msg_text;
 	XmString title;
 	Arg args[11];
-	int i=0;
+	int i = 0;
 	enum mb_result result = _MBR_NVALUES;
-	Boolean blocking=False;
-	XWindowAttributes xwatt;
-	Widget parent_shell;
+	Boolean blocking = False;
 	char *class = (type == MB_NOTIFY || type == MB_ERROR) ?
 		"messageDialog" : "confirmationDialog";
 
-	dbg_assert(parent);
+	dbg_assert(wparent);
 	
 	if(!msg_title) msg_title = APP_TITLE;
 
 	title = XmStringCreateLocalized((char*)msg_title);
 	msg_text = XmStringCreateLocalized((char*)msg_str);
 	
-	wbox = XmCreateMessageDialog(parent, class, NULL, 0);
+	i = 0;
+	XtSetArg(args[i], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); i++;
+	XtSetArg(args[i], XmNnoResize, True); i++;
+	XtSetArg(args[i], XmNdialogTitle, title); i++;
+	XtSetArg(args[i], XmNautoUnmanage, False); i++;
+
+	wbox = XmCreateMessageDialog(wparent, class, args, i);
+	
+	i = 0;
 	
 	switch(type){
 		case MB_CONFIRM:
@@ -148,49 +156,53 @@ enum mb_result message_box(Widget parent, enum mb_type type,
 	};
 			
 	XtSetArg(args[i], XmNmessageString, msg_text); i++;
-	XtSetArg(args[i], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); i++;
-	XtSetArg(args[i], XmNnoResize, True); i++;
-	XtSetArg(args[i], XmNdialogTitle, title); i++;
 	XtSetValues(wbox, args, i);
-	i=0;
-	XtSetArg(args[i], XmNdeleteResponse, XmDESTROY); i++;
-	XtSetArg(args[i], XmNmwmFunctions, MWM_FUNC_MOVE); i++;
-	XtSetValues(XtParent(wbox), args, i);
 
 	XmStringFree(title);
 	XmStringFree(ok_text);
 	XmStringFree(msg_text);
 	if(cancel_text) XmStringFree(cancel_text);
 	if(extra_text) XmStringFree(extra_text);
-	
+
 	if(blocking){
 		XtAddCallback(wbox, XmNokCallback,
-			msgbox_btn_cb, (XtPointer)&result);
+			blocking_msgbox_cb, (XtPointer)&result);
+			
 		XtAddCallback(wbox, XmNcancelCallback,
-			msgbox_btn_cb, (XtPointer)&result);
+			blocking_msgbox_cb, (XtPointer)&result);
+			
 		XtAddCallback(wbox, XmNhelpCallback,
-			msgbox_btn_cb, (XtPointer)&result);
+			blocking_msgbox_cb, (XtPointer)&result);
+		
+		add_delete_window_handler(XtParent(wbox),
+			msgbox_delete_cb, &result);
+	} else {
+		XtAddCallback(wbox, XmNokCallback,
+			msgbox_cb, (XtPointer)&result);
 	}
+
+	/* we need to handle WM_DELETE_WINDOW for blocking dialogs ourselves */
+	XtSetArg(args[0], XmNdeleteResponse, blocking ? XmDO_NOTHING : XmDESTROY);
+	XtSetValues(XtParent(wbox), args, 1);
 	
-	parent_shell = parent;
-	while(!XtIsShell(parent_shell)) parent_shell = XtParent(parent_shell);
-	XGetWindowAttributes(XtDisplay(parent_shell),
-		XtWindow(parent_shell), &xwatt);
-
-	if(xwatt.map_state == IsUnmapped){
-		/* this gets the dialog centered on the screen */
-		XtAddCallback(XtParent(wbox), XmNpopupCallback, msgbox_popup_cb,
-			(XtPointer)wbox);
-	}
-
 	XtManageChild(wbox);
-	XmUpdateDisplay(wbox);
+
 	if(blocking){
 		while(result == _MBR_NVALUES)
-			XtAppProcessEvent(XtWidgetToApplicationContext(wbox), XtIMAll);
+			XtAppProcessEvent(XtWidgetToApplicationContext(wparent), XtIMAll);
+		
+		XtDestroyWidget(wbox);
+		XSync(XtDisplay(wparent), False);
+		XmUpdateDisplay(wparent);
+	
+		/* since WM_DELETE_WINDOW handler always sets MBR_CANCEL */
+		if(type != MB_CQUESTION && result == MBR_CANCEL)
+			result = MBR_DECLINE;
+
 		return result;
 	}
-	return True;
+	
+	return 0;
 }
 
 /*
@@ -219,8 +231,8 @@ enum mb_result va_message_box(Widget parent, enum mb_type type,
 	return res;
 }
 
-/* message_box response callback */
-static void msgbox_btn_cb(Widget w, XtPointer client, XtPointer call)
+/* Blocking message_box response callback */
+static void blocking_msgbox_cb(Widget w, XtPointer client, XtPointer call)
 {
 	XmAnyCallbackStruct *cbs = (XmAnyCallbackStruct*)call;
 	enum mb_result *res = (enum mb_result*)client;
@@ -238,30 +250,20 @@ static void msgbox_btn_cb(Widget w, XtPointer client, XtPointer call)
 			break;
 		}
 	}
-	XtDestroyWidget(w);
 }
 
-/*
- * Manages message box position if parent isn't mapped
- */
-static void msgbox_popup_cb(Widget w, XtPointer client, XtPointer call)
+/* WM_DELETE_WINDOW handler for blocking message boxes */
+static void msgbox_delete_cb(Widget w, XtPointer client, XtPointer call)
 {
-	int sw, sh, sx, sy;
-	Dimension mw, mh;
-	Arg args[2];
-	Widget wbox = (Widget)client;
+	enum mb_result *res = (enum mb_result*)client;
+	
+	*res = MBR_CANCEL;
+}
 
-	XtRemoveCallback(w, XmNpopupCallback, msgbox_popup_cb, client);
-
-	XtSetArg(args[0], XmNwidth, &mw);
-	XtSetArg(args[1], XmNheight, &mh);
-	XtGetValues(wbox, args, 2);
-
-	get_screen_size(wbox, &sw, &sh, &sx, &sy);
-
-	XtSetArg(args[0], XmNx, (sx + (sw - mw) / 2) );
-	XtSetArg(args[1], XmNy, (sy + (sh - mh) / 2) );
-	XtSetValues(wbox, args, 2);
+/* Non-blocking dialog response handler; just destroys the widget */
+static void msgbox_cb(Widget w, XtPointer client, XtPointer call)
+{
+	XtDestroyWidget(w);
 }
 
 /*
@@ -282,12 +284,19 @@ char* input_string_dlg(Widget wparent, const char *title,
 
 	XtSetArg(arg[i], XmNtitle, title ? title : APP_TITLE); i++;
 	XtSetArg(arg[i], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); i++;
+	XtSetArg(arg[i], XmNautoUnmanage, False); i++;
 	
 	if(context)
 		wdlg = XmCreateSelectionDialog(wparent, "promptDialog", arg, i);
 	else
 		wdlg = XmCreatePromptDialog(wparent, "promptDialog", arg, i);
-
+	
+	XtSetArg(arg[0], XmNdeleteResponse, XmDO_NOTHING);
+	XtSetValues(XtParent(wdlg), arg, 1);
+	
+	add_delete_window_handler(XtParent(wdlg),
+		input_dlg_delete_cb, (XtPointer) &idd);
+		
 	XtUnmanageChild(XmSelectionBoxGetChild(wdlg, XmDIALOG_HELP_BUTTON));
 
 	wtext = XmSelectionBoxGetChild(wdlg, XmDIALOG_TEXT);
@@ -350,7 +359,9 @@ char* input_string_dlg(Widget wparent, const char *title,
 	while(!idd.done){
 		XtAppProcessEvent(XtWidgetToApplicationContext(wdlg), XtIMAll);
 	}
+	
 	XtDestroyWidget(wdlg);
+	XSync(XtDisplay(wparent), False);
 	XmUpdateDisplay(wparent);
 	
 	if(context && idd.valid && strlen(idd.string))
@@ -396,6 +407,7 @@ char* dir_select_dlg(Widget wparent, const char *title,
 	XtSetArg(arg[i], XmNdirectory, xm_init_path); i++;
 	XtSetArg(arg[i], XmNtitle, title); i++;
 	XtSetArg(arg[i], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); i++;
+	XtSetArg(arg[i], XmNautoUnmanage, False); i++;
 
 	wdlg = XmCreateFileSelectionDialog(wparent,
 		"directorySelectionDialog", arg, i);
@@ -430,6 +442,12 @@ char* dir_select_dlg(Widget wparent, const char *title,
 		XtManageChild(idd.whistory);
 	}
 	
+	XtSetArg(arg[0], XmNdeleteResponse, XmDO_NOTHING);
+	XtSetValues(XtParent(wdlg), arg, 1);
+	
+	add_delete_window_handler(XtParent(wdlg),
+		input_dlg_delete_cb, (XtPointer) &idd);
+	
 	XtManageChild(wdlg);
 
 	while(!idd.done){
@@ -437,11 +455,12 @@ char* dir_select_dlg(Widget wparent, const char *title,
 	}
 
 	XtDestroyWidget(wdlg);
+	XSync(XtDisplay(wparent), False);
 	XmUpdateDisplay(wparent);
 	
 	if(context && idd.has_history)
 		store_history(idd.whistory, context);
-	
+
 	return idd.valid ? idd.string : NULL;
 }
 
@@ -543,7 +562,15 @@ static void input_dlg_cb(Widget w, XtPointer client, XtPointer call)
 		idd->done = True;
 		XtFree(str);
 	}
-	XtUnmanageChild(w);
+}
+
+/* Input and directory selection dialog WM_DELETE_WINDOW handler */
+static void input_dlg_delete_cb(Widget w, XtPointer client, XtPointer call)
+{
+	struct input_dlg_data *idd= (struct input_dlg_data*)client;
+
+	idd->valid = False;
+	idd->done = True;
 }
 
 /* Returns True if the string is all blank characters */

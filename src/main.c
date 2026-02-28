@@ -382,7 +382,6 @@ int main(int argc, char **argv)
 	map_shell_unpos(app_inst.wshell);
 	
 	set_location(open_spec, True);
-
 	XtAppMainLoop(app_inst.context);
 	return 0;
 }
