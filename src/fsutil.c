@@ -17,6 +17,7 @@
 #include "fsutil.h"
 #include "debug.h"
 
+/* Largest file size exponent (see *_fsize functions) */
 #define FS_EXP_MAX 6
 
 /* Same as readlink, but allocates a buffer */
@@ -100,7 +101,7 @@ char* get_unix_type_string(mode_t st_mode)
 char* get_fsize_string(const struct fsize *fs, char buffer[SIZE_CS_MAX])
 {
 	/* What unit names are we using today? */
-	char *sz_names[] = {
+	char *sz_names[FS_EXP_MAX + 1] = {
 		"B", "K", "M", "G", "T", "P", "E"
 	};
 	char *sz_units;
