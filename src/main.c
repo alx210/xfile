@@ -364,6 +364,11 @@ int main(int argc, char **argv)
 		app_inst.icon_size_id = get_best_icon_size();
 	}
 	
+	if(app_res.refresh_int <= 0) {
+		stderr_msg("Invalid refresh interval value, using default.\n");
+		app_res.refresh_int = DEF_REFRESH_INT;
+	}
+	
 	db_init(&app_inst.type_db);
 	load_db(); 
 	
