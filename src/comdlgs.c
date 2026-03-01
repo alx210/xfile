@@ -190,7 +190,8 @@ enum mb_result message_box(Widget wparent, enum mb_type type,
 	if(blocking){
 		while(result == _MBR_NVALUES)
 			XtAppProcessEvent(XtWidgetToApplicationContext(wparent), XtIMAll);
-		
+
+		XtUnmanageChild(wbox);		
 		XtDestroyWidget(wbox);
 		XSync(XtDisplay(wparent), False);
 		XmUpdateDisplay(wparent);
@@ -263,6 +264,7 @@ static void msgbox_delete_cb(Widget w, XtPointer client, XtPointer call)
 /* Non-blocking dialog response handler; just destroys the widget */
 static void msgbox_cb(Widget w, XtPointer client, XtPointer call)
 {
+	XtUnmanageChild(w);
 	XtDestroyWidget(w);
 }
 
@@ -372,6 +374,7 @@ char* input_string_dlg(Widget wparent, const char *title,
 		XtAppProcessEvent(XtWidgetToApplicationContext(wdlg), XtIMAll);
 	}
 	
+	XtUnmanageChild(wdlg);
 	XtDestroyWidget(wdlg);
 	XSync(XtDisplay(wparent), False);
 	XmUpdateDisplay(wparent);
@@ -466,6 +469,7 @@ char* dir_select_dlg(Widget wparent, const char *title,
 		XtAppProcessEvent(XtWidgetToApplicationContext(wdlg), XtIMAll);
 	}
 
+	XtUnmanageChild(wdlg);
 	XtDestroyWidget(wdlg);
 	XSync(XtDisplay(wparent), False);
 	XmUpdateDisplay(wparent);
