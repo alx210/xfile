@@ -26,6 +26,8 @@
 /* Icon bitmaps */
 #include "xbm/cabinet.xpm"
 
+static void dismiss_cb(Widget, XtPointer, XtPointer);
+
 void display_dbinfo_dialog(Widget wparent)
 {
 	Arg args[10];
@@ -41,6 +43,10 @@ void display_dbinfo_dialog(Widget wparent)
 	XmString xms;
 	unsigned int i;
 	char **ptr;
+	XtCallbackRec cb[2] = {
+		{ dismiss_cb, NULL }, { NULL, NULL }
+	};
+
 	
 	if(!app_inst.type_db.count) {
 		message_box(wparent, MB_NOTIFY, "Type Database Info",
@@ -110,6 +116,7 @@ void display_dbinfo_dialog(Widget wparent)
 	wsep = XmCreateSeparator(wform, "separator", args, n);
 
 	n = 0;
+	cb[0].closure = (XtPointer)wdlg;
 	xms = XmStringCreateLocalized("Close");
 	XtSetArg(args[n], XmNmarginWidth, 4); n++;
 	XtSetArg(args[n], XmNmarginHeight, 4); n++;
@@ -118,6 +125,7 @@ void display_dbinfo_dialog(Widget wparent)
 	XtSetArg(args[n], XmNsensitive, True); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNactivateCallback, cb); n++;
 	wclose = XmCreatePushButton(wform, "closeButton", args, n);
 	XmStringFree(xms);
 	
@@ -186,6 +194,9 @@ void display_about_dialog(Widget wparent)
 	char *about_text;
 	size_t text_len;
 	XmString xms;
+	XtCallbackRec cb[2] = {
+		{ dismiss_cb, NULL }, { NULL, NULL }
+	};
 	
 	text_len = snprintf(NULL, 0,
 		"%s\nVersion %d.%d.%d (%s; Motif %d.%d.%d)\n\n%s",
@@ -243,6 +254,7 @@ void display_about_dialog(Widget wparent)
 	wsep = XmCreateSeparator(wform, "separator", args, n);
 
 	n = 0;
+	cb[0].closure = (XtPointer)wdlg;
 	xms = XmStringCreateLocalized("Close");
 	XtSetArg(args[n], XmNmarginWidth, 4); n++;
 	XtSetArg(args[n], XmNmarginHeight, 4); n++;
@@ -253,6 +265,7 @@ void display_about_dialog(Widget wparent)
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
 	XtSetArg(args[n], XmNtopWidget, wsep); n++;
 	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_FORM); n++;
+	XtSetArg(args[n], XmNactivateCallback, cb); n++;
 	wclose = XmCreatePushButton(wform, "closeButton", args, n);
 	XmStringFree(xms);
 
@@ -271,3 +284,10 @@ void display_about_dialog(Widget wparent)
 	
 	free(about_text);
 }
+
+static void dismiss_cb(Widget w, XtPointer client, XtPointer call)
+{
+	Widget wdlg = (Widget)client;
+	XtDestroyWidget(wdlg);
+}
+
