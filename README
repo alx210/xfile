@@ -13,9 +13,11 @@ C99 compliant C compiler, SysVR4 compatible make, awk and sed
 BUILDING AND INSTALLING
 -----------------------
 
-If necessary, tweak the target platform specific makefile, Makefile.$(uname),
-in the mf sub-directory, e.g. to change installation prefix and whether to 
-enable Xft fonts. If no target specific Makefile exists, try "generic".
+Make sure to review the target platform makefile (mf/Makefile.<platform>).
+Adjust the installation prefix and X resources installation path if necessary.
+Read comments in the makefile for additional compile time options available.
+The target platform is picked by the master Makefile from uname(1). If no
+platform specific Makefile exists, try "Makefile.generic".
 
 Run make in the top-level directory.
 When build process finishes, run "make install" as root.
