@@ -35,16 +35,16 @@ int expand_env_vars(const char *in, struct env_var_rec *vars, char **out);
 int split_arguments(char *cmd_spec, char ***argv_ret, size_t *argc_ret);
 
 /*
- * Takes a command string and vfork-execvs it.
- * Returns zero on success, errno otherwise.
- */
-int spawn_cs_command(const char *cmd_spec);
-
-/*
  * Runs an executable file in a separate process with arguments specified.
  * Returns zero on success, errno otherwise.
  */
 int spawn_command(const char *cmd, char * const *args, size_t nargs);
+
+/*
+ * Splits cmd_spec into separate arguments (see split_arguments)
+ * and vfork-execvs it. Returns zero on success, errno otherwise.
+ */
+int spawn_cs_command(const char *cmd_spec);
 
 /*
  * Runs an executable file (must be FQN) in a separate process.
