@@ -16,7 +16,6 @@
 #include "debug.h"
 
 /* Forward declarations */
-static Bool escape_string(const char *string, char **result);
 static Bool xrm_enum_cb(XrmDatabase *rdb, XrmBindingList bindings,
 	XrmQuarkList quarks, XrmRepresentation *type,
 	XrmValue *value, XPointer closure);
@@ -39,7 +38,13 @@ static Bool xrm_enum_cb(XrmDatabase *rdb, XrmBindingList bindings,
 	
 	if( ((quarks[0] == name_list[0]) || (quarks[0] == class_list[0])) &&
 		((quarks[1] == name_list[1]) || (quarks[1] == class_list[1])) ) {
-
+		
+		if(!strlen(value->addr)) {
+			char *name = XrmQuarkToString(quarks[2]);
+			stderr_msg("Invalid command string for tool \"%s\".\n", name);
+			return False;
+		}
+		
 		if(ntools == nalloc) {
 			struct user_tool_rec *p;
 
@@ -50,7 +55,7 @@ static Bool xrm_enum_cb(XrmDatabase *rdb, XrmBindingList bindings,
 		}
 		
 		memset(&tools[ntools], 0, sizeof(struct user_tool_rec));
-		tools[ntools].name = XrmQuarkToString(quarks[2]);
+		tools[ntools].name = strdup(XrmQuarkToString(quarks[2]));
 		tools[ntools].command = strdup(value->addr);
 		
 		ntools++;
@@ -76,59 +81,28 @@ unsigned int get_user_tools(struct user_tool_rec **p)
 
 void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 {
-	int rv;
 	struct user_tool_rec *tool = (struct user_tool_rec*) closure;
 	struct env_var_rec vars[4] = { NULL }; /* last record must be NULLed */
 	char *exp_cmd;
-	char *files = NULL;
 	char *path = get_working_dir();
 	char *token;
 	char *user_param = NULL;
-	unsigned int n = 0;
+	char *exp_names = NULL;
+	char **argv;
+	size_t argc;
+	int rv, i, n;
 	struct file_list_selection *cur_sel =
 			file_list_get_selection(app_inst.wlist);
 	
-	if(cur_sel->count > 1) {
-		unsigned int i;
-		size_t cat_len = 0;
-		char **esc_names;
-		
-		esc_names = calloc(cur_sel->count, sizeof(char*));
-		
-		for(i = 0; i < cur_sel->count; i++) {
-			escape_string(cur_sel->names[i], &esc_names[i]);
-			cat_len += strlen(esc_names[i] ?
-				esc_names[i] : cur_sel->names[i]) + 3;
-		}
-
-		files = malloc(cat_len);
-		files[0] = '\0';
-		
-		for(i = 0; i < cur_sel->count; i++) {
-			strcat(files, esc_names[i] ?
-				esc_names[i] : cur_sel->names[i]);
-			strcat(files, " ");
-			if(esc_names[i]) free(esc_names[i]);
-		}
-		files[strlen(files) - 1] = '\0';
-		free(esc_names);
-	} else if(cur_sel->count == 1) {
-		if(!escape_string(cur_sel->names[0], &files))
-			files = strdup(cur_sel->names[0]);
-	} else {
-		files = strdup("");
-	}
-
 	if((token = strstr(tool->command, "%u"))) {
 		if( (token != tool->command) ||
-			( (*(token - 1) != '%' ) && (*(token - 1) != '\\' ) ) ) {
+			(( token[-1] != '%' ) && (token[-1] != '\\' ) ) ) {
 			user_param = input_string_dlg(app_inst.wshell, 
 				"Command Arguments",
 				"Specify additional arguments",	tool->hist, NULL,
 				ISF_PRESELECT | ISF_ALLOWEMPTY);
 			if(!user_param) {
 				free(path);
-				free(files);
 				return;
 			}
 			if(tool->hist) free(tool->hist);
@@ -138,13 +112,9 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 	
 	n = 0;
 	vars[n].name = ENV_FNAME;
-	vars[n].value = files;
+	vars[n].value = "%n";
 	n++;
 	
-	if(escape_string(path, &token)) {
-		free(path);
-		path = token;
-	}
 	vars[n].name = ENV_FPATH;
 	vars[n].value = path;
 	n++;
@@ -158,74 +128,101 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 	rv = expand_env_vars(tool->command, vars, &exp_cmd);
 	if(rv) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
-			"Error parsing action command string:\n"
+			"Error parsing command string:\n"
 			"%s\n%s.", tool->command, strerror(rv));
-		free(files);
 		free(path);
 		return;
 	}
-	dbg_trace("TOOL(%s): [%s]\n", tool->name, exp_cmd);
-	rv = spawn_cs_command(exp_cmd);
+	
+	rv = split_arguments(exp_cmd, &argv, &argc);
 	if(rv) {
+		free(exp_cmd);
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
-			"Error executing tool command %s:\n"
-			"%s.", tool->command, strerror(rv));	
+			"Error parsing command string:\n"
+			"%s\n%s.", tool->command, strerror(rv));
+		free(path);
+		return;
 	}
 	
-	free(files);
-	free(path);
-}
-
-/*
- * Checks the string specified for special characters and escapes them
- * with the \ character. Puts the string in quotes if it contains blanks.
- * Returns True and the modified string allocated from the heap in result.
- */
-static Bool escape_string(const char *string, char **result)
-{
-	char spec_chrs[] = "\"\'\\";
-	char blnk_chrs[] = " \n\t";
-	char *sp = (char*) string;
-	char *dp;
-	size_t count = 0;
-	char *res;
-	int quote = 0;
-
-	while(*sp != '\0') {
-		if(strchr(spec_chrs, *sp)) count++;
-		if(strchr(blnk_chrs, *sp)) quote = 1;
-		sp++;
-	}
-	if(!count && !quote) return False;
-	
-	res = malloc(strlen(string) + count + 3);
-	if(!res) return False;
-	
-	sp = (char*)string;
-	dp = res;
-	
-	if(quote) {
-		*dp = '\"';
-		dp++;
-	}
-	
-	while(*sp != '\0') {
-		if(strchr(spec_chrs, *sp)) {
-			*dp = '\\';
-			dp++;
+	/* if we've re-substituted %n earlier, find it so we can use the
+	 * arg's string as a template for pasting file names */
+	for(n = (-1), i = 0; i < argc; i++) {
+		if( (token = strstr(argv[i], "%n")) ) {
+			token[1] = 's';
+			n = i;
+			break;
 		}
-		*dp = *sp;
-		sp++;
-		dp++;
+	}
+
+	/* if we've got file names, we want to allocate a new argument list,
+	 * and splice in file name arguments generated using the template string */
+	if((n >= 0) && cur_sel->count) {
+		char *tmpl = argv[n];
+		char **new_argv;
+		int new_argc = argc + cur_sel->count - 1;
+		size_t len;
+
+		/* allocate a block of memory to hold all the pasted and zero
+		 * terminated file name strings in a contiguous chunk, which will
+		 * be later mapped into the new argument list */
+		for(len = 0, i = 0; i < cur_sel->count; i++)
+			len += strlen(tmpl) + strlen(cur_sel->names[i]) + 1;
+		
+		exp_names = malloc(len);
+		new_argv = malloc(sizeof(char*) * new_argc);
+		if(!exp_names || !new_argv) {
+			if(exp_names) free(exp_names);
+			if(new_argv) free(new_argv);
+			free(exp_cmd);
+			free(argv);
+			free(path);
+			va_message_box(app_inst.wshell,
+				MB_ERROR, APP_TITLE, "Memory allocation error");
+			return;
+		}
+		
+		/* copy original argv contents, leaving a gap for the
+		 * list of file names in the middle */
+		if(n) memcpy(new_argv, argv, sizeof(char*) * n);
+		if((argc - n) > 1) {
+			memcpy(new_argv + n + cur_sel->count,
+				argv + n + 1, sizeof(char*) * (argc - n - 1));
+		}
+
+		/* generate new file names using the template, and map
+		 * them into the argument list */
+		for(len = 0, i = 0; i < cur_sel->count; i++) {
+			sprintf(exp_names + len, tmpl, cur_sel->names[i]);
+			new_argv[n + i] = exp_names + len;
+			len += strlen(tmpl) + strlen(cur_sel->names[i]) + 1;
+		}
+
+		free(argv);
+		argv = new_argv;
+		argc = new_argc;
+	} else if(n >= 0) {
+		argv[n] = "";
 	}
 	
-	if(quote) {
-		*dp = '\"';
-		dp++;
+	if(argc && strlen(argv[0])) {
+		if(argc > 1)
+			rv = spawn_command(argv[0], argv + 1, argc - 1);
+		else
+			rv = spawn_command(argv[0], NULL, 0);
+
+		if(rv) {
+			va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+				"Error executing tool command %s:\n"
+				"%s.", tool->command, strerror(rv));	
+		}
+	} else {
+		/* can happen if it's just envvars and context variables */
+		message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
+			"Command specified resolved to an empty string.");
 	}
-	
-	*dp = '\0';
-	*result = res;
-	dbg_trace("%s\n", res);
-	return True;
+
+	if(exp_names) free(exp_names);
+	free(exp_cmd);
+	free(argv);
+	free(path);
 }
