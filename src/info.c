@@ -58,8 +58,6 @@ void display_dbinfo_dialog(Widget wparent)
 	XtSetArg(args[n], XmNmappedWhenManaged, True); n++;
 	XtSetArg(args[n], XmNallowShellResize, True); n++;
 	XtSetArg(args[n], XmNdeleteResponse, XmDESTROY); n++;
-	XtSetArg(args[n], XmNminWidth, 320); n++;
-	XtSetArg(args[n], XmNminHeight, 280); n++;
 	wdlg = XmCreateDialogShell(wparent, "Type Database Info", args, n);
 
 	n = 0;
@@ -67,6 +65,7 @@ void display_dbinfo_dialog(Widget wparent)
 	XtSetArg(args[n], XmNmarginHeight, 10); n++;
 	XtSetArg(args[n], XmNhorizontalSpacing, 8); n++;
 	XtSetArg(args[n], XmNverticalSpacing, 8); n++;
+	XtSetArg(args[n], XmNnoResize, True); n++;
 	XtSetArg(args[n], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); n++;
 	wform = XmCreateForm(wdlg, "form", args, n);
 	
@@ -82,6 +81,7 @@ void display_dbinfo_dialog(Widget wparent)
 
 
 	n = 0;
+	XtSetArg(args[n], XmNtopOffset, 2); n++;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
 	XtSetArg(args[n], XmNtopWidget, wdblabel); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
@@ -101,6 +101,7 @@ void display_dbinfo_dialog(Widget wparent)
 	XmStringFree(xms);
 	
 	n = 0;
+	XtSetArg(args[n], XmNtopOffset, 2); n++;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
 	XtSetArg(args[n], XmNtopWidget, wtlabel); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
@@ -109,6 +110,8 @@ void display_dbinfo_dialog(Widget wparent)
 	wtlist = XmCreateScrolledList(wform, "types", args, n);
 
 	n = 0;
+	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+	XtSetArg(args[n], XmNtopWidget, wtlist); n++;
 	XtSetArg(args[n], XmNrightAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNleftAttachment, XmATTACH_FORM); n++;
 	XtSetArg(args[n], XmNorientation, XmHORIZONTAL); n++;
@@ -118,6 +121,8 @@ void display_dbinfo_dialog(Widget wparent)
 	n = 0;
 	cb[0].closure = (XtPointer)wdlg;
 	xms = XmStringCreateLocalized("Close");
+	XtSetArg(args[n], XmNtopAttachment, XmATTACH_WIDGET); n++;
+	XtSetArg(args[n], XmNtopWidget, wsep); n++;
 	XtSetArg(args[n], XmNmarginWidth, 4); n++;
 	XtSetArg(args[n], XmNmarginHeight, 4); n++;
 	XtSetArg(args[n], XmNlabelString, xms); n++;
@@ -129,16 +134,6 @@ void display_dbinfo_dialog(Widget wparent)
 	wclose = XmCreatePushButton(wform, "closeButton", args, n);
 	XmStringFree(xms);
 	
-	n = 0;
-	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_WIDGET); n++;
-	XtSetArg(args[n], XmNbottomWidget, wsep); n++;
-	XtSetValues(XtParent(wtlist), args, n);
-
-	n = 0;
-	XtSetArg(args[n], XmNbottomAttachment, XmATTACH_WIDGET); n++;
-	XtSetArg(args[n], XmNbottomWidget, wclose); n++;
-	XtSetValues(wsep, args, n);
-
 	n = 0;
 	XtSetArg(args[n], XmNdefaultButton, wclose); n++;
 	XtSetArg(args[n], XmNcancelButton, wclose); n++;
