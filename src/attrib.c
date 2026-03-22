@@ -77,6 +77,8 @@ static const char *usr_sz[] = {
 #define NUM_MODE_GAD 12
 #define NUM_MASK_GAD 6
 
+#define NAME_LABEL_MAX 32
+
 /* indexed by mode toggle gadget callback */
 static const mode_t mode_bits[] = {
 	S_IRUSR, S_IWUSR, S_IXUSR,
@@ -233,11 +235,25 @@ void attrib_dlg(Widget wp, char *const *files, unsigned int nfiles)
 		add_fsize(&dlg_data->size_total, st.st_size);
 		
 		psz = mbs_make_displayable(file_name);
+		if(mb_strlen(psz) > NAME_LABEL_MAX) {
+			char *new_sz = shorten_mb_string(psz, NAME_LABEL_MAX, 0);
+			if(new_sz) {
+				free(psz);
+				psz = new_sz;
+			}
+		}
 		set_label_string(dlg_data->wattrib[GID_NAME], psz);
 		free(psz);
 		
 		if(is_symlink) {
 			psz = mbs_make_displayable(link_tgt);
+			if(mb_strlen(psz) > NAME_LABEL_MAX) {
+				char *new_sz = shorten_mb_string(psz, NAME_LABEL_MAX, 0);
+				if(new_sz) {
+					free(psz);
+					psz = new_sz;
+				}
+			}
 			set_label_string(dlg_data->wattrib[GID_LTGT], psz);
 			free(psz);
 			free(link_tgt);
