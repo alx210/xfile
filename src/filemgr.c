@@ -44,6 +44,7 @@ struct read_proc_data {
 	int in_fd;
 	int out_fd;
 	Boolean init_done;
+	Boolean background;
 };
 
 /* Reader/watcher message data */
@@ -117,6 +118,7 @@ static void read_proc_sigalrm(int sig);
 static Boolean filter(const char*, mode_t);
 static void status_timeout_cb(XtPointer, XtIntervalId*);
 static void reset_context_data(void);
+static void read_proc_sigusr(int);
 
 /* Local variables */
 static struct read_proc_data rp_data = {0};
@@ -425,6 +427,7 @@ static int read_directory(void)
 	
 	/* reset reader proc data */
 	rp_data.init_done = False;
+	rp_data.background = False;
 
 	pid = fork();
 	if(pid == (-1)) return errno;
@@ -434,6 +437,8 @@ static int read_directory(void)
 		
 		close(XConnectionNumber(app_inst.display));
 		close(rp_data.in_fd);
+		rsignal(SIGUSR1, read_proc_sigusr, 0);
+		rsignal(SIGUSR2, read_proc_sigusr, 0);
 		res = read_proc_main(parent_pid, rp_data.out_fd);
 		
 		_exit(res);
@@ -465,6 +470,17 @@ void stop_read_proc(void)
 		waitpid(pid, (int*)&rp_data.status, 0);
 	}
 	reset_context_data();
+}
+
+/*
+ * Sets directory watcher process state
+ */
+void set_read_proc_refresh(Boolean background)
+{
+	if(rp_data.pid && rp_data.background != background) {
+		kill(rp_data.pid, SIGUSR1);
+		rp_data.background = background;
+	}
 }
 
 
@@ -1028,16 +1044,34 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 
 		out = write(pipe_fd, &msg, sizeof(struct msg_data));
 		if(out < sizeof(struct msg_data)) return RP_IOFAIL;
-						
-		sleep(app_res.refresh_int);
+
+		if(rp_data.background) {
+			sleep(app_res.refresh_int * app_res.refresh_fac);
+		} else {
+			sleep(app_res.refresh_int);
+		}
 	}
 
 	return RP_SUCCES; /* reached if parent process exits */
 }
 
+
 static void read_proc_sigalrm(int sig)
 {
 	/* we use SIGALRM to force refresh */
+}
+
+static void read_proc_sigusr(int sig)
+{
+	if(sig == SIGUSR1) {
+		if(rp_data.background)
+			rp_data.background = False;
+		else
+			rp_data.background = True;
+	
+		dbg_trace("read proc %d background mode %d\n",
+			getpid(), rp_data.background);
+	}
 }
 
 static void read_proc_sigterm(int sig)

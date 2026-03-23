@@ -42,6 +42,9 @@ void force_update(void);
 /* Kills the directory reader/watcher process if one exists */
 void stop_read_proc(void);
 
+/* Sets directory watcher process refresh mode */
+void set_read_proc_refresh(Boolean background);
+
 /* user flags for file list items */
 #define FLI_MNTPOINT	0x01
 #define FLI_MOUNTED		0x02

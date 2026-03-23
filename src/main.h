@@ -21,6 +21,7 @@ struct app_resources {
 	Boolean show_app_title;
 	Boolean user_db_only;
 	unsigned int refresh_int;
+	unsigned int refresh_fac;
 	String confirm_rm;
 	Boolean path_field;
 	Boolean status_field;

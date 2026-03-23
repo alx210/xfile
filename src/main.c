@@ -63,6 +63,7 @@ extern void XmRenderTableGetDefaultFontExtents(XmRenderTable,
 extern void populate_tools_menu(void);
 static void xt_sigchld_handler(XtPointer p, XtSignalId *id);
 static void xfile_open(int, char**);
+static void visibility_event_cb(Widget, XtPointer, XEvent*, Boolean*);
 
 /* Config directory permissions */
 #define CONF_DIR_PERMS  (S_IRWXU|S_IRGRP)
@@ -115,6 +116,12 @@ int main(int argc, char **argv)
 		XmRInt, sizeof(int),
 		XtOffsetOf(struct app_resources, refresh_int),
 		XmRImmediate,(XtPointer)DEF_REFRESH_INT
+	},
+	{
+		"refreshFactor", "RefreshFactor",
+		XmRInt, sizeof(int),
+		XtOffsetOf(struct app_resources, refresh_fac),
+		XmRImmediate,(XtPointer)DEF_REFRESH_FAC
 	},
 	{
 		"showAll", "ShowAll",
@@ -369,6 +376,11 @@ int main(int argc, char **argv)
 		app_res.refresh_int = DEF_REFRESH_INT;
 	}
 	
+	if(app_res.refresh_fac <= 0) {
+		stderr_msg("Invalid refresh interval factor, using default.\n");
+		app_res.refresh_fac = DEF_REFRESH_FAC;
+	}
+	
 	db_init(&app_inst.type_db);
 	load_db(); 
 	
@@ -385,6 +397,13 @@ int main(int argc, char **argv)
 
 	set_status_text(NULL);
 	map_shell_unpos(app_inst.wshell);
+	
+	/* we want to track list's visibility and shell's
+	 * map/unmap events to set refresh intensity */
+	XtAddEventHandler(app_inst.wlist, VisibilityChangeMask,
+		False, visibility_event_cb, NULL);
+	XtAddEventHandler(app_inst.wshell, SubstructureNotifyMask,
+		False, visibility_event_cb, NULL);
 	
 	set_location(open_spec, True);
 	XtAppMainLoop(app_inst.context);
@@ -748,6 +767,34 @@ static void xt_sigchld_handler(XtPointer p, XtSignalId *id)
 	force_update();
 }
 
+/* 
+ * Visibility event handler for the list and MapUnmap for the shell window.
+ * Sets directory refresh rate depending on window visibility.
+ */
+static void visibility_event_cb(Widget w,
+	XtPointer p, XEvent *e, Boolean *cont)
+{
+	static Boolean last_state = False; /* always start with visible */
+	Boolean hidden = True;
+	
+	if(e->type == VisibilityNotify) {
+		hidden = (e->xvisibility.state ==
+			VisibilityFullyObscured) ? True : False;
+	} else if(e->type == MapNotify) {
+		hidden = False;
+	} else if(e->type == UnmapNotify) {
+		hidden = True;
+	} else return;
+	
+	if(last_state != hidden) {
+		set_read_proc_refresh(hidden);
+		last_state = hidden;
+	}
+}
+
+/*
+ * scandir filter procedure used in load_db
+ */
 static int db_dir_filter(const struct dirent *e)
 {
 	size_t name_len = strlen(e->d_name);

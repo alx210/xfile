@@ -84,6 +84,10 @@ If True, the path field will be shown in the main window. Defaults to True.
 Specifies the interval in seconds at which xfile should check for changes
 within the current directory. Default is 3 seconds.
 .TP
+\fBrefreshFactor\fP \fIInteger\fP
+Specifies the factor \fBrefreshInterval\fP gets multiplied by when the xfile
+window is obscured or iconified. Must be 1 or larger. Default is 4.
+.TP
 \fBstatusField\fP \fIBoolean\fP
 If True, the status field will be displayed in the main window.
 Defaults to True.

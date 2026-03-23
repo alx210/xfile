@@ -31,6 +31,7 @@
 
 /* Default update polling interval */
 #define DEF_REFRESH_INT 4
+#define DEF_REFRESH_FAC 4
 
 /* Default history limit */
 #define DEF_HISTORY_MAX 8
