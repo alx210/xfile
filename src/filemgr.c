@@ -76,6 +76,7 @@ struct msg_data {
 struct watch_rec {
 	char *name;
 	time_t mtime;
+	time_t ctime;
 	Boolean is_mpoint;
 	dev_t device;
 	Boolean touched;
@@ -758,6 +759,7 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 		}
 		file_list[nfiles].name = strdup(ent->d_name);
 		file_list[nfiles].mtime = st.st_mtime;
+		file_list[nfiles].ctime = st.st_ctime;
 		file_list[nfiles].device = st.st_dev;
 		file_list[nfiles].touched = False;
 		
@@ -903,6 +905,7 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 				}
 				file_list[nfiles].name = strdup(ent->d_name);
 				file_list[nfiles].mtime = st.st_mtime;
+				file_list[nfiles].ctime = st.st_ctime;
 				file_list[nfiles].touched = True;
 				
 				/* is it a mount point ? */
@@ -933,10 +936,12 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 				msg.size_total = size_total;
 			
 			} else if( (file_list[i].mtime != st.st_mtime) ||
+				(file_list[i].ctime != st.st_ctime) ||
 				(S_ISDIR(st.st_mode) && (file_list[i].device != st.st_dev)) ) {
 				dbg_trace("update: \'%s\' was changed\n", ent->d_name);
 				/* file was modified */
 				file_list[i].mtime = st.st_mtime;
+				file_list[i].ctime = st.st_ctime;
 				if(file_list[i].device != st.st_dev) {
 					dev_changed = True;
 					file_list[i].device = st.st_dev;
