@@ -42,4 +42,12 @@ char* get_working_dir(void);
 /* Returns 1 if path (must be fqn) appears to be mounted */
 int path_mounted(const char *path);
 
+/* Same as read(2), except it will resume reading if interrupted
+ * until all requested data is read, or an error occurs */
+ssize_t readn(int fd, void *pbuf, size_t len);
+
+/* Same as write(2), except it will resume writing if interrupted
+ * until all data is written, or an error occurs */
+ssize_t writen(int fd, const void *pbuf, size_t len);
+
 #endif /* FSUTIL_H */
