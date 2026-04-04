@@ -29,6 +29,7 @@ struct app_resources {
 	Boolean reverse_order;
 	Boolean filter_dirs;
 	Boolean user_mounts;
+	Boolean force_sync;
 	String sort_by;
 	String filter;
 	String def_path;

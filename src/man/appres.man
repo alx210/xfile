@@ -66,6 +66,12 @@ on success. If it returns non\-zero, anything it prints to \fBstderr\fP will
 be captured and displayed in a message box.
 Default value is "mount".
 .TP
+\fBsyncOnCopy\fP \fIBoolean\fP
+Specifies whether XFile should request the disk cache to be flushed when copying
+files. In general, this should ensure that all data is actually written to disk
+when XFile finishes copying it, but is system implementation dependent, see
+also \fBsync(1)\fP. The default value of \fBFalse\fP leaves it to the system.
+.TP
 \fBunmountCommand\fP \fIString\fP
 Specifies the default command to unmount mount\-points.
 It is expected to take one argument (the mount point path), and return zero

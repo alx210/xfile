@@ -191,6 +191,10 @@ static char* wp_error_string(const char *verb, const char *src_name,
 static Boolean wp_check_same(const char *csrc, const char *cdest);
 static void wp_sigpipe_handler(int);
 
+#if defined(__FreeBSD__) && (__FreeBSD_version < 1200000)
+#define fdatasync fsync
+#endif
+
 /*
  * Allocates, initializes and inserts an fsproc_data struct
  * into the fs_procs list. Returns NULL on error.
@@ -1511,6 +1515,9 @@ static int wp_copy_file(struct wp_data *wpd,
 		size_total += (size_t)rw;
 
 		if(size_total >= wpd->one_percent_size) {
+
+			if(app_res.force_sync) fdatasync(fout);
+
 			wp_post_prog(wpd, (int) (0.5 + wpd->percent_total +
 				(size_total / wpd->one_percent_size)) );
 		}
@@ -1521,8 +1528,6 @@ static int wp_copy_file(struct wp_data *wpd,
 			res = errno;
 			break;
 		}
-		
-
 	}
 
 	if(!res && rest){
@@ -1563,6 +1568,8 @@ static int wp_copy_file(struct wp_data *wpd,
 			NULL, strerror(res)) );
 		if(reply == FB_SKIP_IGNORE_ALL) wpd->ignore_write_err = True;
 	}
+
+	if(app_res.force_sync) fsync(fout);
 
 	close(fout);
 	

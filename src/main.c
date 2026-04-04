@@ -223,7 +223,13 @@ int main(int argc, char **argv)
 		XtRString, sizeof(String),
 		XtOffsetOf(struct app_resources, dup_suffix),
 		XtRImmediate,(XtPointer)DEF_DUP_SUFFIX
-	}
+	},
+	{
+		"syncOnCopy", "SyncOnCopy",
+		XmRBoolean, sizeof(Boolean),
+		XtOffsetOf(struct app_resources, force_sync),
+		XmRImmediate,(XtPointer)False
+	}	
 	};
 
 	XrmOptionDescRec xrdb_options[] = {
