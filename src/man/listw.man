@@ -137,6 +137,14 @@ Shift<Key>osfDown:	MoveCursor(Down, Extend)
 Shift<Key>osfBeginLine:	MoveCursor(Begin, Extend)
 Shift<Key>osfEndLine:	MoveCursor(End, Extend)
 .fi
+.IP "LookUpNext()"
+Only while incremental search is active, locates the next matching item.
+Default binding:
+
+.nf
+.ta 16n
+Ctrl<Key>n: LookupNext()
+.fi
 .IP "PrimaryButton(Down|Up, [Extend])"
 Primary mouse button handler. Focuses (Down) and selects (Up) the item under
 the pointer, adds it to existing selection if \fBExtend\fP is specified.
@@ -156,9 +164,16 @@ Primary mouse button motion handler. Activates the rectangle selection mode.
 Default binding:
 
 .nf
+.ta 16m
 <Btn1Motion>:	PrimaryButtonMotion()
 .fi
+.IP "ResetLookUp()"
+Resets the incremental search. Default binding:
+
+.nf
 .ta 16m
+<Key>osfCancel: ResetLookUp()
+.fi
 .IP "SecondaryButton()"
 Displays the context menu. Default binding:
 

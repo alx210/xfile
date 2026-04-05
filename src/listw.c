@@ -93,6 +93,7 @@ static void primary_button(Widget, XEvent*, String*, Cardinal*);
 static void button_motion(Widget, XEvent*, String*, Cardinal*);
 static void move_cursor(Widget, XEvent*, String*, Cardinal*);
 static void lookup_input(Widget, XEvent*, String*, Cardinal*);
+static void lookup_next(Widget, XEvent*, String*, Cardinal*);
 static void reset_lookup(Widget, XEvent*, String*, Cardinal*);
 static void focus_in(Widget, XEvent*, String*, Cardinal*);
 static void focus_out(Widget, XEvent*, String*, Cardinal*);
@@ -345,35 +346,35 @@ static XtResource resources[] = {
 #undef RFO
 
 static char translations[] = {
-	"Shift<Btn1Down>: PrimaryButton(Down, Extend) \n"
-	"Shift<Btn1Up>: PrimaryButton(Up, Extend) \n"
-	"Ctrl<Btn1Down>: PrimaryButton(Down, Add) \n"
-	"Ctrl<Btn1Up>: PrimaryButton(Up, Add) \n"
+	"Shift<Btn1Down>: PrimaryButton(Down, Extend)\n"
+	"Shift<Btn1Up>: PrimaryButton(Up, Extend)\n"
+	"Ctrl<Btn1Down>: PrimaryButton(Down, Add)\n"
+	"Ctrl<Btn1Up>: PrimaryButton(Up, Add)\n"
 	
-	"Ctrl<Key>space: Select(Add) \n"
+	"Ctrl<Key>space: Select(Add)\n"
 
-	"Shift<Key>osfLeft: MoveCursor(Left, Extend) \n"
-	"Shift<Key>osfRight: MoveCursor(Right, Extend) \n"
-	"Shift<Key>osfUp: MoveCursor(Up, Extend) \n"
-	"Shift<Key>osfDown: MoveCursor(Down, Extend) \n"
-	"Shift<Key>osfBeginLine: MoveCursor(Begin, Extend) \n"
+	"Shift<Key>osfLeft: MoveCursor(Left, Extend)\n"
+	"Shift<Key>osfRight: MoveCursor(Right, Extend)\n"
+	"Shift<Key>osfUp: MoveCursor(Up, Extend)\n"
+	"Shift<Key>osfDown: MoveCursor(Down, Extend)\n"
+	"Shift<Key>osfBeginLine: MoveCursor(Begin, Extend)\n"
 	"Shift<Key>osfEndLine: MoveCursor(End, Extend) \n"
 
-	"Ctrl<Key>osfLeft: MoveCursor(Left) \n"
-	"Ctrl<Key>osfRight: MoveCursor(Right) \n"
+	"Ctrl<Key>osfLeft: MoveCursor(Left)\n"
+	"Ctrl<Key>osfRight: MoveCursor(Right)\n"
 	"Ctrl<Key>osfUp: MoveCursor(Up) \n"
-	"Ctrl<Key>osfDown: MoveCursor(Down) \n"
+	"Ctrl<Key>osfDown: MoveCursor(Down)\n"
 	"Ctrl<Key>osfBeginLine: MoveCursor(Begin) \n"
 	"Ctrl<Key>osfEndLine: MoveCursor(End) \n"
 	
-	"<Btn1Down>: PrimaryButton(Down) \n"
+	"<Btn1Down>: PrimaryButton(Down)\n"
 	"<Btn1Up>: PrimaryButton(Up) \n"
-	"<Btn1Motion>: PrimaryButtonMotion() \n"
+	"<Btn1Motion>: PrimaryButtonMotion()\n"
 	"<Btn3Down>: SecondaryButton() \n"
 
-	"<Key>Return: Select() Activate() \n"	
-	"<Key>osfActivate: Select() Activate() \n"
-	"<Key>space: Select(Toggle) \n"
+	"<Key>Return: Select() Activate()\n"	
+	"<Key>osfActivate: Select() Activate()\n"
+	"<Key>space: Select(Toggle)\n"
 	"<Key>osfLeft: MoveCursor(Left) Select()\n"
 	"<Key>osfRight: MoveCursor(Right) Select()\n"
 	"<Key>osfUp: MoveCursor(Up) Select()\n"
@@ -381,24 +382,25 @@ static char translations[] = {
 	"<Key>osfBeginLine: MoveCursor(Begin) Select()\n"
 	"<Key>osfEndLine: MoveCursor(End) Select()\n"
 	
-	"Shift<Key>osfPageUp: PageScroll(Left) \n"
-	"Shift<Key>osfPageDown: PageScroll(Right) \n"
-	"<Key>osfPageUp: PageScroll(Up) \n"
-	"<Key>osfPageDown: PageScroll(Down) \n"
-	"<Btn4Down>: Scroll(Up) \n"
-	"<Btn5Down>: Scroll(Down) \n"
-	"Shift<Btn4Down>: PageScroll(Up) \n"
-	"Shift<Btn5Down>: PageScroll(Down) \n"
-	"<Key>osfBackSpace: DirectoryUp() \n"
-	"<Key>osfDelete: Delete() \n"
+	"Shift<Key>osfPageUp: PageScroll(Left)\n"
+	"Shift<Key>osfPageDown: PageScroll(Right)\n"
+	"<Key>osfPageUp: PageScroll(Up)\n"
+	"<Key>osfPageDown: PageScroll(Down)\n"
+	"<Btn4Down>: Scroll(Up)\n"
+	"<Btn5Down>: Scroll(Down)\n"
+	"Shift<Btn4Down>: PageScroll(Up)\n"
+	"Shift<Btn5Down>: PageScroll(Down)\n"
+	"<Key>osfBackSpace: DirectoryUp()\n"
+	"<Key>osfDelete: Delete()\n"
 
-	"s ~m ~a <Key>Tab: PreviousTabGroup() \n"
-	"~m ~a <Key>Tab: NextTabGroup() \n"
+	"s ~m ~a <Key>Tab: PreviousTabGroup()\n"
+	"~m ~a <Key>Tab: NextTabGroup()\n"
 	
-	"<Key>osfCancel: ResetLookUp() \n"
-	"<KeyDown>: LookUpInput() \n"
+	"<Key>osfCancel: ResetLookUp()\n"
+	"Ctrl<Key>n: LookUpNext()\n"
+	"<KeyDown>: LookUpInput()\n"
 	
-	"<FocusIn>: FocusIn() \n"
+	"<FocusIn>: FocusIn()\n"
 	"<FocusOut>: FocusOut()"
 };
 
@@ -414,6 +416,7 @@ static XtActionsRec actions[] = {
 	{ "Delete", delete },
 	{ "LookUpInput", lookup_input },
 	{ "ResetLookUp", reset_lookup },
+	{ "LookUpNext", lookup_next },
 	{ "FocusIn", focus_in },
 	{ "FocusOut", focus_out },
 	{ "SecondaryButton", secondary_button },
@@ -2147,6 +2150,54 @@ static void lookup_input(Widget w, XEvent *evt,
 			XtWidgetToApplicationContext(w),
 			fl->lookup_time, lookup_timeout_cb, (XtPointer)w);
 	}
+}
+
+/*
+ * Finds the next match using the string collected in lookup_input
+ */
+static void lookup_next(Widget w, XEvent *evt,
+	String *params, Cardinal *nparams)
+{
+	struct file_list_part *fl = FL_PART(w);
+	unsigned int i;
+	size_t lookup_str_len;
+	
+	if((fl->num_items < 2) || (fl->sz_lookup[0] == '\0') ) {
+		if(!fl->silent)	XBell(XtDisplay(w), 100);
+		return;
+	}
+
+	lookup_str_len = wcslen(fl->sz_lookup);
+	i = get_cursor(w);
+	
+	if(++i == fl->num_items) {
+		if(!fl->silent) XBell(XtDisplay(w), 100);
+		return;
+	}
+
+	for( ; i < fl->num_items; i++) {
+		wchar_t wcs_title[LOOKUP_STR_MAX + 1];
+		if(mbstowcs(wcs_title, fl->items[i].name, LOOKUP_STR_MAX) == -1) {
+			if(!fl->silent) XBell(XtDisplay(w), 100);
+			return;
+		}
+
+		if(!wcsncmp(fl->sz_lookup, wcs_title, lookup_str_len)) {
+			scroll_into_view(w, i);
+			set_cursor(w, i);
+			select_at_cursor(w, False, True);
+			break;
+		}
+	}
+
+	if(i == fl->num_items && !fl->silent) {
+		XBell(XtDisplay(w), 100);
+		return;
+	}
+
+	fl->lookup_timeout = XtAppAddTimeOut(
+		XtWidgetToApplicationContext(w),
+		fl->lookup_time, lookup_timeout_cb, (XtPointer)w);
 }
 
 /* This is set in primary_button handler */
