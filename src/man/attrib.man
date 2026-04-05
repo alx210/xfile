@@ -1,0 +1,19 @@
+.SS Attributes Dialog
+The attributes dialog allows to view and modify selected file's attributes.
+.PP
+When a single file is selected, all fields and controls reflect attributes of
+the file at the time of invocation. Changing these and pressing the \fBApply\fP
+button will modify file's attributes accordingly.
+.PP
+When a single directory is selected, total size of files located within are
+shown, and additional options to set attributes recursively are available. The
+\fBRecursion Mode Mask\fP specifies which attributes from the mode matrix above
+should be applied to files and directories located in the currently selected
+directory (inactive will be left unchanged).
+.PP
+When multiple files and/or directories are selected, only the total size is
+displayed. Owner and group may be changed by specifying them in the field
+otherwise left empty. Mode may be changed by activating the \fBChange Mode\fP
+toggle switch, and setting the mode accordingly, the \fBMulti-Selection Mode
+Mask\fP specifies which attributes from the mode matrix above should be applied
+to selected files and directories.
