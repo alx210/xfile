@@ -1767,7 +1767,7 @@ static void initialize(Widget wreq, Widget wnew,
 	struct file_list_rec *fl = (struct file_list_rec*) wnew;
 	Arg args[10];
 	Cardinal n;
-	XtCallbackRec sb_callback[2] = {NULL};
+	XtCallbackRec sb_callback[2] = { { NULL, NULL } };
 	
 	/* Initial state */
 	fl->file_list.items = NULL;

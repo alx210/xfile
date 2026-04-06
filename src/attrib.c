@@ -394,7 +394,7 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 	Widget wcancel;
 	Widget wtop;
 	XmString xms;
-	XtCallbackRec cbr[2] = { NULL };
+	XtCallbackRec cbr[2] = { { NULL, NULL } };
 
 	n = 0;
 	xms = XmStringCreateLocalized(

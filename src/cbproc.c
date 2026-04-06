@@ -1029,7 +1029,7 @@ void sub_shell_destroy_cb(Widget w, XtPointer client, XtPointer call)
 int run_action(const char *file_name, const char *action_str,
 	const struct file_type_rec *db_rec)
 {
-	struct env_var_rec vars[4] = { NULL };
+	struct env_var_rec vars[4] = { { NULL, NULL } };
 	char *path;
 	char *exp_act;
 	char **argv;

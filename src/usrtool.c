@@ -82,7 +82,7 @@ unsigned int get_user_tools(struct user_tool_rec **p)
 void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 {
 	struct user_tool_rec *tool = (struct user_tool_rec*) closure;
-	struct env_var_rec vars[4] = { NULL }; /* last record must be NULLed */
+	struct env_var_rec vars[4] = { { NULL, NULL } };
 	char *exp_cmd;
 	char *path = get_working_dir();
 	char *token;
