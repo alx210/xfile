@@ -90,11 +90,13 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 	char *exp_names = NULL;
 	char **argv;
 	size_t argc;
-	int rv, i, n;
+	int rv, i, n, itmpl;
 	struct file_list_selection *cur_sel =
 			file_list_get_selection(app_inst.wlist);
 	
-	if((token = strstr(tool->command, "%u"))) {
+	/* see if we need to get a user supplied parameter */
+	if((token = strstr(tool->command, "%u")) ||
+		(token = strstr(tool->command, "%{u}")) ) {
 		if( (token != tool->command) ||
 			(( token[-1] != '%' ) && (token[-1] != '\\' ) ) ) {
 			user_param = input_string_dlg(app_inst.wshell, 
@@ -110,18 +112,20 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 		}
 	}
 	
+	/* substitute name, path and user param back, since we
+	 * expand them later in the parameter list */
 	n = 0;
 	vars[n].name = ENV_FNAME;
 	vars[n].value = "%n";
 	n++;
 	
 	vars[n].name = ENV_FPATH;
-	vars[n].value = path;
+	vars[n].value = "%{" ENV_FPATH "}";
 	n++;
 	
 	if(user_param) {
 		vars[n].name = ENV_UPARM;
-		vars[n].value = user_param;
+		vars[n].value = "%{" ENV_UPARM "}";
 		n++;
 	}
 	
@@ -131,6 +135,7 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 			"Error parsing command string:\n"
 			"%s\n%s.", tool->command, strerror(rv));
 		free(path);
+		if(user_param) free(user_param);
 		return;
 	}
 	
@@ -141,23 +146,52 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 			"Error parsing command string:\n"
 			"%s\n%s.", tool->command, strerror(rv));
 		free(path);
+		if(user_param) free(user_param);
 		return;
 	}
 	
-	/* if we've re-substituted %n earlier, find it so we can use the
-	 * arg's string as a template for pasting file names */
-	for(n = (-1), i = 0; i < argc; i++) {
+	/* expand variables we substituted back earlier */
+	for(itmpl = (-1), i = 0; i < argc; i++) {
+		char *exp_parm;
+		
+		/* We still can't expand %n, since we may have multiple file
+		 * names, get its index instead, so we can use the arg's
+		 * string as a template for pasting file names later.
+		 * Path and user supplied string are expanded normally. */
 		if( (token = strstr(argv[i], "%n")) ) {
 			token[1] = 's';
-			n = i;
-			break;
+			itmpl = i;
+		} else if( (token = strstr(argv[i], "%{" ENV_FPATH "}")) ) {
+			vars[0].name = ENV_FPATH;
+			vars[0].value = path;
+			vars[1].name = vars[1].value = NULL;
+			
+			rv = expand_env_vars(argv[i], vars, &exp_parm);
+			if(!rv) {
+				free(path);
+				path = exp_parm;
+				argv[i] = exp_parm;
+			}
+		} else if( user_param &&
+			(token = strstr(argv[i], "%{" ENV_UPARM "}")) ) {
+			
+			vars[0].name = ENV_UPARM;
+			vars[0].value = user_param;
+			vars[1].name = vars[1].value = NULL;
+			
+			rv = expand_env_vars(argv[i], vars, &exp_parm);
+			if(!rv) {
+				free(user_param);
+				user_param = exp_parm;
+				argv[i] = exp_parm;
+			}
 		}
 	}
 
 	/* if we've got file names, we want to allocate a new argument list,
 	 * and splice in file name arguments generated using the template string */
-	if((n >= 0) && cur_sel->count) {
-		char *tmpl = argv[n];
+	if((itmpl >= 0) && cur_sel->count) {
+		char *tmpl = argv[itmpl];
 		char **new_argv;
 		int new_argc = argc + cur_sel->count - 1;
 		size_t len;
@@ -171,6 +205,7 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 		exp_names = malloc(len);
 		new_argv = malloc(sizeof(char*) * new_argc);
 		if(!exp_names || !new_argv) {
+			if(user_param) free(user_param);
 			if(exp_names) free(exp_names);
 			if(new_argv) free(new_argv);
 			free(exp_cmd);
@@ -183,25 +218,25 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 		
 		/* copy original argv contents, leaving a gap for the
 		 * list of file names in the middle */
-		if(n) memcpy(new_argv, argv, sizeof(char*) * n);
-		if((argc - n) > 1) {
-			memcpy(new_argv + n + cur_sel->count,
-				argv + n + 1, sizeof(char*) * (argc - n - 1));
+		if(itmpl) memcpy(new_argv, argv, sizeof(char*) * itmpl);
+		if((argc - itmpl) > 1) {
+			memcpy(new_argv + itmpl + cur_sel->count,
+				argv + itmpl + 1, sizeof(char*) * (argc - itmpl - 1));
 		}
 
 		/* generate new file names using the template, and map
 		 * them into the argument list */
 		for(len = 0, i = 0; i < cur_sel->count; i++) {
 			sprintf(exp_names + len, tmpl, cur_sel->names[i]);
-			new_argv[n + i] = exp_names + len;
+			new_argv[itmpl + i] = exp_names + len;
 			len += strlen(tmpl) + strlen(cur_sel->names[i]) + 1;
 		}
 
 		free(argv);
 		argv = new_argv;
 		argc = new_argc;
-	} else if(n >= 0) {
-		argv[n] = "";
+	} else if(itmpl >= 0) {
+		argv[itmpl] = "";
 	}
 	
 	if(argc && strlen(argv[0])) {
@@ -221,6 +256,7 @@ void user_tool_cbproc(Widget w, XtPointer closure, XtPointer data)
 			"Command specified resolved to an empty string.");
 	}
 
+	if(user_param) free(user_param);
 	if(exp_names) free(exp_names);
 	free(exp_cmd);
 	free(argv);
