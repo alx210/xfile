@@ -150,7 +150,7 @@ char* mbs_make_displayable(const char *src)
 			id++;
 			is++;
 			continue;
-		} else if(ns == 1 && iscntrl(src[is])) {
+		} else if(ns == 1 && iscntrl((int)src[is])) {
 			dest[id] = ' ';
 		} else {
 			memcpy(dest + id, src + is, ns);

@@ -242,7 +242,7 @@ static char* token(char *p)
 	}
 	p = skip_ws(p);
 	t = p;
-	while(*p && !isspace(*p)) p++;
+	while(*p && !isspace((int)*p)) p++;
 	
 	if(p == t) {
 		lp = NULL;
@@ -256,6 +256,6 @@ static char* token(char *p)
 
 static char* skip_ws(const char *p)
 {
-	while(isspace(*p)) p++;
+	while(isspace((int)*p)) p++;
 	return (char*)p;
 }

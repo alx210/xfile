@@ -2255,7 +2255,7 @@ static char* wp_error_string(const char *verb, const char *csrc_name,
 	}
 	
 	/* Add a . to the end of the string if nothing there yet */
-	if(len && !ispunct(buffer[len - 1])) strcat(buffer, ".");
+	if(len && !ispunct((int)buffer[len - 1])) strcat(buffer, ".");
 	
 	free(sz_src);
 	free(sz_dest);

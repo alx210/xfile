@@ -939,7 +939,7 @@ void new_window_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	
 	path = input;
 	
-	while(isspace(*path)) path++;
+	while(isspace((int)*path)) path++;
 
 	if(*path == '\0') {
 		path = home;

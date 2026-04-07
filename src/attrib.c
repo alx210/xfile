@@ -538,7 +538,7 @@ static void create_attrib_dlg(Widget wparent, struct attrib_dlg_data *dlg_data)
 			};
 
 			sprintf(gad_name, "%s%s", usr_sz[j], mode_sz[i]);
-			gad_name[0] = tolower(gad_name[0]);
+			gad_name[0] = tolower((int)gad_name[0]);
 
 			n = 0;
 			xms = XmStringCreateLocalized((char*)mode_sz[i]);

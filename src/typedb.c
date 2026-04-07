@@ -105,7 +105,7 @@ static void chop_blanks(char *p)
 	char *pb = p;
 	
 	while(p[1] != '\0') p++;
-	while(isspace(*p)){
+	while(isspace((int)*p)){
 		*p = '\0';
 		if(p == pb) break;
 		p--;
@@ -115,7 +115,7 @@ static void chop_blanks(char *p)
 /* Skip left hand side blanks */
 static char* skip_blanks(char *p)
 {
-	while(isspace(*p)) p++;
+	while(isspace((int)*p)) p++;
 	return p;
 }
 
@@ -124,7 +124,7 @@ static char* get_tail(char *sz)
 {
 	char *p = sz;
 	while(p[1] != '\0') p++;
-	while(isspace(*p) && p != sz) p--;
+	while(isspace((int)*p) && p != sz) p--;
 	return p;
 }
 
@@ -200,7 +200,7 @@ static int parse_buffer(struct parser_state *ps)
 			
 			if(rec == RID_ICON || rec == RID_MIME){
 				/* inline only */
-				while(*p && !isspace(*p)) p++;
+				while(*p && !isspace((int)*p)) p++;
 				p = skip_blanks(p);
 				if(*p == '\0'){
 					set_parse_error(ps, "Value expected");
@@ -211,7 +211,7 @@ static int parse_buffer(struct parser_state *ps)
 				if(status == DB_SYNTAX) set_parse_error(ps, "Syntax error");	
 			}else{
 				/* inline/multi line values */
-				while(*p && !isspace(*p) && *p != '{') p++;
+				while(*p && !isspace((int)*p) && *p != '{') p++;
 				p = skip_blanks(p);
 				if(*p == '{'){
 					ps->cur_rec = rec;
@@ -287,7 +287,7 @@ static int parse_content_pat(char *str, struct content_pattern_rec *rec)
 	char *p = str;
 	size_t len, i;
 	
-	while(!isspace(*p) && *p) p++;
+	while(!isspace((int)*p) && *p) p++;
 	if(*p == '\0') return DB_SYNTAX;
 
 	*p = '\0';	p++;
@@ -311,7 +311,7 @@ static int parse_content_pat(char *str, struct content_pattern_rec *rec)
 			bs[1] = p[++i];
 			bs[2] = '\0';
 			
-			if( !isalnum(bs[0]) || !isalnum(bs[1]) ){
+			if( !isalnum((int)bs[0]) || !isalnum((int)bs[1]) ){
 				free(pdata);
 				return DB_SYNTAX;
 			}
@@ -713,7 +713,7 @@ static int probe_contents(const char *fname)
 		return DB_TEXT;
 	} else if(nc < 4) {
 		for(n = 0; n < nc; n++) {
-			if(!isprint(buf[n]) && !isspace(buf[n]))
+			if(!isprint((int)buf[n]) && !isspace((int)buf[n]))
 				return DB_BINARY;
 		}
 		return DB_TEXT;				

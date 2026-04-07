@@ -694,7 +694,7 @@ static int compare_names(const char *a, const char *b)
 	int res = 0;
 
 	while(*a && *b) {
-		if(isdigit(*a) && isdigit(*b)) {
+		if(isdigit((int)*a) && isdigit((int)*b)) {
 			const char *sp_a = a;
 			const char *sp_b = b;
 			unsigned int ai = 0;
@@ -702,8 +702,8 @@ static int compare_names(const char *a, const char *b)
 			unsigned int fa = 1;
 			const char *p;
 
-			while(*sp_a && isdigit(*sp_a)) sp_a++;
-			while(*sp_b && isdigit(*sp_b)) sp_b++;
+			while(*sp_a && isdigit((int)*sp_a)) sp_a++;
+			while(*sp_b && isdigit((int)*sp_b)) sp_b++;
 
 			p = sp_a;
 
@@ -2118,7 +2118,7 @@ static void lookup_input(Widget w, XEvent *evt,
 		return;
 	}
 
-	if(iswprint((wchar_t)keysym)) {
+	if(iswprint((wint_t)keysym)) {
 		unsigned int i;
 
 		if(fl->lookup_timeout != None) {
