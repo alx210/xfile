@@ -1,6 +1,22 @@
 .SH FILE TYPE DATABASE
 .PP
-A file type database is a plain text file, comprised of one or more records.
+A file type database is a plain text file, comprised of one or more records
+formatted as follows:
+.nf
+
+# Comment
+
+Descriptive File Type Name
+{
+   FieldName Value
+   FieldName
+   {
+      Value
+      ...
+   }
+   ...
+}
+.fi
 .PP
 A record starts with a type name string, consisting of alpha-numeric characters
 and whitespace, followed by a bracketed scope, that is, an opening bracket { on
