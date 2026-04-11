@@ -877,10 +877,13 @@ void show_path_field_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	XmToggleButtonCallbackStruct *cbs =
 		(XmToggleButtonCallbackStruct*) pcall;
 
-	if(cbs->set)
+	if(cbs->set) {
+		XtManageChild(app_inst.wpath);
 		XtManageChild(app_inst.wpath_frm);
-	else
+	} else {
+		XtUnmanageChild(app_inst.wpath);
 		XtUnmanageChild(app_inst.wpath_frm);
+	}
 }
 
 void show_status_field_cb(Widget w, XtPointer pclient, XtPointer pcall)
@@ -888,10 +891,13 @@ void show_status_field_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	XmToggleButtonCallbackStruct *cbs =
 		(XmToggleButtonCallbackStruct*) pcall;
 
-	if(cbs->set)
+	if(cbs->set) {
+		XtManageChild(app_inst.wstatus);
 		XtManageChild(app_inst.wstatus_frm);
-	else
+	} else {
 		XtUnmanageChild(app_inst.wstatus_frm);
+		XtUnmanageChild(app_inst.wstatus_frm);
+	}
 
 }
 
