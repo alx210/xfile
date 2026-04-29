@@ -132,14 +132,8 @@ HTML {
 	match_name {
 		*.htm
 		*.html
-		*.xml
-		*.css
-		*.js
 		*.HTM
 		*.HTML
-		*.XML
-		*.CSS
-		*.JS
 	}
 	action &View: %webBrowser %n
 	action &Edit: %textEditor %n
