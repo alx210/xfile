@@ -375,6 +375,7 @@ static int spawn_proc(struct mount_proc_data *mp,
 	const char *cmd, const char *mnt_path)
 {
 	int pipe_fd[2];
+	sigset_t sigmask;
 	
 	if(pipe(pipe_fd)) return errno;
 
@@ -387,7 +388,14 @@ static int spawn_proc(struct mount_proc_data *mp,
 	mp->xt_sigchld_id = XtAppAddSignal(app_inst.context,
 		xt_sigchld_handler, (XtPointer)mp);
 
+	sigemptyset(&sigmask);
+	sigaddset(&sigmask, SIGCHLD);
+	sigprocmask(SIG_BLOCK, &sigmask, NULL);
+
 	mp->cmd_pid = fork();
+	
+	sigprocmask(SIG_UNBLOCK, &sigmask, NULL);
+	
 	if(mp->cmd_pid == (-1)) {
 		close(pipe_fd[0]);
 		close(pipe_fd[1]);

@@ -746,7 +746,12 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 	int reply;
 	char *cdest = NULL;
 	const char *cwd;
+	sigset_t sigmask;
 	struct timespec proc_time[2];
+
+	sigemptyset(&sigmask);
+	sigaddset(&sigmask, SIGCHLD);
+	sigprocmask(SIG_BLOCK, &sigmask, NULL);
 
 	pid = fork();
 	if(pid == -1) return errno;
@@ -761,6 +766,9 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 		close(d->reply_in_fd);
 		d->msg_out_fd = -1;
 		d->reply_in_fd = -1;
+		
+		sigprocmask(SIG_UNBLOCK, &sigmask, NULL);
+		
 		return 0;
 	}
 

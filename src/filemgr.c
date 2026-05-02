@@ -409,6 +409,7 @@ static int read_directory(void)
 {
 	pid_t pid;
 	pid_t parent_pid = getpid();
+	sigset_t sigmask;
 	
 	set_status_text("Reading %s...", app_inst.location);
 
@@ -425,7 +426,11 @@ static int read_directory(void)
 	
 	/* reset reader proc data */
 	rp_data.init_done = False;
-
+	
+	sigemptyset(&sigmask);
+	sigaddset(&sigmask, SIGCHLD);
+	sigprocmask(SIG_BLOCK, &sigmask, NULL);
+	
 	pid = fork();
 	if(pid == (-1)) return errno;
 	
@@ -440,6 +445,8 @@ static int read_directory(void)
 	}
 
 	rp_data.pid = pid;
+
+	sigprocmask(SIG_UNBLOCK, &sigmask, NULL);
 
 	xt_update_iid = XtAppAddTimeOut(app_inst.context,
 		STATUS_UPDATE_INT, status_timeout_cb, NULL);
