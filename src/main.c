@@ -341,8 +341,7 @@ int main(int argc, char **argv)
 	
 	/* Set some initial instance options from app resources */
 	
-	/* The filter string must be malloc'd (see set_filter_cb() in cbproc.c ) */
-	if(app_res.filter) app_inst.filter = strdup(app_res.filter);
+	if(app_res.filter) set_filter(app_res.filter);
 	
 	/* NOTE: The matching stuff below should really be done with XtRepTypes,
 	 *       but there is not enough of it to be worth the trouble yet */
@@ -981,6 +980,81 @@ static void xfile_open(int argc, char **argv)
 		stderr_msg("Exiting with error status due to previous errors.\n");
 	
 	exit(errors ? EXIT_FAILURE : EXIT_SUCCESS);
+}
+
+/* Parses a filter pattern and sets app_inst.filter_pat/neg */
+void set_filter(const char *psz)
+{
+	char *src;
+	char **pat = NULL;
+	char *s;
+	char *p;
+	unsigned int l;
+	unsigned int i;
+	
+	if(app_inst.filter) {
+		free(app_inst.filter);
+		app_inst.filter = NULL;
+	}
+	
+	if(app_inst.filter_pat) {
+		for(i = 0; app_inst.filter_pat[i]; i++) {
+			free(app_inst.filter_pat[i]);
+		}
+		free(app_inst.filter_pat);
+		app_inst.filter_pat = NULL;
+	}
+
+	app_inst.filter_neg = False;
+	
+	if(!psz) return;
+	
+	src = strdup(psz);
+
+	s = p = src;
+	l = 0;
+	i = 0;
+	
+	if(*p == '!') {
+		if(p[1] != '!') app_inst.filter_neg = True;
+		memcpy(p, p + 1, strlen(p));
+	}
+
+	for( ; ; ) {
+		if(*p == '\0' || *p == '|') {
+			
+			if(*p == '|' && p[1] == '|') {
+				memcpy(p, p + 1, strlen(p));
+				p++;
+				continue;
+			}
+			
+			if( (l = p - s) ) {
+				pat = realloc(pat, (i + 2) * sizeof(char*));
+
+				pat[i] = malloc(l + 1);
+				memcpy(pat[i], s, l);
+				pat[i][l] = '\0';
+
+				i++;
+			}
+			if(*p == '\0') break;
+
+			l = 0;
+			s = p + 1;
+		}
+		p++;
+	}
+	
+	free(src);
+	
+	if(i) {
+		pat[i] = NULL;
+		app_inst.filter_pat = pat;
+
+		/* retain the actual pattern for the filter dialog */
+		app_inst.filter = strdup(psz);
+	}
 }
 
 /* Sets the status bar text from printf(3) arguments */

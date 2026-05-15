@@ -6,8 +6,8 @@
 #define VERSION_H
 
 #define APP_VER 1
-#define APP_REV 1
-#define APP_UPD	1
+#define APP_REV 2
+#define APP_UPD	0
 #ifdef DEBUG
 #define APP_BLD "Debug; Built " __DATE__
 #else

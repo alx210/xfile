@@ -89,6 +89,8 @@ struct app_inst_data {
 	int icon_size_id;
 	int confirm_rm;
 	char *filter;
+	char **filter_pat;
+	Boolean filter_neg;
 
 	/* number of currently active sub-shells */
 	unsigned int num_sub_shells;
@@ -117,6 +119,9 @@ void fork_xfile(const char *path, Boolean inherit_ui);
 
 /* Sets GUI sensitivity according to UIF* flags */
 void set_ui_sensitivity(short);
+
+/* Parses a filter pattern and sets app_inst.filter_pat/neg on success */
+void set_filter(const char*);
 
 /* UI sensitivity flags */
 #define UIF_DIR 0x0001		/* displaying a directory */

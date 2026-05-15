@@ -84,6 +84,7 @@ static void select_at_cursor(Widget, Boolean, Boolean);
 static void set_cursor(Widget, unsigned int);
 static unsigned int get_cursor(Widget);
 static void default_action_handler(Widget, unsigned int);
+static char** parse_pattern(const char*, Boolean*);
 static void sel_change_handler(Widget, Boolean);
 static void dblclk_timeout_cb(XtPointer, XtIntervalId*);
 static void autoscrl_timeout_cb(XtPointer, XtIntervalId*);
@@ -2736,6 +2737,68 @@ static void sel_change_handler(Widget w, Boolean initial)
 }
 
 /*
+ * Parses a file name pattern, returns a NULL terminated array of strings,
+ * and sets the 'negate' flag. Returns NULL if nothing was extracted.
+ * The caller must free() each item in the array and the array itself.
+ */
+static char** parse_pattern(const char *psz, Boolean *negate)
+{
+	char *src;
+	char **pat = NULL;
+	char *s;
+	char *p;
+	unsigned int l;
+	unsigned int i;
+
+	*negate = False;
+	
+	if(!psz) return NULL;
+
+	src = strdup(psz);
+
+	s = p = src;
+	l = 0;
+	i = 0;
+	
+	if(*p == '!') {
+		if(p[1] != '!') *negate = True;
+		memcpy(p, p + 1, strlen(p));
+	}
+
+	for( ; ; ) {
+		if(*p == '\0' || *p == '|') {
+			
+			if(*p == '|' && p[1] == '|') {
+				memcpy(p, p + 1, strlen(p));
+				p++;
+				continue;
+			}
+			
+			if( (l = p - s) ) {
+				pat = realloc(pat, (i + 2) * sizeof(char*));
+
+				pat[i] = malloc(l + 1);
+				memcpy(pat[i], s, l);
+				pat[i][l] = '\0';
+
+				i++;
+			}
+			if(*p == '\0') break;
+
+			l = 0;
+			s = p + 1;
+		}
+		p++;
+	}
+
+	free(src);
+
+	if(i) pat[i] = NULL;
+
+	return pat;
+}
+
+/*
  * Switches selection highlighting, redraws selected items
  */
 void file_list_highlight_selection(Widget w, Boolean on)
@@ -2961,17 +3024,33 @@ int file_list_select_name(Widget w, const char *name, Boolean add)
 	return 0;
 }
 
-int file_list_select_pattern(Widget w, const char *pattern, Boolean add)
+int file_list_select_pattern(Widget w, const char *psz, Boolean add)
 {
 	struct file_list_part *fl = FL_PART(w);
 	Boolean sel_changed = False;
-	Boolean matched = False;
+	Boolean matched_any = False;
+	Boolean negate = False;
 	unsigned int i = 0;
+	char **pattern;
+	
+	pattern = parse_pattern(psz, &negate);
+	if(!pattern) return ENOENT;
 	
 	for(i = 0; i < fl->num_items; i++) {
-		if(!fnmatch(pattern, fl->items[i].name, 0)) {
+		int pi;
+		Boolean matched = False;
+		
+		for(pi = 0; pattern[pi]; pi++) {
+			if(!fnmatch(pattern[pi], fl->items[i].name, 0)) {
+				matched = True;
+				break;
+			}
+		}
+		if(negate) matched = matched ? False : True;
+		
+		if(matched) {
 			fl->items[i].selected = True;
-			matched = True;
+			matched_any = True;
 			sel_changed = True;
 		} else {
 			if(!add && fl->items[i].selected) {
@@ -2981,12 +3060,16 @@ int file_list_select_pattern(Widget w, const char *pattern, Boolean add)
 		}
 	}
 	
+	for(i = 0; pattern[i]; i++) free(pattern[i]);
+	
+	free(pattern);
+	
 	if(sel_changed) {
 		redraw_all(w);
 		sel_change_handler(w, True);
 	}
 	
-	return matched ? 0 : ENOENT;
+	return matched_any ? 0 : ENOENT;
 }
 
 

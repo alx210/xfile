@@ -903,26 +903,16 @@ void show_status_field_cb(Widget w, XtPointer pclient, XtPointer pcall)
 
 void set_filter_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
+	Boolean need_refresh = app_inst.filter ? True : False;
 	char *input;
 
 	input = input_string_dlg(app_inst.wshell, "Filter",
-		"Specify a glob pattern to filter out matching names.\n"
-		"Prefix the pattern with the ! character to negate it.\n"
-		"Leave the field empty or choose Cancel to dismiss.",
-		app_inst.filter, "filter", ISF_PRESELECT);
+		"Specify a pattern", app_inst.filter, "filter", ISF_PRESELECT);
 
-	if(!input) {
-		if(app_inst.filter) {
-			free(app_inst.filter);
-			app_inst.filter = NULL;
-			reread();
-		}
-		return;
-	}
+	if(input) need_refresh = True;
 	
-	if(app_inst.filter) free(app_inst.filter);
-	app_inst.filter = input;
-	reread();
+	set_filter(input);
+	if(need_refresh) reread();
 }
 
 void reread_cb(Widget w, XtPointer pclient, XtPointer pcall)

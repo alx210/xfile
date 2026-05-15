@@ -665,27 +665,20 @@ static void read_error_msg(const char *path, const char *estr, Boolean blocking)
  */
 static Boolean filter(const char *file_name, mode_t mode)
 {
+	int i;
+	
 	if(file_name[0] == '.' && !app_res.show_all)
 		return False;
 
 	if(S_ISDIR(mode) && !app_res.filter_dirs)
 		return True;
 
-	if(app_inst.filter) {
-		char *filter = app_inst.filter;
-		Boolean invert = False;
-		Boolean match;
-		
-		if(*filter == '!') {
-			filter++;
-			invert = True;
+	for(i = 0; app_inst.filter_pat && app_inst.filter_pat[i]; i++) {
+		if(fnmatch(app_inst.filter_pat[i], file_name, 0) == 0) {
+			return app_inst.filter_neg ? True : False;
 		}
-		match = (fnmatch(filter, file_name, 0) == 0) ? False : True;
-		if(invert) match = match ? False : True;
-		
-		return match;
 	}
-	return True;
+	return app_inst.filter_neg ? False : True;
 }
 
 

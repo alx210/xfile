@@ -31,6 +31,14 @@ be specified (see mountCommand, unmountCommand), or disabled (see userMounts).
 XFile may be configured to utilize a user mount daemon that manages a "media"
 directory (see mediaDirectory, mediaMountCommand, mediaUnmountCommand X
 resources).
+.SS Filter and Select Pattern Dialogs
+The Select Pattern dialog may be used to select file names matching
+a \fIglob\fP pattern. The filter dialog allows to filter displayed files
+matching a \fIglob\fP pattern (see also the \fB-f\fP command line option).
+.PP
+Prefix the whole pattern with the \fB!\fP character to negate. Specify
+multiple patterns by separating them with the \fB|\fP character.
+Double ! and | characters to remove their special meaning.
 .SS File/Context Menu
 Actions defined in the file type database appear first in File/Context menus,
 in the order they were defined. First action in the list is the default -
