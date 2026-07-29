@@ -216,6 +216,7 @@ struct file_list_part {
 	short view_mode;
 	Pixel select_pixel;
 	unsigned int fg_threshold;
+	int visibility;
 };
 
 struct file_list_rec {

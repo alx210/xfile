@@ -103,6 +103,7 @@ static void pg_scroll(Widget, XEvent*, String*, Cardinal*);
 static void secondary_button(Widget, XEvent*, String*, Cardinal*);
 static void dir_up(Widget, XEvent*, String*, Cardinal*);
 static void delete(Widget, XEvent*, String*, Cardinal*);
+static void visibility_change_cb(Widget, XtPointer, XEvent*, Boolean*);
 
 #define WARNING(w,s) XtAppWarning(XtWidgetToApplicationContext(w), s)
 
@@ -466,7 +467,7 @@ static struct file_list_class_rec fileListWidgetClassRec = {
 	.core.compress_motion = True,
 	.core.compress_exposure = True,
 	.core.compress_enterleave = True,
-	.core.visible_interest = True,
+	.core.visible_interest = False,
 	.core.destroy = destroy,
 	.core.resize = resize,
 	.core.expose = expose,
@@ -1139,9 +1140,10 @@ static void hscroll_cb(Widget wsb, XtPointer ud, XtPointer cd)
 	
 	fl->file_list.xoff = cbs->value;
 	
-	if(fl->core.background_pixmap != XmUNSPECIFIED_PIXMAP) {
-		/* if a background pixmap is set, we cannot use optimized scrolling
-		 * code below, since it'd cause staggering pattern  */
+	if(fl->core.background_pixmap != XmUNSPECIFIED_PIXMAP
+		|| fl->file_list.visibility != VisibilityUnobscured) {
+		/* if a background pixmap is set, or the widget is partially
+		 * obscured we cannot use the optimized scrolling code below */
 		redraw_all(w);
 		return;
 	}
@@ -1179,9 +1181,10 @@ static void vscroll_cb(Widget wsb, XtPointer ud, XtPointer cd)
 		return;
 	}
 
-	if(fl->core.background_pixmap != XmUNSPECIFIED_PIXMAP) {
-		/* if a background pixmap is set, we cannot use optimized scrolling
-		 * code below, since it'd cause staggering pattern  */
+	if(fl->core.background_pixmap != XmUNSPECIFIED_PIXMAP
+		|| fl->file_list.visibility != VisibilityUnobscured) {
+		/* if a background pixmap is set, or the widget is partially
+		 * obscured we cannot use the optimized scrolling code below */
 		redraw_all(w);
 		return;
 	}
@@ -1790,6 +1793,7 @@ static void initialize(Widget wreq, Widget wnew,
 	fl->file_list.in_sb_update = False;
 	fl->file_list.ptr_last_valid = False;
 	fl->file_list.highlight_sel = False;
+	fl->file_list.visibility = VisibilityUnobscured;
 	memset(&fl->file_list.cur_sel, 0,
 		sizeof(struct file_list_selection));
 
@@ -1845,6 +1849,9 @@ static void initialize(Widget wreq, Widget wnew,
 		CORE_WIDTH(wnew) = DEFAULT_WIDTH;
 	if(CORE_HEIGHT(wreq) == 0)
 		CORE_HEIGHT(wnew) = DEFAULT_HEIGHT;
+	
+	XtAddEventHandler(wnew, VisibilityChangeMask,
+		False, visibility_change_cb, NULL);
 }
 
 static void init_gcs(Widget w)
@@ -2802,6 +2809,22 @@ static char** parse_pattern(const char *psz, Boolean *negate)
 
 	return pat;
 }
+
+/*
+ * XVisibility notification event handler. We need this, because
+ * visible_interest can't tell us whether we're partially obscured.
+ */
+static void visibility_change_cb(Widget w,
+	XtPointer cd, XEvent *evt, Boolean *cont)
+{
+	struct file_list_part *fl = FL_PART(w);
+	
+	if(evt->type == VisibilityNotify)
+		fl->visibility = evt->xvisibility.state;
+
+	*cont = True;
+}
+
 
 /*
  * Switches selection highlighting, redraws selected items
