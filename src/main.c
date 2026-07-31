@@ -431,7 +431,9 @@ static void create_main_window(void)
 	XtCallbackRec delete_cbr[] = {
 		{ delete_cb, NULL }, { NULL, NULL }
 	};
-
+	XtCallbackRec mbpaste_cbr[] = {
+		{  mbpaste_cb, NULL }, { NULL, NULL }
+	};
 	
 	app_inst.wmain = XmCreateMainWindow(app_inst.wshell, "main", NULL, 0);
 	
@@ -475,6 +477,7 @@ static void create_main_window(void)
 	XtSetArg(args[n], XfNselectionChangeCallback, sel_change_cbr); n++;
 	XtSetArg(args[n], XfNdirectoryUpCallback, dir_up_cbr); n++;
 	XtSetArg(args[n], XfNdeleteCallback, delete_cbr); n++;
+	XtSetArg(args[n], XfNpasteCallback, mbpaste_cbr); n++;
 	XtSetArg(args[n], XfNhorizontalScrollBar, whscrl); n++;
 	XtSetArg(args[n], XfNverticalScrollBar, wvscrl); n++;
 	if(app_res.sort_by) {

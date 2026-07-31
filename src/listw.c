@@ -103,6 +103,7 @@ static void pg_scroll(Widget, XEvent*, String*, Cardinal*);
 static void secondary_button(Widget, XEvent*, String*, Cardinal*);
 static void dir_up(Widget, XEvent*, String*, Cardinal*);
 static void delete(Widget, XEvent*, String*, Cardinal*);
+static void paste(Widget, XEvent*, String*, Cardinal*);
 static void visibility_change_cb(Widget, XtPointer, XEvent*, Boolean*);
 
 #define WARNING(w,s) XtAppWarning(XtWidgetToApplicationContext(w), s)
@@ -152,6 +153,15 @@ static XtResource resources[] = {
 		XmRCallback,
 		sizeof(XtPointer),
 		RFO(file_list.delete_cb),
+		XmRCallback,
+		NULL	
+	},
+	{
+		XfNpasteCallback,
+		XfCPasteCallback,
+		XmRCallback,
+		sizeof(XtPointer),
+		RFO(file_list.paste_cb),
 		XmRCallback,
 		NULL	
 	},
@@ -352,7 +362,7 @@ static char translations[] = {
 	"Shift<Btn1Up>: PrimaryButton(Up, Extend)\n"
 	"Ctrl<Btn1Down>: PrimaryButton(Down, Add)\n"
 	"Ctrl<Btn1Up>: PrimaryButton(Up, Add)\n"
-	
+
 	"Ctrl<Key>space: Select(Add)\n"
 
 	"Shift<Key>osfLeft: MoveCursor(Left, Extend)\n"
@@ -422,6 +432,7 @@ static XtActionsRec actions[] = {
 	{ "FocusIn", focus_in },
 	{ "FocusOut", focus_out },
 	{ "SecondaryButton", secondary_button },
+	{ "Paste", paste },
 	{ "NextTabGroup", _XmTraverseNextTabGroup },
 	{ "PreviousTabGroup", _XmTraversePrevTabGroup }
 };
@@ -2677,6 +2688,19 @@ static void delete(Widget w, XEvent *evt, String *params, Cardinal *nparams)
 
 	if(fl->cur_sel.count && fl->delete_cb)
 		XtCallCallbackList(w, fl->delete_cb, (XtPointer)NULL);
+}
+
+static void paste(Widget w, XEvent *evt, String *params, Cardinal *nparams)
+{
+	struct file_list_part *fl = FL_PART(w);
+	Boolean move = False;
+	
+	if(fl->paste_cb) {
+		if((*nparams) && !strcmp(params[0], "Move"))
+			move = True;
+
+		XtCallCallbackList(w, fl->paste_cb, &move);
+	}
 }
 
 /*

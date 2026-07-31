@@ -58,6 +58,8 @@ enum { XfCOMPACT, XfDETAILED };
 #define XfCDeleteCallback "DeleteCallback"
 #define XfNdoubleClickInterval XmNdoubleClickInterval
 #define XfCDoubleClickInterval XmCDoubleClickInterval
+#define XfNpasteCallback "pasteCallback"
+#define XfCPasteCallback "PasteCallback"
 #define XfNsortOrder "sortOrder"
 #define XfCSortOrder "SortOrder"
 #define XfNsortDirection "sortDirection"

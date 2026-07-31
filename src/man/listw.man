@@ -142,7 +142,7 @@ Only while incremental search is active, locates the next matching item.
 Default binding:
 
 .nf
-.ta 16n
+.ta 16m
 Ctrl<Key>n: LookupNext()
 .fi
 .IP "PrimaryButton(Down|Up, [Extend])"
@@ -167,6 +167,11 @@ Default binding:
 .ta 16m
 <Btn1Motion>:	PrimaryButtonMotion()
 .fi
+.IP "Paste([Move])"
+Pastes primary X selection. Copies selected items by default,
+moves them if the optional argument \fBMove\fP is specified.
+This action has no default binding, but is intended to be bound to
+the middle mouse button.
 .IP "ResetLookUp()"
 Resets the incremental search. Default binding:
 

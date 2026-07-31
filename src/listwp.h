@@ -170,7 +170,7 @@ struct file_list_part {
 	Boolean sel_add_mode;
 	Boolean highlight_sel;
 	Boolean has_focus;
-
+	
 	struct file_list_selection cur_sel;
 
 	/* pointer state */
@@ -209,6 +209,7 @@ struct file_list_part {
 	XtCallbackList sel_change_cb;
 	XtCallbackList dir_up_cb;
 	XtCallbackList delete_cb;
+	XtCallbackList paste_cb;
 	short dblclk_int;
 	short scrl_factor;
 	short sort_order;

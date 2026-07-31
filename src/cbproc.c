@@ -769,6 +769,13 @@ void move_here_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	paste_selection(True);
 }
 
+void mbpaste_cb(Widget w, XtPointer pclient, XtPointer pcall)
+{
+	Boolean move = *((Boolean*)pcall);
+
+	paste_selection(move);
+}
+
 void toggle_detailed_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
 	XmToggleButtonCallbackStruct *cbs =
