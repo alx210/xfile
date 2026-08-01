@@ -531,7 +531,8 @@ static void draw_item(Widget w, unsigned int index, Boolean erase)
 	Dimension lw = item_width - (fl->icon_width_max + fl->label_margin);
 	Dimension lh = fl->item_height_max - r->text_yoff;
 	
-	if((x + item_width < 0) || (y + fl->item_height_max < 0)) return;
+	if((x + item_width < 0) || (y + fl->item_height_max < 0) ||
+		(x > CORE_WIDTH(w)) || (y > CORE_HEIGHT(w)) ) return;
 
 	if(erase) {
 		XClearArea(dpy, wnd, x, y,
