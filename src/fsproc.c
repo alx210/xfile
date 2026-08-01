@@ -641,10 +641,9 @@ static void progress_cb(XtPointer cd, int *pfd, XtInputId *iid)
 		d->msg_input_iid = None;
 		return;
 	}
-
 	rc = readn(d->msg_in_fd, &msg_type, sizeof(int));
 	if(!rc) return;
-	
+
 	if(msg_type == MSG_STAT) {
 		int msg_len;
 		char *msg;
@@ -1386,6 +1385,7 @@ static int wp_copy_file(struct wp_data *wpd,
 	int reply = 0;
 	int res = 0;
 	double size_total = 0;
+	double size_last = 0;
 	Boolean read_err = False;
 
 	if(stat(src, &st_src)) {
@@ -1524,12 +1524,14 @@ static int wp_copy_file(struct wp_data *wpd,
 		
 		size_total += (size_t)rw;
 
-		if(size_total >= wpd->one_percent_size) {
+		if(size_total >= size_last + wpd->one_percent_size) {
 
 			if(app_res.force_sync) fdatasync(fout);
 
 			wp_post_prog(wpd, (int) (0.5 + wpd->percent_total +
 				(size_total / wpd->one_percent_size)) );
+			
+			size_last = size_total;
 		}
 		
 		rw = write(fout, wpd->copy_buffer, wpd->copy_buffer_size);
