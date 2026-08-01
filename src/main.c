@@ -898,21 +898,19 @@ static Boolean load_db(void)
  */
 static int get_best_icon_size(void)
 {
-	int height, ascent, descent, id = IS_SMALL;
+	int height, ascent, descent, id = IS_TINY;
 	XmRenderTable rt = NULL;
 	
 	XtVaGetValues(app_inst.wlist, XmNrenderTable, &rt, NULL);
 	if(!rt) return IS_SMALL;
 	XmRenderTableGetDefaultFontExtents(rt, &height, &ascent, &descent);
 
-	if(height <= 8)
-		id = IS_TINY;
-	else if(height >= 12)
-		id = IS_SMALL;
-	else if(height >= 16)
-		id = IS_MEDIUM;
-	else if(height >= 24)
+	if(height > 24)
 		id = IS_LARGE;
+	else if(height > 18)
+		id = IS_MEDIUM;
+	else if(height > 10)
+		id = IS_SMALL;
 
 	return id;
 }
