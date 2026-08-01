@@ -223,6 +223,8 @@ static struct fsproc_data *init_fsproc(enum wp_action action)
 	d->reply_in_fd = pipe_fd[0];
 	d->reply_out_fd = pipe_fd[1];
 
+	fcntl(d->msg_in_fd, F_SETFL, O_NONBLOCK);
+	
 	d->msg_input_iid = XtAppAddInput(app_inst.context, d->msg_in_fd,
 		(XtPointer)XtInputReadMask, progress_cb, (XtPointer)d);
 
@@ -805,7 +807,7 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 		wp_post_stat(wpd, "Setting attributes...");		
 	} else if(wpd->action == WP_DELETE) {
 		wp_post_prog(wpd, PROG_INTERMEDIATE);
-		wp_post_stat(wpd, "Deleting files...");		
+		wp_post_stat(wpd, "Deleting files...");
 	}
 
 	if(wpd->dest) {

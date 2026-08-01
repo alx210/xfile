@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <fnmatch.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -136,6 +137,8 @@ int initialize(void)
 	
 	rp_data.in_fd = pipe_fd[0];
 	rp_data.out_fd = pipe_fd[1];
+
+	fcntl(rp_data.in_fd, F_SETFL, O_NONBLOCK);
 	
 	rp_data.sigid = XtAppAddSignal(app_inst.context,
 			xt_read_proc_sig_handler, NULL);
