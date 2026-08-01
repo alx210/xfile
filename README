@@ -8,7 +8,7 @@ libXm (Motif 2.3 or newer)
 
 Tools:
 
-C99 compliant C compiler, SysVR4 compatible make, awk and sed
+C99 compliant C compiler, POSIX compliant make, awk and sed
 
 BUILDING AND INSTALLING
 -----------------------
