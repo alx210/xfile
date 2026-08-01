@@ -627,7 +627,7 @@ static void feedback_cb(Widget w, XtPointer client, XtPointer call)
 	while(d->wfbinput[id] != w) id++;
 	
 	dbg_trace("feedback button id: %d\n", id);
-	writen(d->reply_out_fd, &id, sizeof(int));
+	write(d->reply_out_fd, &id, sizeof(int));
 }
 
 /*
@@ -647,21 +647,21 @@ static void progress_cb(XtPointer cd, int *pfd, XtInputId *iid)
 		d->msg_input_iid = None;
 		return;
 	}
-	rc = readn(d->msg_in_fd, &msg_type, sizeof(int));
+	rc = read(d->msg_in_fd, &msg_type, sizeof(int));
 	if(!rc) return;
 
 	if(msg_type == MSG_STAT) {
 		int msg_len;
 		char *msg;
 		
-		rc = readn(d->msg_in_fd, &msg_len, sizeof(int));
+		rc = read(d->msg_in_fd, &msg_len, sizeof(int));
 		if(rc < sizeof(int)) return;
 		
 		if(msg_len) {
 			msg = malloc(msg_len + 1);
 			if(!msg) return;
 
-			rc = readn(d->msg_in_fd, msg, msg_len);
+			rc = read(d->msg_in_fd, msg, msg_len);
 			if(rc == msg_len)  {
 				msg[rc] = '\0';
 				set_label_string(d->wprstatus, msg);
@@ -672,7 +672,7 @@ static void progress_cb(XtPointer cd, int *pfd, XtInputId *iid)
 	} else if(msg_type == MSG_PROG) {
 		int prog_val;
 		
-		rc = readn(d->msg_in_fd, &prog_val, sizeof(int));
+		rc = read(d->msg_in_fd, &prog_val, sizeof(int));
 		if(rc == sizeof(int))
 			ProgressSetValue(d->wprogress, prog_val);
 	
@@ -681,15 +681,15 @@ static void progress_cb(XtPointer cd, int *pfd, XtInputId *iid)
 		int msg_len;
 		char *msg;
 		
-		rc = readn(d->msg_in_fd, &fb_type, sizeof(int));
-		rc += readn(d->msg_in_fd, &msg_len, sizeof(int));
+		rc = read(d->msg_in_fd, &fb_type, sizeof(int));
+		rc += read(d->msg_in_fd, &msg_len, sizeof(int));
 		
 		if(rc == sizeof(int) * 2) {
 
 			msg = malloc(msg_len + 1);
 			if(!msg) return;
 
-			rc = readn(d->msg_in_fd, msg, msg_len);
+			rc = read(d->msg_in_fd, msg, msg_len);
 			if(rc < msg_len) {
 				free(msg);
 				return;
@@ -707,7 +707,7 @@ static void progress_cb(XtPointer cd, int *pfd, XtInputId *iid)
 					stderr_msg("%s: %s", "Error", msg);
 				}
 				/* since we don't use feedback_dialog */
-				writen(d->reply_out_fd, &reply, sizeof(int));
+				write(d->reply_out_fd, &reply, sizeof(int));
 			} else {
 				/* will write reply_out_fd in feedback_cb */
 				feedback_dialog(d, fb_type, msg);
@@ -812,7 +812,7 @@ static int wp_main(struct fsproc_data *d, struct wp_data *wpd)
 		wp_post_stat(wpd, "Setting attributes...");		
 	} else if(wpd->action == WP_DELETE) {
 		wp_post_prog(wpd, PROG_INTERMEDIATE);
-		wp_post_stat(wpd, "Deleting files...");		
+		wp_post_stat(wpd, "Deleting files...");
 	}
 
 	if(wpd->dest) {
@@ -2106,10 +2106,10 @@ static int wp_post_msg(struct wp_data *wpd, int fb_type, const char *msg)
 	
 	msg_data_len = sizeof(int) * 3 + msg_len;
 	
-	io = writen(wpd->msg_out_fd, &msg_type, sizeof(int));
-	io += writen(wpd->msg_out_fd, &fb_type, sizeof(int));
-	io += writen(wpd->msg_out_fd, &msg_len, sizeof(int));
-	io += writen(wpd->msg_out_fd, msg, msg_len);
+	io = write(wpd->msg_out_fd, &msg_type, sizeof(int));
+	io += write(wpd->msg_out_fd, &fb_type, sizeof(int));
+	io += write(wpd->msg_out_fd, &msg_len, sizeof(int));
+	io += write(wpd->msg_out_fd, msg, msg_len);
 
 	if(io < msg_data_len) {
 		stderr_msg("Subprocess %lu cannot communicate with"
@@ -2119,7 +2119,7 @@ static int wp_post_msg(struct wp_data *wpd, int fb_type, const char *msg)
 	
 	dbg_trace("%ld waiting for reply\n", getpid());
 
-	io = readn(wpd->reply_in_fd, &oid, sizeof(int));
+	io = read(wpd->reply_in_fd, &oid, sizeof(int));
 	if(io < sizeof(int) || !FB_VALID_ID(oid)) {
 		stderr_msg("Subprocess %lu received invalid response from"
 			" the GUI process; exiting!\n", pid);
@@ -2182,10 +2182,10 @@ static void wp_post_astat(struct wp_data *wpd,
 			action, sz_src);
 	}
 
-	writen(wpd->msg_out_fd, &msg_type, sizeof(int));
+	write(wpd->msg_out_fd, &msg_type, sizeof(int));
 	buf_len = strlen(buffer);
-	writen(wpd->msg_out_fd, &buf_len, sizeof(int));
-	writen(wpd->msg_out_fd, buffer, buf_len);
+	write(wpd->msg_out_fd, &buf_len, sizeof(int));
+	write(wpd->msg_out_fd, buffer, buf_len);
 }
 
 /*
@@ -2196,10 +2196,10 @@ static void wp_post_stat(struct wp_data *wpd, const char *str)
 	int msg_type = MSG_STAT;
 	size_t len;
 
-	writen(wpd->msg_out_fd, &msg_type, sizeof(int));
+	write(wpd->msg_out_fd, &msg_type, sizeof(int));
 	len = strlen(str);
-	writen(wpd->msg_out_fd, &len, sizeof(int));
-	writen(wpd->msg_out_fd, str, len);
+	write(wpd->msg_out_fd, &len, sizeof(int));
+	write(wpd->msg_out_fd, str, len);
 
 }
 
@@ -2211,8 +2211,8 @@ static void wp_post_prog(struct wp_data *wpd, int prog)
 	int msg_type = MSG_PROG;
 
 	if(prog > 100) prog = 100;
-	writen(wpd->msg_out_fd, &msg_type, sizeof(int));
-	writen(wpd->msg_out_fd, &prog, sizeof(int));
+	write(wpd->msg_out_fd, &msg_type, sizeof(int));
+	write(wpd->msg_out_fd, &prog, sizeof(int));
 }
 
 /*

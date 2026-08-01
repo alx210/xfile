@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <fnmatch.h>
 #include <dirent.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -136,7 +137,7 @@ int initialize(void)
 	
 	rp_data.in_fd = pipe_fd[0];
 	rp_data.out_fd = pipe_fd[1];
-	
+
 	rp_data.sigid = XtAppAddSignal(app_inst.context,
 			xt_read_proc_sig_handler, NULL);
 
@@ -502,7 +503,7 @@ static void reader_callback_proc(XtPointer cd, int *pfd, XtInputId *iid)
 	Boolean update = False;
 	int res;
 
-	if(readn(*pfd, &msg, sizeof(struct msg_data)) == -1) {
+	if(read(*pfd, &msg, sizeof(struct msg_data)) == -1) {
 			read_error_msg(app_inst.location, strerror(errno), False);
 			stop_read_proc();
 			return;
@@ -521,7 +522,7 @@ static void reader_callback_proc(XtPointer cd, int *pfd, XtInputId *iid)
 	}
 
 	if(msg.name_len) {
-		if(readn(*pfd, fname_buf, msg.name_len) == -1) {
+		if(read(*pfd, fname_buf, msg.name_len) == -1) {
 			read_error_msg(app_inst.location, strerror(errno), False);
 			stop_read_proc();
 			return;
@@ -801,8 +802,8 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 		msg.is_mpoint = is_mpoint;
 		msg.is_mounted = is_mounted;
 		
-		out = writen(pipe_fd, &msg, sizeof(struct msg_data));
-		out += writen(pipe_fd, ent->d_name, msg.name_len);
+		out = write(pipe_fd, &msg, sizeof(struct msg_data));
+		out += write(pipe_fd, ent->d_name, msg.name_len);
 		if(out < (sizeof(struct msg_data) + msg.name_len))
 				return RP_IOFAIL;
 	}
@@ -813,7 +814,7 @@ static int read_proc_main(pid_t parent_pid, int pipe_fd)
 	msg.files_total = files_total;
 	msg.files_skipped = files_skipped;
 	msg.size_total = size_total;
-	out = writen(pipe_fd, &msg, sizeof(struct msg_data));
+	out = write(pipe_fd, &msg, sizeof(struct msg_data));
 	if(out < sizeof(struct msg_data))
 		return RP_IOFAIL;
 	
@@ -978,8 +979,8 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 			msg.is_mpoint = is_mpoint;
 			msg.is_mounted = is_mounted;
 	
-			out = writen(pipe_fd, &msg, sizeof(struct msg_data));
-			out += writen(pipe_fd, ent->d_name, msg.name_len);
+			out = write(pipe_fd, &msg, sizeof(struct msg_data));
+			out += write(pipe_fd, ent->d_name, msg.name_len);
 			if(out < (sizeof(struct msg_data) + msg.name_len))
 				return RP_IOFAIL;
 			
@@ -1003,8 +1004,8 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 			msg.reason = MSG_REMOVE;
 			msg.name_len = strlen(file_list[i].name);
 
-			out = writen(pipe_fd, &msg, sizeof(struct msg_data));
-			out += writen(pipe_fd, file_list[i].name, msg.name_len);
+			out = write(pipe_fd, &msg, sizeof(struct msg_data));
+			out += write(pipe_fd, file_list[i].name, msg.name_len);
 			if(out < (sizeof(struct msg_data) + msg.name_len))
 				return RP_IOFAIL;
 
@@ -1023,7 +1024,7 @@ static int read_proc_watch(const char *path, pid_t parent_pid,
 		msg.files_skipped = files_skipped;
 		msg.size_total = size_total;
 
-		out = writen(pipe_fd, &msg, sizeof(struct msg_data));
+		out = write(pipe_fd, &msg, sizeof(struct msg_data));
 		if(out < sizeof(struct msg_data)) return RP_IOFAIL;
 						
 		sleep(app_res.refresh_int);
