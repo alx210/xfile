@@ -66,6 +66,8 @@ common_install: xfile xfile.ad xfile.1
 	for n in icons/*.xpm; do install -o 0 -g 0 -m 664 $$n $(SHAREDIR)/$$n; done
 	install -o 0 -g 0 -m 644 icons/README $(SHAREDIR)/README.icons
 	-install -o 0 -g 0 -m 644 xbm/cabinet.xpm $(PREFIX)/share/pixmaps/xfile_48x48.xpm
+	-install -o 0 -g 0 -m 644 xbm/cabinet64.xpm $(PREFIX)/share/pixmaps/xfile_64x64.xpm
+
 
 # Removal
 uninstall:
@@ -76,6 +78,8 @@ uninstall:
 	-rm -f $(SHAREDIR)/types/system.db
 	-rm -f $(SHAREDIR)/icons/*.xpm
 	-rm -f $(SHAREDIR)/README.icons
+	-rm -f $(PREFIX)/share/pixmaps/xfile_48x48.xpm
+	-rm -f $(PREFIX)/share/pixmaps/xfile_64x64.xpm
 	-rmdir $(SHAREDIR)/types
 	-rmdir $(SHAREDIR)/icons
 	-rmdir $(SHAREDIR)
