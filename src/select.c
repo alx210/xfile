@@ -140,6 +140,8 @@ static Boolean convert_selection_proc(Widget w,
 		unsigned long len = 0;
 		char *data;
 		
+		if(!cur_sel->count) return False;
+		
 		for(i = 0; i < cur_sel->count; i++) {
 			len += strlen(cur_sel->names[i]) + 1;
 		}
@@ -169,6 +171,8 @@ static Boolean convert_selection_proc(Widget w,
 		char *data;
 		char *path;
 		char *pos;
+
+		if(!cur_sel->count) return False;
 		
 		/* Generate a zero separated list of item names, which is
 		 * terminated by a double-zero. The first item in the list
