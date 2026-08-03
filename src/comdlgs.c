@@ -400,6 +400,58 @@ static void input_modify_cb(Widget w, XtPointer client, XtPointer call)
 }
 
 /*
+ * Displays a blocking file selection dialog.
+ * Returns a valid path name or NULL if selection was cancelled.
+ * If a valid path name is returned it must be freed by the caller.
+ */
+char* file_select_dlg(Widget wparent, const char *title, const char *init_path)
+{
+	Widget wdlg;
+	Arg arg[8];
+	int i = 0;
+	XmString xm_init_path = NULL;
+	struct input_dlg_data idd = { 0, NULL, None, False, False, False };
+
+	if(!init_path) init_path = getenv("HOME");
+	if(init_path)
+		xm_init_path = XmStringCreateLocalized((String)init_path);
+
+	XtSetArg(arg[i], XmNfileTypeMask, XmFILE_REGULAR); i++;
+	XtSetArg(arg[i], XmNpathMode, XmPATH_MODE_FULL); i++;
+	XtSetArg(arg[i], XmNdirectory, xm_init_path); i++;
+	XtSetArg(arg[i], XmNtitle, title); i++;
+	XtSetArg(arg[i], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); i++;
+	XtSetArg(arg[i], XmNautoUnmanage, False); i++;
+
+	wdlg = XmCreateFileSelectionDialog(wparent,
+		"fileSelectionDialog", arg, i);
+	
+	if(xm_init_path) XmStringFree(xm_init_path);
+	XtAddCallback(wdlg, XmNokCallback, input_dlg_cb,(XtPointer)&idd);
+	XtAddCallback(wdlg, XmNcancelCallback, input_dlg_cb, (XtPointer)&idd);
+	XtUnmanageChild(XmFileSelectionBoxGetChild(wdlg, XmDIALOG_HELP_BUTTON));
+	
+	XtSetArg(arg[0], XmNdeleteResponse, XmDO_NOTHING);
+	XtSetValues(XtParent(wdlg), arg, 1);
+	
+	add_delete_window_handler(XtParent(wdlg),
+		input_dlg_delete_cb, (XtPointer) &idd);
+	
+	XtManageChild(wdlg);
+
+	while(!idd.done){
+		XtAppProcessEvent(XtWidgetToApplicationContext(wdlg), XtIMAll);
+	}
+
+	XtUnmanageChild(wdlg);
+	XtDestroyWidget(wdlg);
+	XSync(XtDisplay(wparent), False);
+	XmUpdateDisplay(wparent);
+
+	return idd.valid ? idd.string : NULL;
+}
+
+/*
  * Displays a blocking directory selection dialog.
  * Returns a valid path name or NULL if selection was cancelled.
  * If a valid path name is returned it must be freed by the caller.
