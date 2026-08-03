@@ -43,6 +43,10 @@
 #include "xbm/move.xpm"
 #include "xbm/delete.xpm"
 #include "xbm/chattr.xpm"
+#include "xbm/copy64.xpm"
+#include "xbm/move64.xpm"
+#include "xbm/delete64.xpm"
+#include "xbm/chattr64.xpm"
 
 /* Wait before mapping the progress dialog */
 #define PROG_MAP_TIMEOUT 500
@@ -323,9 +327,13 @@ static int create_progress_ui(struct fsproc_data *d)
 
 	if(label_pix[0] == None) {
 		int i;
+		Boolean lpix = (app_inst.def_font_height >= LARGE_FONT) ? True : False;
+
 		char **pix_data[NUM_ACTIONS] = {
-			copy_xpm, move_xpm,
-			delete_xpm, chattr_xpm
+			(lpix ? copy64_xpm : copy_xpm),
+			(lpix ? move64_xpm : move_xpm),
+			(lpix ? delete64_xpm: delete_xpm),
+			(lpix ? chattr64_xpm : chattr_xpm)
 		};
 		
 		for(i = 0; i < NUM_ACTIONS; i++) {

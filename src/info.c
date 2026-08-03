@@ -25,6 +25,7 @@
 
 /* Icon bitmaps */
 #include "xbm/cabinet.xpm"
+#include "xbm/cabinet64.xpm"
 
 static void dismiss_cb(Widget, XtPointer, XtPointer);
 
@@ -217,9 +218,14 @@ void display_about_dialog(Widget wparent)
 	XtSetArg(args[n], XmNnoResize, True); n++;
 	XtSetArg(args[n], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); n++;
 	wform = XmCreateForm(wdlg, "form", args, n);
-
-	if(!create_ui_pixmap(wform, cabinet_xpm, &icon_pix, NULL))
-		icon_pix = XmUNSPECIFIED_PIXMAP;
+	
+	if(app_inst.def_font_height >= LARGE_FONT) {
+		if(!create_ui_pixmap(wform, cabinet64_xpm, &icon_pix, NULL))
+			icon_pix = XmUNSPECIFIED_PIXMAP;
+	} else {
+		if(!create_ui_pixmap(wform, cabinet_xpm, &icon_pix, NULL))
+			icon_pix = XmUNSPECIFIED_PIXMAP;
+	}
 
 	n = 0;
 	XtSetArg(args[n], XmNtopAttachment, XmATTACH_FORM); n++;

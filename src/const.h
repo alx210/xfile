@@ -67,8 +67,15 @@
 #define CS_ICON_MEDIUM	"medium"
 #define CS_ICON_LARGE	"large"
 
+/* At what font height should we consider using large icons in dialogs */
+#ifndef LARGE_FONT
+#define LARGE_FONT 20
+#endif
+
 /* Default duplicate suffix */
+#ifndef DEF_DUP_SUFFIX
 #define DEF_DUP_SUFFIX ".copy"
+#endif
 
 /* Selection file list atom name */
 #define CS_FILE_LIST "XFile_FileList1"
