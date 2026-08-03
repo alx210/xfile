@@ -18,7 +18,7 @@
 #include <Xm/Xm.h>
 #include <Xm/MainW.h>
 #include <Xm/RowColumn.h>
-#include <Xm/TextF.h>
+#include <Xm/Label.h>
 #include <Xm/Frame.h>
 #include <Xm/ScrollBar.h>
 #include <Xm/ScrolledW.h>
@@ -63,6 +63,7 @@ extern void XmRenderTableGetDefaultFontExtents(XmRenderTable,
 extern void populate_tools_menu(void);
 static void xt_sigchld_handler(XtPointer p, XtSignalId *id);
 static void xfile_open(int, char**);
+static int get_widget_font_height(Widget);
 
 /* Config directory permissions */
 #define CONF_DIR_PERMS  (S_IRWXU|S_IRGRP)
@@ -392,8 +393,10 @@ int main(int argc, char **argv)
 	
 	res = initialize();
 	if(res) return res;
+	
+	app_inst.def_font_height = get_widget_font_height(app_inst.wstatus);
 
-	set_status_text(NULL);
+	set_status_text("Ready");
 	map_shell_unpos(app_inst.wshell);
 	
 	set_location(open_spec, True);
@@ -409,7 +412,6 @@ static void create_main_window(void)
 	Widget wscrolled;
 	Widget wframe;
 	Widget whscrl, wvscrl;
-	Pixel frm_bg_pixel;
 	Arg args[10];
 	short fl_sort_dir;
 	short fl_sort_order;
@@ -449,14 +451,9 @@ static void create_main_window(void)
 		XmNshadowType, XmSHADOW_OUT,
 		XmNshadowThickness, 1, NULL);
 	
-	XtVaGetValues(app_inst.wstatus_frm, XmNbackground, &frm_bg_pixel, NULL);
-	
-	app_inst.wstatus = XmVaCreateTextField(app_inst.wstatus_frm, "statusField",
-		XmNeditable, False, XmNcursorPositionVisible, False,
-		XmNshadowThickness, 0, XmNmarginHeight, 1, XmNmarginWidth, 1,
-		XmNtraversalOn, False, XmNvalue, "Ready",
-		XmNbackground, frm_bg_pixel, NULL);
-	XtUninstallTranslations(app_inst.wstatus);
+	app_inst.wstatus = XmVaCreateLabel(app_inst.wstatus_frm, "statusField",
+		XmNalignment, XmALIGNMENT_BEGINNING,
+		XmNlabelType, XmSTRING, XmNrecomputeSize, True, NULL);
 	
 	/* 3D frame and scrolled window for the file list */
 	wframe = XmVaCreateFrame(app_inst.wmain, "frame",
@@ -898,12 +895,10 @@ static Boolean load_db(void)
  */
 static int get_best_icon_size(void)
 {
-	int height, ascent, descent, id = IS_TINY;
-	XmRenderTable rt = NULL;
+	int id = IS_TINY;
+	int height = get_widget_font_height(app_inst.wlist);
 	
-	XtVaGetValues(app_inst.wlist, XmNrenderTable, &rt, NULL);
-	if(!rt) return IS_SMALL;
-	XmRenderTableGetDefaultFontExtents(rt, &height, &ascent, &descent);
+	if(height <= 0) return IS_SMALL;
 
 	if(height > 24)
 		id = IS_LARGE;
@@ -913,6 +908,22 @@ static int get_best_icon_size(void)
 		id = IS_SMALL;
 
 	return id;
+}
+
+/*
+ * Returns font height used to draw text in the widget specified.
+ * Returns -1 if it cannot be determined (i.e. the widget has no render table)
+ */
+static int get_widget_font_height(Widget w)
+{
+	int height, ascent, descent;
+	XmRenderTable rt = NULL;
+	
+	XtVaGetValues(app_inst.wlist, XmNrenderTable, &rt, NULL);
+	if(!rt) return -1;
+	XmRenderTableGetDefaultFontExtents(rt, &height, &ascent, &descent);
+	
+	return height;
 }
 
 /*
@@ -1071,7 +1082,7 @@ void set_status_text(const char *fmt, ...)
 	size_t len;
 
 	if(!fmt) {
-		XmTextFieldSetString(app_inst.wstatus, "");
+		set_label_string(app_inst.wstatus, NULL);
 		return;
 	}
 
@@ -1088,7 +1099,7 @@ void set_status_text(const char *fmt, ...)
 	vsnprintf(buffer, len, fmt, ap);
 	va_end(ap);
 	
-	XmTextFieldSetString(app_inst.wstatus, buffer);
+	set_label_string(app_inst.wstatus, buffer);
 	
 	free(buffer);
 }

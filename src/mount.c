@@ -38,6 +38,9 @@
 #include "xbm/mount.xpm"
 #include "xbm/umount.xpm"
 #include "xbm/mnterr.xpm"
+#include "xbm/mount64.xpm"
+#include "xbm/umount64.xpm"
+#include "xbm/mnterr64.xpm"
 
 /* Forward declarations */
 static void map_timeout_cb(XtPointer, XtIntervalId*);
@@ -190,10 +193,22 @@ static struct mount_proc_data* init_mount_proc(
 	wform = XmCreateForm(mp->wfbdlg, "main", args, n);
 
 	if(!mount_icon) {
-		if(!create_ui_pixmap(wform, mount_xpm, &mount_icon, NULL) ||
-			!create_ui_pixmap(wform, umount_xpm, &umount_icon, NULL) ||
-			!create_ui_pixmap(wform, mnterr_xpm, &error_icon, NULL)) {
-				mount_icon = umount_icon = error_icon = XmUNSPECIFIED_PIXMAP;
+		if(app_inst.def_font_height >= LARGE_FONT) {
+		
+			if(!create_ui_pixmap(wform, mount64_xpm, &mount_icon, NULL) ||
+				!create_ui_pixmap(wform, umount64_xpm, &umount_icon, NULL) ||
+				!create_ui_pixmap(wform, mnterr64_xpm, &error_icon, NULL)) {
+					mount_icon = umount_icon = error_icon =
+					XmUNSPECIFIED_PIXMAP;
+			}
+		
+		} else {
+			if(!create_ui_pixmap(wform, mount_xpm, &mount_icon, NULL) ||
+				!create_ui_pixmap(wform, umount_xpm, &umount_icon, NULL) ||
+				!create_ui_pixmap(wform, mnterr_xpm, &error_icon, NULL)) {
+					mount_icon = umount_icon = error_icon =
+					XmUNSPECIFIED_PIXMAP;
+			}
 		}
 	}
 	

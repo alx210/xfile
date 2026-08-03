@@ -54,6 +54,7 @@ struct app_inst_data {
 	Visual *visual;
 	Screen *screen;
 	XtAppContext context;
+	int def_font_height;
 	
 	/* file manager shell and widgets */
 	Widget wshell;
