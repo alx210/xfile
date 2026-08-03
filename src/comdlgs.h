@@ -51,6 +51,14 @@ char* dir_select_dlg(Widget parent, const char *title,
 	const char *init_path, const char *context);
 
 /*
+ * Displays a blocking file selection dialog.
+ * Returns a valid path name or NULL if selection was cancelled.
+ * If a valid path name is returned it must be freed by the caller.
+ */
+char* file_select_dlg(Widget parent,
+	const char *title, const char *init_path);
+
+/*
  * Displays a blocking input dialog.
  * Returns a valid string or NULL if cancelled. If a non NULL pointer
  * is returned it must be freed by the caller.

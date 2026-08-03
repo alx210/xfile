@@ -631,41 +631,24 @@ void delete_cb(Widget w, XtPointer pclient, XtPointer pcall)
 	}
 }
 
-void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
+void make_link_cb(Widget w, XtPointer pclient, XtPointer pcall)
 {
-	struct file_list_selection *list_sel;
 	char *link;
 	char *target;
-	char *cursel;
 	
-	list_sel = file_list_get_selection(app_inst.wlist);
-	if(!list_sel->count) {
-		stderr_msg("%s invalid selection\n", __FUNCTION__);
+	link = input_string_dlg(app_inst.wshell, "Make Link",
+		"Specify a name for the symbolic link", NULL, NULL, 0);
+	if(!link) return;
+
+	target = file_select_dlg(app_inst.wshell,
+		"Select Link Target", app_inst.location);
+	
+	if(!target) {
+		free(link);
 		return;
 	}
 	
-	cursel = strdup(list_sel->item.name);
-	
-	link = input_string_dlg(app_inst.wshell, "Link To",
-		"Specify a name for the symbolic link.\n"
-		"It may contain either absolute or relative path.", NULL, NULL, 0);
-	if(!link) {
-		free(cursel);
-		return;
-	}		
-	
-	if(strchr(link, '/')) {
-		target = realpath(cursel, NULL);
-		if(!target) {
-			va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
-				"Error accessing \'%s\'.\n%s", cursel, strerror(errno));
-			return;
-		}
-	} else {
-		target = cursel;
-	}
-	
-	if(!target || (symlink(target, link) == -1) ) {
+	if(symlink(target, link) == -1) {
 		va_message_box(app_inst.wshell, MB_ERROR, APP_TITLE,
 			"Could not complete requested action.\n%s.",
 			strerror(errno), NULL);
@@ -673,8 +656,7 @@ void link_to_cb(Widget w, XtPointer pclient, XtPointer pcall)
 		force_update();
 	}
 
-	if(target != cursel) free(target);
-	free(cursel);
+	free(target);
 	free(link);
 }
 

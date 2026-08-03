@@ -594,10 +594,10 @@ static void create_main_menus(void)
 		{IT_SEPARATOR, "actionsSeparator", NULL},
 		{IT_PUSH, "makeDirectory", "&Make Directory...", make_dir_cb, NULL},
 		{IT_PUSH, "makeFile", "M&ake File...", make_file_cb, NULL},
+		{IT_PUSH, "makeLink", "Make &Link...", make_link_cb, NULL},
 		{IT_SEPARATOR },
 		{IT_PUSH, "copyTo", "&Copy To...", copy_to_cb, NULL},
 		{IT_PUSH, "moveTo", "&Move To...", move_to_cb, NULL},
-		{IT_PUSH, "link", "&Link...", link_to_cb, NULL},
 		{IT_PUSH, "duplicate", "D&uplicate...", duplicate_cb, NULL},
 		{IT_PUSH, "rename", "&Rename", rename_cb, NULL},
 		{IT_PUSH, "delete", "&Delete", delete_cb, NULL},
@@ -664,8 +664,7 @@ static void create_main_menus(void)
 		{IT_SEPARATOR, "actionsSeparator", NULL, NULL},
 		{IT_PUSH, "copyTo", "&Copy To...", copy_to_cb, NULL},
 		{IT_PUSH, "moveTo", "&Move To...", move_to_cb, NULL},
-		{IT_PUSH, "duplicate", "D&uplicate...", duplicate_cb, NULL},
-		{IT_PUSH, "link", "&Link...", link_to_cb, NULL},
+		{IT_PUSH, "duplicate", "D&uplicate", duplicate_cb, NULL},
 		{IT_PUSH, "rename", "&Rename", rename_cb, NULL},
 		{IT_PUSH, "delete", "&Delete", delete_cb, NULL},
 		{IT_SEPARATOR, NULL },
@@ -1163,7 +1162,6 @@ void set_ui_sensitivity(short flags)
 		"*attributes",
 		"*copyTo",
 		"*moveTo",
-		"*link",
 		"*duplicate",
 		"*delete"
 	};
@@ -1171,6 +1169,7 @@ void set_ui_sensitivity(short flags)
 	char *dir_ops[] = {
 		"*makeDirectory",
 		"*makeFile",
+		"*makeLink",
 		"*reread",
 		"*detailed",
 		"*showAll",
@@ -1184,8 +1183,7 @@ void set_ui_sensitivity(short flags)
 	};
 	
 	char *single_ops[] = {
-		"*rename",
-		"*link"
+		"*rename"
 	};
 	
 	for(i = 0; i < XtNumber(sel_ops); i++) {
