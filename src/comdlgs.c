@@ -356,12 +356,15 @@ char* input_string_dlg(Widget wparent, const char *title,
 	
 	if(init_str && (flags & ISF_PRESELECT)) {
 		if(flags & ISF_FILENAME) {
-			/* preselect file title sans extension */
+			/* preselect file title sans suffix */
 			token = strrchr(init_str, '.');
 			
 			if(token){
-				XmTextFieldSetSelection(wtext,0,
+				XmTextFieldSetSelection(wtext, 0,
 					strlen(init_str) - strlen(token),
+					XtLastTimestampProcessed(XtDisplay(wdlg)));
+			} else {
+				XmTextFieldSetSelection(wtext, 0,strlen(init_str),
 					XtLastTimestampProcessed(XtDisplay(wdlg)));
 			}
 		} else {
