@@ -2226,7 +2226,7 @@ static char* wp_error_string(const char *verb, const char *csrc_name,
 	static char *buffer = NULL;
 	size_t len;
 	char tmpl1[] = "%s \'%s\'\n%s";
-	char tmpl2[] = "%s \'%s\' to \'%s\'\n%s";
+	char tmpl2[] = "%s \'%s\'\nto \'%s\'\n%s";
 	char *sz_src = NULL;
 	char *sz_dest = NULL;
 	
