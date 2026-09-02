@@ -56,11 +56,12 @@ void display_dbinfo_dialog(Widget wparent)
 	}
 	
 	n = 0;
+	XtSetArg(args[n], XmNtitle, "Type Database Info"); n++;
 	XtSetArg(args[n], XmNmappedWhenManaged, True); n++;
 	XtSetArg(args[n], XmNallowShellResize, True); n++;
 	XtSetArg(args[n], XmNdeleteResponse, XmDESTROY); n++;
-	wdlg = XmCreateDialogShell(wparent, "Type Database Info", args, n);
-
+	wdlg = XmCreateDialogShell(wparent, "typeDatabaseInfo", args, n);
+	
 	n = 0;
 	XtSetArg(args[n], XmNmarginWidth, 10); n++;
 	XtSetArg(args[n], XmNmarginHeight, 10); n++;
@@ -205,10 +206,11 @@ void display_about_dialog(Widget wparent)
 		XmVERSION, XmREVISION, XmUPDATE_LEVEL, COPYRIGHT_CS);
 	
 	n = 0;
+	XtSetArg(args[n], XmNtitle, "About"); n++;
 	XtSetArg(args[n], XmNmappedWhenManaged, True); n++;
 	XtSetArg(args[n], XmNallowShellResize, True); n++;
 	XtSetArg(args[n], XmNdeleteResponse, XmDESTROY); n++;
-	wdlg = XmCreateDialogShell(wparent, "About", args, n);
+	wdlg = XmCreateDialogShell(wparent, "about", args, n);
 
 	n = 0;
 	XtSetArg(args[n], XmNmarginWidth, 10); n++;
